@@ -1,4 +1,4 @@
-# Project Name
+# Costco CRM example
 
 This project consists of a frontend, backend, and a PostgreSQL database, all orchestrated using Docker Compose.
 
