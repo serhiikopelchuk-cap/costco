@@ -1,0 +1,105 @@
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+  line-height: 1.6;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 500;
+  margin: 0 0 10px;
+}
+
+p {
+  margin: 0 0 15px;
+}
+
+.App {
+  text-align: center;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.header {
+  background-color: var(--primary-color);
+  color: var(--light-color);
+}
+
+.button-primary {
+  background-color: var(--primary-color);
+  color: var(--light-color);
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+.button-primary:hover {
+  background-color: var(--dark-color);
+}
+
+.alert-success {
+  background-color: var(--success-color);
+  color: var(--light-color);
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.alert-danger {
+  background-color: var(--danger-color);
+  color: var(--light-color);
+  padding: 10px;
+  border-radius: 5px;
+}
+
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}

@@ -1,0 +1,97 @@
+.enter-team-spend {
+  display: flex;
+  flex-direction: column;
+  /* min-height: 90vh; */
+  background-color: var(--background-color);
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  width: 100%;
+  max-width: 800px; /* Limit the width of the content */
+  margin: 0 auto; /* Center the content */
+}
+
+.form {
+  width: 100%;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.form input {
+  flex: 1;
+  margin-right: 10px;
+  padding: 10px;
+  border: 1px solid var(--secondary-color);
+  border-radius: 5px;
+  font-size: 16px;
+  max-width: 200px; /* Limit the width of each input */
+  box-sizing: border-box;
+}
+
+.form input:last-child {
+  margin-right: 0; /* Remove margin from the last input */
+}
+
+.form input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+.search-bar {
+  width: 100%;
+  max-width: 400px; /* Limit the width of the search bar */
+  padding: 10px;
+  margin-bottom: 20px;
+  border: 1px solid var(--secondary-color);
+  border-radius: 5px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.search-bar:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+th {
+  background-color: var(--light-color);
+  color: var(--dark-color); /* Ensure text is visible */
+  text-align: left;
+}
+
+td input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--secondary-color);
+  border-radius: 5px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+td input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+button {
+  padding: 5px 10px;
+  margin: 5px;
+  cursor: pointer;
+}
