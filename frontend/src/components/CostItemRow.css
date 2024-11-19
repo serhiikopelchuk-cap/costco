@@ -1,0 +1,31 @@
+.cost-item-row {
+    position: relative; /* Ensure relative positioning for icon placement */
+  }
+  
+  .cost-item-row:hover td {
+    background-color: #e6f2ff; /* Light version of primary color */
+  }
+  
+  .cost-item-row .average-cell {
+    position: relative; /* Ensure relative positioning for icon placement */
+  }
+  
+  .cost-item-row .average-cell .pencil-icon,
+  .cost-item-row .average-cell .delete-icon {
+    position: absolute;
+    right: 20px; /* Position in the right corner */
+    bottom: 0px;
+    display: none;
+    font-size: 14px;
+    color: #007bff;
+  }
+  
+  .cost-item-row .average-cell .delete-icon {
+    right: 0px; /* Position delete icon to the far right */
+    color: #ff4d4d; /* Red color for delete icon */
+  }
+  
+  .cost-item-row:hover .average-cell .pencil-icon,
+  .cost-item-row:hover .average-cell .delete-icon {
+    display: inline;
+  }

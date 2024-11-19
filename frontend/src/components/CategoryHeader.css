@@ -1,0 +1,79 @@
+.category-header {
+    /* display: flex; */
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+    position: relative;
+  }
+  
+  .category-header:hover {
+    background-color: #e6f2ff; /* Light version of primary color */
+  }
+  
+  .category-header .category-actions {
+    display: flex;
+    align-items: center;
+    position: absolute;
+    right: 10px;
+    /* top: 50%; */
+    transform: translateY(-25%);
+  }
+  
+  .category-header .pencil-icon,
+  .category-header .remove-category-button {
+    display: none;
+  }
+  
+  .category-header:hover .pencil-icon,
+  .category-header:hover .remove-category-button {
+    display: inline-block;
+  }
+  
+  .category-header .pencil-icon {
+    font-size: 14px;
+    color: #007bff;
+    margin-right: 5px;
+    cursor: pointer;
+    right: -20px !important;
+  }
+  
+  .category-header .remove-category-button {
+    background-color: #ff4d4d; /* Red background */
+    color: white; /* White text */
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 12px;
+  }
+  
+  .category-header .remove-category-button:hover {
+    background-color: #cc0000; /* Darker red on hover */
+  }
+  
+  .category-header .remove-category-button:focus {
+    outline: none;
+    box-shadow: 0 0 5px rgba(255, 77, 77, 0.5);
+  }
+  
+  .category-header input,
+  .category-header textarea {
+    width: 100%;
+    margin-top: 5px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    resize: vertical; /* Allow vertical resizing for textarea */
+  }
+  
+  .category-header input:focus,
+  .category-header textarea:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  }

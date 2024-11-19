@@ -8,6 +8,8 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import MonthlyReports from './pages/MonthlyReports';
 import EnterTeamSpend from './pages/EnterTeamSpend';
+import DirectCost from './pages/DirectCost';
+import Outline from './pages/Outline';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -25,9 +27,11 @@ function App() {
           <Routes>
             <Route path="/" element={<Login />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/direct-cost" element={<DirectCost />} />
             <Route path="/monthly-reports" element={<MonthlyReports />} />
             <Route path="/enter-team-spend" element={<EnterTeamSpend />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/outline" element={<Outline />} />
           </Routes>
         </main>
         <Footer />

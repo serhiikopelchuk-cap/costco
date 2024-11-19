@@ -10,9 +10,7 @@ function Header({ toggleSidebar }: HeaderProps) {
   return (
     <header className="header">
       <button className="hamburger button-primary" onClick={toggleSidebar}>☰</button>
-      <img src={require('../logo.png')} alt="App Logo" className="logo" />
-      {/* <h1>My App</h1> */}
-      {/* Add navigation links or other header content here */}
+      <img src={require('../costcologo.png')} alt="App Logo" className="logo" />
     </header>
   );
 }

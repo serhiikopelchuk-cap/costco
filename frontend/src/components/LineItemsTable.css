@@ -1,0 +1,142 @@
+.line-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.header-row {
+  background-color: #f9f9f9;
+}
+
+.header-cell, .line-item-cell {
+  border: unset;
+  padding: 10px;
+  text-align: center;
+  font-weight: bold;
+  width: auto;
+  min-width: 50px;
+  max-width: 90px;
+}
+
+.line-item-label {
+  border: unset;
+  text-align: left;
+  padding: 5px 10px;
+  font-weight: bold;
+  background-color: #fff;
+  width: 100%;
+  min-width: 200px;
+}
+
+.line-item-row {
+  border: unset;
+  overflow: hidden;
+}
+
+.add-item-button-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.add-item-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--success-color);
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+
+.add-item-button:hover {
+  opacity: 0.9;
+}
+
+.line-item-input {
+  width: 100%;
+  padding: 5px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-weight: bold;
+}
+
+.line-item-input:hover,
+.line-item-input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+.period-input {
+  width: 100%;
+  min-width: 40px;
+  max-width: 80px;
+  padding: 5px;
+  border: 1px solid transparent;
+  background: transparent;
+  text-align: center;
+  font-weight: bold;
+}
+
+.period-input:hover,
+.period-input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+/* Hide number input arrows */
+.period-input::-webkit-outer-spin-button,
+.period-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.period-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+.remove-item-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--danger-color);
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+
+.remove-item-button:hover {
+  opacity: 0.9;
+}
+
+.deselect-all-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #007bff;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s, opacity 0.3s;
+}
+
+.deselect-all-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
