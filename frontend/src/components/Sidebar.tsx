@@ -14,6 +14,8 @@ function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
       <nav className="menu">
         <ul>
           <li><a href="/dashboard">Dashboard</a></li>
+          <li><a href="/outline">Outline</a></li>
+          <li><a href="/direct-cost">Direct Cost</a></li>
           <li><a href="/monthly-reports">Monthly Reports</a></li>
           <li><a href="/enter-team-spend">Enter Team Spend</a></li>
           <li><a href="/login">Login</a></li>

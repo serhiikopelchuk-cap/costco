@@ -1,0 +1,115 @@
+,,Annual Direct Costs,P1,P2,P3,P4,P5,P6,P7,P8,P9,P10,P11,P12,P13,Total,Average
+Compute Costs,"Costs associated with virtual machines, virtual machine scale sets, and container instances",Period totals:,$20,$20,$20,$20,$20,$20,$20,$20,$10,$10,$10,$10,$10,$210,$16
+,Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period,Azure Container Instances,$20,$20,$20,$20,$20,$20,$20,$20,$10,$10,$10,$10,$10,$210,$16
+,,Azure Kubernetes Service (AKS),,,,,,,,,,,,,,$0,$0
+,,Azure Container Registry,,,,,,,,,,,,,,$0,$0
+,,General Purpose VMs (D-series),,,,,,,,,,,,,,$0,$0
+,,Compute-Optimized VMs (F-series),,,,,,,,,,,,,,$0,$0
+,,Memory-Optimized VMs (M-series),,,,,,,,,,,,,,$0,$0
+,,Storage-Optimized VMs (H-series),,,,,,,,,,,,,,$0,$0
+,,GPU-Optimized VMs (N-series),,,,,,,,,,,,,,$0,$0
+,Please Add or Edit as needed,Virtual Machine Scale Sets,,,,,,,,,,,,,,$0,$0
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+Storage Costs,"Costs associated with block storage, file storage, and object storage",Period totals:,$10,$10,$10,$15,$15,$15,$15,$15,$25,$25,$25,$25,$30,$235,$18
+,Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period,Azure Blob Storage,$10,$10,$10,$15,$15,$15,$15,$15,$25,$25,$25,$25,$30,$235,$18
+,,Azure File Storage,,,,,,,,,,,,,,$0,$0
+,,Azure Disk Storage (Premium SSD),,,,,,,,,,,,,,$0,$0
+,,Azure Disk Storage (Standard SSD),,,,,,,,,,,,,,$0,$0
+,,Azure Disk Storage (HDD),,,,,,,,,,,,,,$0,$0
+,Please Add or Edit as needed,Azure Data Lake Storage Gen2,,,,,,,,,,,,,,$0,$0
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+Network Costs,"Costs associated with virtual networks, VPN gateways, and ExpressRoute",Period totals:,$50,$50,$50,$60,$60,$60,$60,$60,$80,$80,$80,$80,$90,$860,$66
+,Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period,Virtual Networks,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$130,$10
+,,VPN Gateway,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$130,$10
+,,ExpressRoute,,,,,,,,,,,,,,$0,$0
+,,Azure Load Balancer,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$130,$10
+,,Azure Application Gateway,,,,,,,,,,,,,,$0,$0
+,,Azure Firewall,$10,$10,$10,$15,$15,$15,$15,$15,$25,$25,$25,$25,$30,$235,$18
+,,Azure Front Door,$10,$10,$10,$15,$15,$15,$15,$15,$25,$25,$25,$25,$30,$235,$18
+,Please Add or Edit as needed,Azure Traffic Manager,,,,,,,,,,,,,,$0,$0
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+Database Costs,"Costs associated with SQL Database, Cosmos DB, and Data Warehouse",Period totals:,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$130,$10
+,Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period,Azure SQL Database,,,,,,,,,,,,,,$0,$0
+,,Azure Cosmos DB,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$130,$10
+,,Azure Synapse Analytics,,,,,,,,,,,,,,$0,$0
+,,Azure Database for PostgreSQL,,,,,,,,,,,,,,$0,$0
+,,Azure Cache for Redis,,,,,,,,,,,,,,$0,$0
+,Please Edit these Line Items as needed,Azure Database for MySQL,,,,,,,,,,,,,,$0,$0
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+Analytics Costs,"Costs associated with Data Factory, Databricks, and Synapse Analytics",Period totals:,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$130,$10
+,Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period,Azure Data Factory,,,,,,,,,,,,,,$0,$0
+,,Azure Databricks,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$130,$10
+,Please Add or Edit as needed,Azure Synapse Analytics,,,,,,,,,,,,,,$0,$0
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+Integration Costs,"Costs associated with Logic Apps, Integration Services, and API Management",Period totals:,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0
+,Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period,Azure Logic Apps,,,,,,,,,,,,,,$0,$0
+,,Azure Integration Services (SSIS),,,,,,,,,,,,,,$0,$0
+,,Azure API Management,,,,,,,,,,,,,,$0,$0
+,,Azure Event Grid,,,,,,,,,,,,,,$0,$0
+,Please Add or Edit as needed,Azure Service Bus,,,,,,,,,,,,,,$0,$0
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+Security Costs,"Costs associated with Azure Security Center, Azure Firewall, and Azure Key Vault",Period totals:,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$130,$10
+,Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period,Azure Key Vault,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$130,$10
+,,Web Application Firewalls (WAF),,,,,,,,,,,,,,$0,$0
+,,Intrusion Detection/Prevention (IDPS),,,,,,,,,,,,,,$0,$0
+,Please Add or Edit as needed,Other Security Tools,,,,,,,,,,,,,,$0,$0
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+Monitoring and Management Costs,"Costs associated with Azure Monitor, Azure Log Analytics, and Azure Automation",Period totals:,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$130,$10
+,Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period,Azure Monitor,,,,,,,,,,,,,,$0,$0
+,,Azure Log Analytics,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$130,$10
+,,Other Monitoring Tools,,,,,,,,,,,,,,$0,$0
+,Please Add or Edit as needed,Other Management Tools,,,,,,,,,,,,,,$0,$0
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+Application Development Costs,Costs associated with developing and deploying applications on Azure,Period totals:,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$130,$10
+,"Azure Cost Management + Billing > Cost Analysis. Filter resource type (App Service, Functions) & period",Azure App Service,,,,,,,,,,,,,,$0,$0
+,,Azure Functions,,,,,,,,,,,,,,$0,$0
+,,Azure Static Web Apps,,,,,,,,,,,,,,$0,$0
+,,Azure App Service (Web Apps),,,,,,,,,,,,,,$0,$0
+,,Azure App Service (API Apps),,,,,,,,,,,,,,$0,$0
+,,Azure App Service (Mobile Apps),,,,,,,,,,,,,,$0,$0
+,Please Add or Edit as needed,Azure App Service (Static Web Apps),$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$130,$10
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+Third-Party Service Costs,Costs associated with third-party services integrated with Azure,Period totals:,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0
+,Third-party provider invoices and billing portal,Third-party cloud storage,,,,,,,,,,,,,,$0,$0
+,,Third-party security solutions,,,,,,,,,,,,,,$0,$0
+,,Third-party monitoring tools,,,,,,,,,,,,,,$0,$0
+,,Third-party collaboration tools,,,,,,,,,,,,,,$0,$0
+,,Third-party CI/CD tools,,,,,,,,,,,,,,$0,$0
+,Please Add or Edit as needed,Third-party database solutions,,,,,,,,,,,,,,$0,$0
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+Other 1,,Period totals:,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0
+,,[Enter your item],,,,,,,,,,,,,,$0,$0
+,,[Enter your item],,,,,,,,,,,,,,$0,$0
+,,[Enter your item],,,,,,,,,,,,,,$0,$0
+,,[Enter your item],,,,,,,,,,,,,,$0,$0
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+Other 2,,Period totals:,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0
+,,[Enter your item],,,,,,,,,,,,,,$0,$0
+,,[Enter your item],,,,,,,,,,,,,,$0,$0
+,,[Enter your item],,,,,,,,,,,,,,$0,$0
+,,[Enter your item],,,,,,,,,,,,,,$0,$0
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+Other 3,,Period totals:,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0
+,,[Enter your item],,,,,,,,,,,,,,$0,$0
+,,[Enter your item],,,,,,,,,,,,,,$0,$0
+,,[Enter your item],,,,,,,,,,,,,,$0,$0
+,,[Enter your item],,,,,,,,,,,,,,$0,$0
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+Other 4,,Period totals:,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0,$0
+,,[Enter your item],,,,,,,,,,,,,,$0,$0
+,,[Enter your item],,,,,,,,,,,,,,$0,$0
+,,[Enter your item],,,,,,,,,,,,,,$0,$0
+,,[Enter your item],,,,,,,,,,,,,,$0,$0

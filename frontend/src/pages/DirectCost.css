@@ -1,0 +1,126 @@
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+  
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+    position: relative; /* Position relative for icon placement */
+  }
+  
+  th {
+    background-color: #f2f2f2;
+  }
+  
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .category {
+    margin-bottom: 40px;
+    position: relative; /* Position relative for icon placement */
+  }
+  
+  .category-header {
+    /* display: flex; */
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .category-header:hover {
+    background-color: #e6f2ff; /* Light version of primary color */
+  }
+  
+  .category-header .pencil-icon {
+    display: none;
+    font-size: 14px;
+    color: #007bff;
+  }
+  
+  .category-header:hover .pencil-icon {
+    display: inline;
+  }
+  
+  h1, h2 {
+    text-align: center;
+    color: #333;
+  }
+  
+  tr:hover {
+    background-color: #e6f2ff; /* Light version of primary color */
+  }
+  
+  .pencil-icon {
+    position: absolute;
+    right: 0px; /* Position in the right corner */
+    bottom: 0px;
+    display: none;
+    font-size: 14px;
+    color: #007bff;
+  }
+
+  .category-header:hover .pencil-icon {
+    right: 0;
+    bottom: unset;
+  }
+  
+  tr:hover .pencil-icon {
+    display: inline;
+  }
+  
+  /* New styles for the note row */
+  .note-row th {
+    background-color: #f2f2f2;
+    transition: background-color 0.3s ease;
+  }
+  
+  .note-row th:hover {
+    background-color: #e6f2ff; /* Light version of primary color */
+  }
+  
+  .note-row input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+  }
+  
+  .note-row input:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  }
+  
+  /* Styles for the Add button */
+  .add-button {
+    background-color: #28a745; /* Green background */
+    color: white; /* White text */
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .add-button:hover {
+    background-color: #218838; /* Darker green on hover */
+  }
+  
+  .add-button:focus {
+    outline: none;
+    box-shadow: 0 0 5px rgba(40, 167, 69, 0.5);
+  }

@@ -1,0 +1,95 @@
+.outline-view {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  background-color: #f9f9f9;
+}
+
+.column {
+  flex: 1;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  transition: transform 0.3s ease-in-out, flex 0.3s ease-in-out, max-width 0.3s ease-in-out;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.column.minified {
+  flex: 0.2;
+  max-width: 100px;
+}
+
+.column h3 {
+  cursor: pointer;
+  margin-bottom: 10px;
+  font-size: 1.2em;
+  color: #333;
+}
+
+.column div {
+  cursor: pointer;
+  margin-bottom: 5px;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.column div:hover {
+  background-color: #e0e0e0;
+}
+
+.column div.selected {
+  background-color: #d0e6ff;
+  color: #0056b3;
+}
+
+.column:last-child {
+  border-right: none;
+}
+
+.line-item-details-column div {
+  transition: none;
+}
+
+.line-item-details-column div:hover {
+  background-color: inherit;
+}
+
+.line-item-details-column {
+  flex: 2;
+  max-width: none !important;
+  overflow-x: auto;
+}
+
+.line-item-details-column .line-items-table {
+  min-width: 100%;
+  max-width: 100%;
+}
+
+.column.minified div {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 5px;
+  /* width: 100%; */
+} 
+
+.search-input {
+  width: 100%;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  box-sizing: border-box;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.search-input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  outline: none;
+}

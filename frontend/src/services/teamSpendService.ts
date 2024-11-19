@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_URL = process.env.API_URL + '/team-spend' || 'http://localhost:3000/team-spend';
+// const API_URL = process.env.API_URL + '/team-spend' || 'http://localhost:3000/team-spend';
+const API_URL = 'http://localhost:3000/team-spend';
 console.log("API_URL", API_URL);
 export const getTeamSpends = async () => {
   const response = await axios.get(API_URL);
