@@ -19,7 +19,7 @@
 
 .column.minified {
   flex: 0.2;
-  max-width: 100px;
+  max-width: 160px;
 }
 
 .column h3 {
@@ -92,4 +92,53 @@
   border-color: #007bff;
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
   outline: none;
+}
+
+.header-with-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.add-item-input-container {
+  display: flex;
+  align-items: center;
+}
+
+.add-item-form {
+  display: flex;
+  flex-direction: column;
+  margin-top: 5px;
+}
+
+.add-item-input {
+  margin-bottom: 5px;
+}
+
+.add-item-toggle-button {
+  margin-left: 10px;
+}
+
+.add-toggle-button {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background-color: var(--success-color);
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s, background-color 0.2s;
+  margin-top: 5px;
+}
+
+.add-toggle-button.active {
+  background-color: var(--danger-color); /* Red color */
+}
+
+.add-toggle-button:hover {
+  opacity: 0.9;
 }

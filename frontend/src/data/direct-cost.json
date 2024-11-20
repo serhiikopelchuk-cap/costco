@@ -1,0 +1,285 @@
+{
+    "categories": [
+      {
+        "name": "Compute Costs",
+        "description": "Costs associated with virtual machines, virtual machine scale sets, and container instances",
+        "note": "Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period",
+        "lineItems": [
+          {
+            "name": "Azure Container Instances",
+            "periods": [20, 20, 20, 20, 20, 20, 20, 20, 10, 10, 10, 10, 10]
+          },
+          {
+            "name": "Azure Kubernetes Service (AKS)",
+            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          },
+          {
+            "name": "Azure Container Registry",
+            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          },
+          {
+            "name": "General Purpose VMs (D-series)",
+            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          },
+          {
+            "name": "Compute-Optimized VMs (F-series)",
+            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          },
+          {
+            "name": "Memory-Optimized VMs (M-series)",
+            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          },
+          {
+            "name": "Storage-Optimized VMs (H-series)",
+            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          },
+          {
+            "name": "GPU-Optimized VMs (N-series)",
+            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          },
+          {
+            "name": "Virtual Machine Scale Sets",
+            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          }
+        ]
+      },
+      {
+        "name": "Storage Costs",
+        "description": "Costs associated with block storage, file storage, and object storage",
+        "note": "Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period",
+        "lineItems": [
+          {
+            "name": "Azure Blob Storage",
+            "periods": [10, 10, 10, 15, 15, 15, 15, 15, 25, 25, 25, 25, 30]
+          },
+          {
+            "name": "Azure File Storage",
+            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          },
+          {
+            "name": "Azure Disk Storage (Premium SSD)",
+            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          },
+          {
+            "name": "Azure Disk Storage (Standard SSD)",
+            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          },
+          {
+            "name": "Azure Disk Storage (HDD)",
+            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          },
+          {
+            "name": "Azure Data Lake Storage Gen2",
+            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          }
+        ]
+      },
+      {
+        "name": "Network Costs",
+        "description": "Costs associated with virtual networks, VPN gateways, and ExpressRoute",
+        "note": "Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period",
+        "lineItems": [
+          {
+            "name": "Virtual Networks",
+            "periods": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+          },
+          {
+            "name": "VPN Gateway",
+            "periods": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+          },
+          {
+            "name": "ExpressRoute",
+            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          },
+          {
+            "name": "Azure Load Balancer",
+            "periods": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+          },
+          {
+            "name": "Azure Firewall",
+            "periods": [10, 10, 10, 15, 15, 15, 15, 15, 25, 25, 25, 25, 30]
+          },
+          {
+            "name": "Azure Front Door",
+            "periods": [10, 10, 10, 15, 15, 15, 15, 15, 25, 25, 25, 25, 30]
+          },
+          {
+            "name": "Azure Traffic Manager",
+            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          }
+        ]
+      },
+      {
+        "name": "Database Costs",
+        "description": "Costs associated with SQL Database, Cosmos DB, and Data Warehouse",
+        "note": "Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period",
+        "lineItems": [
+          {
+            "name": "Azure SQL Database",
+            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          },
+          {
+            "name": "Azure Cosmos DB",
+            "periods": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+          },
+          {
+            "name": "Azure Synapse Analytics",
+            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          },
+          {
+            "name": "Azure Database for PostgreSQL",
+            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          },
+          {
+            "name": "Azure Cache for Redis",
+            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          },
+          {
+            "name": "Azure Database for MySQL",
+            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          }
+        ]
+      },
+      {
+        "name": "Analytics Costs",
+        "description": "Costs associated with Data Factory, Databricks, and Synapse Analytics",
+        "note": "Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period",
+        "lineItems": [
+          {
+            "name": "Azure Data Factory",
+            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          },
+          {
+            "name": "Azure Databricks",
+            "periods": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+          },
+          {
+            "name": "Azure Synapse Analytics",
+            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          }
+        ]
+      },
+      {
+        "name": "Integration Costs",
+        "description": "Costs associated with Logic Apps, Integration Services, and API Management",
+        "note": "Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period",
+        "lineItems": [
+            {"name": "Azure Logic Apps", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure Integration Services (SSIS)", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure API Management", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure Event Grid", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure Service Bus", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
+        ]
+      },
+      {
+        "name": "Security Costs",
+        "description": "Costs associated with Azure Security Center, Azure Firewall, and Azure Key Vault",
+        "note": "Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period",
+        "lineItems": [
+            {"name": "Azure Key Vault", "periods": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]},
+            {"name": "Web Application Firewalls (WAF)", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Intrusion Detection/Prevention (IDPS)", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Other Security Tools", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
+        ]
+      },
+      {
+        "name": "Monitoring and Management Costs",
+        "description": "Costs associated with Azure Monitor, Azure Log Analytics, and Azure Automation",
+        "note": "Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period",
+        "lineItems": [
+            {"name": "Azure Monitor", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure Log Analytics", "periods": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]},
+            {"name": "Other Monitoring Tools", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Other Management Tools", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
+        ]
+      },
+      {
+        "name": "Application Development Costs",
+        "description": "Costs associated with developing and deploying applications on Azure",
+        "note": "Azure Cost Management + Billing > Cost Analysis. Filter resource type (App Service, Functions) & period",
+        "lineItems": [
+            {"name": "Azure App Service", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure Functions", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure Static Web Apps", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure App Service (Web Apps)", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure App Service (API Apps)", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure App Service (Mobile Apps)", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure App Service (Static Web Apps)", "periods": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]}
+        ]
+      },
+      {
+        "name": "Third-Party Service Costs",
+        "description": "Costs associated with third-party services integrated with Azure",
+        "note": "Third-party provider invoices and billing portal",
+        "lineItems": [
+            {"name": "Third-party cloud storage", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Third-party security solutions", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Third-party monitoring tools", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Third-party collaboration tools", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Third-party CI/CD tools", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Third-party database solutions", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
+        ]
+      },
+      {
+        "name": "Integration Costs",
+        "description": "Costs associated with Logic Apps, Integration Services, and API Management",
+        "note": "Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period",
+        "lineItems": [
+            {"name": "Azure Logic Apps", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure Integration Services (SSIS)", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure API Management", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure Event Grid", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure Service Bus", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
+        ]
+      },
+      {
+        "name": "Security Costs",
+        "description": "Costs associated with Azure Security Center, Azure Firewall, and Azure Key Vault",
+        "note": "Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period",
+        "lineItems": [
+            {"name": "Azure Key Vault", "periods": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]},
+            {"name": "Web Application Firewalls (WAF)", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Intrusion Detection/Prevention (IDPS)", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Other Security Tools", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
+        ]
+      },
+      {
+        "name": "Monitoring and Management Costs",
+        "description": "Costs associated with Azure Monitor, Azure Log Analytics, and Azure Automation",
+        "note": "Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period",
+        "lineItems": [
+            {"name": "Azure Monitor", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure Log Analytics", "periods": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]},
+            {"name": "Other Monitoring Tools", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Other Management Tools", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
+        ]
+      },
+      {
+        "name": "Application Development Costs",
+        "description": "Costs associated with developing and deploying applications on Azure",
+        "note": "Azure Cost Management + Billing > Cost Analysis. Filter resource type (App Service, Functions) & period",
+        "lineItems": [
+            {"name": "Azure App Service", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure Functions", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure Static Web Apps", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure App Service (Web Apps)", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure App Service (API Apps)", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure App Service (Mobile Apps)", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure App Service (Static Web Apps)", "periods": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]}
+        ]
+      },
+      {
+        "name": "Third-Party Service Costs",
+        "description": "Costs associated with third-party services integrated with Azure",
+        "note": "Third-party provider invoices and billing portal",
+        "lineItems": [
+            {"name": "Third-party cloud storage", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Third-party security solutions", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Third-party monitoring tools", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Third-party collaboration tools", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Third-party CI/CD tools", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Third-party database solutions", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
+        ]
+      }
+    ]
+  }

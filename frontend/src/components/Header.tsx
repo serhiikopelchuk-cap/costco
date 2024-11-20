@@ -11,6 +11,7 @@ function Header({ toggleSidebar }: HeaderProps) {
     <header className="header">
       <button className="hamburger button-primary" onClick={toggleSidebar}>☰</button>
       <img src={require('../costcologo.png')} alt="App Logo" className="logo" />
+      <h1 className="header-title">Total Cost of Ownership (TCO) Portal</h1>
     </header>
   );
 }

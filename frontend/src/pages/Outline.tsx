@@ -3,6 +3,7 @@ import './Outline.css';
 import LineItemsTable from '../components/LineItemsTable';
 import SearchInput from '../components/SearchInput';
 import AddItemInput from '../components/AddItemInput';
+import directCosts from '../data/direct-cost.json';
 
 type LineItem = {
   id: number;
@@ -13,31 +14,22 @@ type Categories = Record<string, LineItem[]>;
 type Projects = Record<string, { categories: Categories }>;
 type Data = Record<string, { projects: Projects }>;
 
-const data: Data = {
+const defaultTestData: Data = {
   Program1: {
     projects: {
       Project1: {
         categories: {
-          Category1: [
-            {
-              id: 1,
-              name: 'LINE ITEM-A',
-              periods: Array(13).fill(20),
-            },
-            {
-              id: 2,
-              name: 'LINE ITEM-B',
-              periods: Array(13).fill(30),
-            },
-            {
-              id: 3,
-              name: 'LINE ITEM-C',
-              periods: Array(13).fill(30),
-            },
-          ],
-        },
-      },
-    },
+          ...directCosts.categories.reduce((acc, category) => {
+            acc[category.name] = category.lineItems.map(item => ({
+              id: Date.now() + Math.random(), // Ensure unique IDs
+              name: item.name,
+              periods: item.periods
+            }));
+            return acc;
+          }, {} as Categories),
+        }
+      }
+    }
   },
   Program2: {
     projects: {
@@ -100,8 +92,11 @@ const data: Data = {
     },
   },
 };
+interface OutlineProps {
+  data?: Data;
+}
 
-const Outline: React.FC = () => {
+const Outline: React.FC<OutlineProps> = ({ data = defaultTestData }) => {
 
   // Initialize state with first available items
   const firstProgram = Object.keys(data)[0];
@@ -127,6 +122,11 @@ const Outline: React.FC = () => {
   const [projectSearch, setProjectSearch] = useState('');
   const [categorySearch, setCategorySearch] = useState('');
   const [lineItemSearch, setLineItemSearch] = useState('');
+
+  const [showAddProgramInput, setShowAddProgramInput] = useState(false);
+  const [showAddProjectInput, setShowAddProjectInput] = useState(false);
+  const [showAddCategoryInput, setShowAddCategoryInput] = useState(false);
+  const [showAddLineItemInput, setShowAddLineItemInput] = useState(false);
 
   const filteredPrograms = programs.filter(program => program.toLowerCase().includes(programSearch.toLowerCase()));
   const filteredProjects = projects.filter(project => project.toLowerCase().includes(projectSearch.toLowerCase()));
@@ -331,12 +331,21 @@ const Outline: React.FC = () => {
   return (
     <div className="outline-view">
       <div className="column minified">
-        <h3>Programs</h3>
+        <div className="header-with-button">
+          <h3>Programs</h3>
+          <button
+            className={`add-toggle-button ${showAddProgramInput ? 'active' : ''}`}
+            onClick={() => setShowAddProgramInput(!showAddProgramInput)}
+          >
+            {showAddProgramInput ? '×' : '+'}
+          </button>
+        </div>
         <SearchInput
           placeholder="Search Programs"
           value={programSearch}
           onChange={setProgramSearch}
         />
+        {showAddProgramInput && <AddItemInput onAdd={handleAddProgram} />}
         {filteredPrograms.map(program => (
           <div
             key={program}
@@ -346,15 +355,23 @@ const Outline: React.FC = () => {
             {program}
           </div>
         ))}
-        <AddItemInput onAdd={handleAddProgram} />
       </div>
       <div className="column minified">
-        <h3>Projects</h3>
+        <div className="header-with-button">
+          <h3>Projects</h3>
+          <button
+            className={`add-toggle-button ${showAddProjectInput ? 'active' : ''}`}
+            onClick={() => setShowAddProjectInput(!showAddProjectInput)}
+          >
+            {showAddProjectInput ? '×' : '+'}
+          </button>
+        </div>
         <SearchInput
           placeholder="Search Projects"
           value={projectSearch}
           onChange={setProjectSearch}
         />
+        {showAddProjectInput && <AddItemInput onAdd={handleAddProject} />}
         {filteredProjects.map(project => (
           <div
             key={project}
@@ -364,15 +381,23 @@ const Outline: React.FC = () => {
             {project}
           </div>
         ))}
-        <AddItemInput onAdd={handleAddProject} />
       </div>
       <div className="column minified">
-        <h3>Categories</h3>
+        <div className="header-with-button">
+          <h3>Categories</h3>
+          <button
+            className={`add-toggle-button ${showAddCategoryInput ? 'active' : ''}`}
+            onClick={() => setShowAddCategoryInput(!showAddCategoryInput)}
+          >
+            {showAddCategoryInput ? '×' : '+'}
+          </button>
+        </div>
         <SearchInput
           placeholder="Search Categories"
           value={categorySearch}
           onChange={setCategorySearch}
         />
+        {showAddCategoryInput && <AddItemInput onAdd={handleAddCategory} />}
         {filteredCategories.map(category => (
           <div
             key={category}
@@ -382,15 +407,23 @@ const Outline: React.FC = () => {
             {category}
           </div>
         ))}
-        <AddItemInput onAdd={handleAddCategory} />
       </div>
       <div className="column minified">
-        <h3>Line Items</h3>
+        <div className="header-with-button">
+          <h3>Line Items</h3>
+          <button
+            className={`add-toggle-button ${showAddLineItemInput ? 'active' : ''}`}
+            onClick={() => setShowAddLineItemInput(!showAddLineItemInput)}
+          >
+            {showAddLineItemInput ? '×' : '+'}
+          </button>
+        </div>
         <SearchInput
           placeholder="Search Line Items"
           value={lineItemSearch}
           onChange={setLineItemSearch}
         />
+        {showAddLineItemInput && <AddItemInput onAdd={handleAddLineItem} />}
         {filteredLineItems.map(lineItem => (
           <div
             key={lineItem.id}
@@ -400,11 +433,10 @@ const Outline: React.FC = () => {
             {lineItem.name}
           </div>
         ))}
-        <AddItemInput onAdd={handleAddLineItem} />
       </div>
       {selectedCategory && (
         <div className="column line-item-details-column">
-          <h3>Line Item Details</h3>
+          {/* <h3>{selectedCategory ? selectedCategory : 'Category Details'}</h3> */}
           <div>
             <LineItemsTable 
               lineItems={selectedLineItems.length > 0 ? selectedLineItems : lineItems} // Show all if none selected
@@ -412,8 +444,9 @@ const Outline: React.FC = () => {
                 handleLineItemUpdate(newLineItems);
               }}
               onLineItemAdd={handleLineItemAdd}
-              onDeselectAll={handleDeselectAll} // Pass the new handler
-              selectedLineItems={selectedLineItems} // Pass the selected line items
+              onDeselectAll={handleDeselectAll}
+              selectedLineItems={selectedLineItems}
+              categoryName={selectedCategory || ''}
             />
           </div>
         </div>

@@ -7,20 +7,17 @@ interface AddItemInputProps {
 
 const AddItemInput: React.FC<AddItemInputProps> = ({ onAdd }) => {
   const [inputValue, setInputValue] = useState('');
-  const [isVisible, setIsVisible] = useState(false);
 
   const handleAdd = () => {
     if (inputValue.trim()) {
-      console.log('Adding item:', inputValue.trim());
       onAdd(inputValue.trim());
       setInputValue('');
-      setIsVisible(false);
     }
   };
 
   return (
     <div className="add-item-input-container">
-      {isVisible ? (
+      
         <div className="add-item-form">
           <input
             type="text"
@@ -31,9 +28,7 @@ const AddItemInput: React.FC<AddItemInputProps> = ({ onAdd }) => {
           />
           <button onClick={handleAdd} className="add-item-submit-button">Add</button>
         </div>
-      ) : (
-        <button onClick={() => setIsVisible(true)} className="add-item-toggle-button">+</button>
-      )}
+      
     </div>
   );
 };

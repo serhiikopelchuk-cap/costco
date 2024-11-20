@@ -1,0 +1,91 @@
+{
+  "categories": [
+    {
+      "name": "Talent Costs",
+      "description": "Your team specific salary & training, for talent building on / supporting your cloud resources",
+      "note": "Please Add or Edit as needed",
+      "lineItems": [
+        {
+          "name": "Staff Salary (cloud engineers, DevOps)",
+          "periods": [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
+        },
+        {
+          "name": "Staff Salary (Other staff talent, PMs, Arch)",
+          "periods": [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
+        },
+        {
+          "name": "Training & Certs for cloud skills",
+          "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        },
+        {
+          "name": "Cross training costs",
+          "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        }
+      ]
+    },
+    {
+      "name": "Professional Services Costs",
+      "description": "Costs for consulting and implementation services",
+      "note": "",
+      "lineItems": []
+    },
+    {
+      "name": "Licensing Costs",
+      "description": "Costs for consulting and implementation services",
+      "note": "",
+      "lineItems": [
+        {
+          "name": "Licensing Costs",
+          "periods": [10, 10, 10, 15, 15, 15, 15, 15, 25, 25, 25, 25, 30]
+        }
+      ]
+    },
+    {
+      "name": "Operational Costs",
+      "description": "Day-to-day operational expenses for cloud environments",
+      "note": "",
+      "lineItems": []
+    },
+    {
+      "name": "Data Transfer Costs",
+      "description": "Costs for data transfer to and from Azure",
+      "note": "",
+      "lineItems": [
+        {
+          "name": "Data Transfer Costs",
+          "periods": [20, 20, 20, 25, 25, 25, 25, 25, 35, 35, 35, 35, 40]
+        }
+      ]
+    },
+    {
+      "name": "Compliance Costs",
+      "description": "Costs for meeting regulatory and compliance standards",
+      "note": "",
+      "lineItems": []
+    },
+    {
+      "name": "Risk Management Costs",
+      "description": "Costs for identifying, assessing, and mitigating risks",
+      "note": "",
+      "lineItems": []
+    },
+    {
+      "name": "Incident Costs",
+      "description": "Costs associated with Incidents related to your cloud use",
+      "note": "",
+      "lineItems": []
+    },
+    {
+      "name": "Backup and Recovery Costs",
+      "description": "Costs associated with backup and recovery solutions",
+      "note": "",
+      "lineItems": []
+    },
+    {
+      "name": "Downtime Costs",
+      "description": "Costs and impact from outages",
+      "note": "",
+      "lineItems": []
+    }
+  ]
+}
