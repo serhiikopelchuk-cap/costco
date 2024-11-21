@@ -16,7 +16,23 @@ const DirectCosts: React.FC = () => {
             }));
             return acc;
           }, {})
-        }
+        },
+        Project2: {
+          categories: {
+            Category2: [
+              {
+                id: 1,
+                name: 'LINE ITEM-1 RELATED INFORMATION',
+                periods: Array(13).fill(40),
+              },
+              {
+                id: 2,
+                name: 'LINE ITEM-2 RELATED INFORMATION',
+                periods: Array(13).fill(50),
+              },
+            ],
+          },
+        },
       }
     }
   };

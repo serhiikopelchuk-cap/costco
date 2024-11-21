@@ -1,0 +1,4 @@
+.container:hover {
+    /* Remove the background hover effect */
+    background-color: transparent !important; /* or any other style you prefer */
+  } 

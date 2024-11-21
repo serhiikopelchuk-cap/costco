@@ -1,0 +1,32 @@
+.toggle-page {
+  display: flex;
+  font-size: 16px;
+  background-color: var(--secondary-color);
+  border: none;
+  cursor: pointer;
+  color: var(--light-color);
+  padding: 0 0;
+  margin-left: 20px;
+  border-radius: 50px;
+  width: 240px;
+  position: relative;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.toggle-option {
+  flex: 1;
+  text-align: center;
+  padding: 5px 0;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.toggle-option.active {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.toggle-option.inactive {
+  background-color: var(--inactive-color);
+  color: white;
+} 

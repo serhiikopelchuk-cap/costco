@@ -1,6 +1,9 @@
-import React, { SetStateAction, useState } from 'react';
+import React, { SetStateAction, useState, useCallback } from 'react';
 import './LineItemsTable.css';
 import { validateCellValue } from '../utils/validationUtils';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
+import ActionButtons from './ActionButtons';
 
 interface LineItem {
   id: number;
@@ -36,9 +39,10 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({ lineItems, setLineItems
 
   const [errorMessages, setErrorMessages] = useState<{ [key: number]: string }>({});
 
-  const handleAddLineItem = () => {
+  const handleAddLineItem = useCallback(() => {
+    console.log('Adding new line item');
     const newItem: LineItem = {
-      id: Date.now(),
+      id: Date.now() + Math.random(),
       name: `LINE ITEM-${Date.now()}`,
       periods: Array(numberOfPeriods).fill(0),
     };
@@ -47,38 +51,40 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({ lineItems, setLineItems
     if (onLineItemAdd) {
       onLineItemAdd(newItem);
     }
-  };
+  }, [setLineItems, onLineItemAdd]);
 
-  const handleUpdateValue = (itemId: number, field: string, value: string | number, periodIndex?: number) => {
-    const validationResult = validateCellValue(value);
+  const handleUpdateValue = (itemId: number, field: string, value: string, periodIndex?: number) => {
+    // Remove the dollar sign for validation and calculation
+    const numericValue = value.replace(/\$/g, '');
 
-    if (!validationResult.isValid) {
-      setErrorMessages(prevErrors => ({
-        ...prevErrors,
-        [itemId]: validationResult.message || ''
-      }));
-      return;
+    // Allow intermediate states like "20."
+    if (field === 'period' && periodIndex !== undefined) {
+      setLineItems(prevItems => 
+        prevItems.map(item => {
+          if (item.id === itemId) {
+            const newPeriods = [...item.periods];
+            newPeriods[periodIndex] = numericValue.endsWith('.') ? parseFloat(numericValue) : parseFloat(numericValue) || 0;
+            return { ...item, periods: newPeriods };
+          }
+          return item;
+        })
+      );
+    } else if (field === 'name') {
+      setLineItems(prevItems => 
+        prevItems.map(item => {
+          if (item.id === itemId) {
+            return { ...item, name: numericValue };
+          }
+          return item;
+        })
+      );
     }
 
+    // Clear error messages if any
     setErrorMessages(prevErrors => ({
       ...prevErrors,
       [itemId]: ''
     }));
-
-    setLineItems(prevItems => 
-      prevItems.map(item => {
-        if (item.id === itemId) {
-          if (field === 'name') {
-            return { ...item, name: value as string };
-          } else if (field === 'period' && periodIndex !== undefined) {
-            const newPeriods = [...item.periods];
-            newPeriods[periodIndex] = Number(value);
-            return { ...item, periods: newPeriods };
-          }
-        }
-        return item;
-      })
-    );
   };
 
   const handleRemoveLastLineItem = () => {
@@ -95,33 +101,16 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({ lineItems, setLineItems
   };
 
   return (
-    <>
+    <div className="line-items-table">
       <div className="table-header">
         <h3 className="category-name">{categoryName}</h3>
-        <div className="action-buttons-container">
-          <button 
-            className="remove-item-button"
-            onClick={handleRemoveLastLineItem}
-            aria-label="Remove last line item"
-          >
-            -
-          </button>
-          <button 
-            className="deselect-all-button"
-            onClick={handleDeselectAll}
-            aria-label="Deselect all line items"
-            disabled={selectedLineItems.length === 0}
-          >
-            ⮟
-          </button>
-          <button 
-            className="add-item-button"
-            onClick={handleAddLineItem}
-            aria-label="Add new line item"
-          >
-            +
-          </button>
-        </div>
+        <ActionButtons
+          handleRemoveLastLineItem={handleRemoveLastLineItem}
+          handleDeselectAll={handleDeselectAll}
+          handleAddLineItem={handleAddLineItem}
+          selectedLineItemsCount={selectedLineItems.length} cloudProviders={[]} selectedProvider={''} onProviderChange={function (provider: string): void {
+            throw new Error('Function not implemented.');
+          } }        />
       </div>
       <table className="line-items-table">
         <thead>
@@ -162,11 +151,11 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({ lineItems, setLineItems
                   {item.periods.map((value, periodIndex) => (
                     <td key={periodIndex} className="line-item-cell">
                       <input
-                        type="number"
-                        value={value}
+                        type="text"
+                        value={`${value}$`}
                         onChange={(e) => handleUpdateValue(item.id, 'period', e.target.value, periodIndex)}
                         className="period-input"
-                      />$
+                      />
                     </td>
                   ))}
                   <td className="line-item-cell">{total}$</td>
@@ -177,7 +166,7 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({ lineItems, setLineItems
           })}
         </tbody>
       </table>
-    </>
+    </div>
   );
 };
 

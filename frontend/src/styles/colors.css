@@ -10,4 +10,5 @@
     --dark-color: #343a40; /* Example dark color */
     --text-color: #333; /* Example text color */
     --background-color: #fff; /* Example background color */
-  }
+    --inactive-color: #005daa; /* New inactive color */
+}

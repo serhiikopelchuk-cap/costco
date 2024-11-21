@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './Outline.css';
 import LineItemsTable from '../components/LineItemsTable';
 import SearchInput from '../components/SearchInput';
 import AddItemInput from '../components/AddItemInput';
+import DetailsComponent from '../components/DetailsComponent';
 import directCosts from '../data/direct-cost.json';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 
 type LineItem = {
   id: number;
@@ -128,6 +131,8 @@ const Outline: React.FC<OutlineProps> = ({ data = defaultTestData }) => {
   const [showAddCategoryInput, setShowAddCategoryInput] = useState(false);
   const [showAddLineItemInput, setShowAddLineItemInput] = useState(false);
 
+  const [details, setDetails] = useState<{ type: 'program' | 'project', name: string } | null>(null);
+
   const filteredPrograms = programs.filter(program => program.toLowerCase().includes(programSearch.toLowerCase()));
   const filteredProjects = projects.filter(project => project.toLowerCase().includes(projectSearch.toLowerCase()));
   const filteredCategories = categories.filter(category => category.toLowerCase().includes(categorySearch.toLowerCase()));
@@ -230,15 +235,48 @@ const Outline: React.FC<OutlineProps> = ({ data = defaultTestData }) => {
     }
   };
 
-  // New handler to select the newly added line item
-  const handleLineItemAdd = (newLineItem: LineItem) => {
-    setSelectedLineItems(prevSelected => {
-      if (prevSelected.length > 0) {
-        return [...prevSelected, newLineItem];
-      }
-      return prevSelected;
-    });
-  };
+  const handleLineItemAdd = useCallback((newLineItem: LineItem) => {
+    if (selectedProgram && selectedProject && selectedCategory) {
+      setTableData(prevData => {
+        const currentLineItems = prevData[selectedProgram].projects[selectedProject].categories[selectedCategory];
+
+        // Check if the new line item already exists
+        const itemExists = currentLineItems.some(item => item.id === newLineItem.id);
+        if (itemExists) {
+          return prevData; // Return previous data without changes
+        }
+
+        const updatedLineItems = [
+          ...currentLineItems,
+          newLineItem
+        ];
+
+
+        return {
+          ...prevData,
+          [selectedProgram]: {
+            projects: {
+              ...prevData[selectedProgram].projects,
+              [selectedProject]: {
+                categories: {
+                  ...prevData[selectedProgram].projects[selectedProject].categories,
+                  [selectedCategory]: updatedLineItems
+                }
+              }
+            }
+          }
+        };
+      });
+
+      // Only select the new line item if some items are already selected
+      setSelectedLineItems(prevSelected => {
+        if (prevSelected.length > 0) {
+          return [...prevSelected, newLineItem];
+        }
+        return prevSelected;
+      });
+    }
+  }, [selectedProgram, selectedProject, selectedCategory]);
 
   const handleDeselectAll = () => {
     if (selectedProgram && selectedProject && selectedCategory) {
@@ -289,14 +327,8 @@ const Outline: React.FC<OutlineProps> = ({ data = defaultTestData }) => {
     }
   };
 
-  const handleAddLineItem = (lineItemName: string) => {
+  const handleAddLineItem = (newLineItem: LineItem) => {
     if (selectedProgram && selectedProject && selectedCategory) {
-      const newLineItem: LineItem = {
-        id: Date.now(), // Use a timestamp as a unique ID
-        name: lineItemName,
-        periods: Array(13).fill(0)
-      };
-
       setTableData(prevData => {
         const updatedLineItems = [
           ...prevData[selectedProgram].projects[selectedProject].categories[selectedCategory],
@@ -321,6 +353,21 @@ const Outline: React.FC<OutlineProps> = ({ data = defaultTestData }) => {
 
       // Optionally, select the new line item
       setSelectedLineItems(prevSelected => [...prevSelected, newLineItem]);
+    }
+  };
+
+  const handleDetailsClick = (type: 'program' | 'project', name: string) => {
+    setDetails({ type, name });
+    if (type === 'program') {
+      console.log('Details:', type, name);
+      setSelectedProgram(name);
+      setSelectedProject(null);
+      setSelectedCategory(null);
+      setSelectedLineItems([]);
+    } else if (type === 'project') {
+      setSelectedProject(name);
+      setSelectedCategory(null);
+      setSelectedLineItems([]);
     }
   };
 
@@ -349,10 +396,19 @@ const Outline: React.FC<OutlineProps> = ({ data = defaultTestData }) => {
         {filteredPrograms.map(program => (
           <div
             key={program}
-            className={selectedProgram === program ? 'selected' : ''}
+            className={`program-item ${selectedProgram === program ? 'selected' : ''}`}
             onClick={() => handleProgramToggle(program)}
           >
-            {program}
+            <span>{program}</span>
+            <button
+              className="icon-button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDetailsClick('program', program);
+              }}
+            >
+              <FontAwesomeIcon icon={faEllipsisV} className="edit-icon" />
+            </button>
           </div>
         ))}
       </div>
@@ -375,10 +431,19 @@ const Outline: React.FC<OutlineProps> = ({ data = defaultTestData }) => {
         {filteredProjects.map(project => (
           <div
             key={project}
-            className={selectedProject === project ? 'selected' : ''}
+            className={`project-item ${selectedProject === project ? 'selected' : ''}`}
             onClick={() => handleProjectToggle(project)}
           >
-            {project}
+            <span>{project}</span>
+            <button
+              className="icon-button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDetailsClick('project', project);
+              }}
+            >
+              <FontAwesomeIcon icon={faEllipsisV} className="edit-icon" />
+            </button>
           </div>
         ))}
       </div>
@@ -423,7 +488,18 @@ const Outline: React.FC<OutlineProps> = ({ data = defaultTestData }) => {
           value={lineItemSearch}
           onChange={setLineItemSearch}
         />
-        {showAddLineItemInput && <AddItemInput onAdd={handleAddLineItem} />}
+        {showAddLineItemInput && (
+          <AddItemInput
+            onAdd={(itemName: string) => {
+              const newLineItem: LineItem = {
+                id: Date.now() + Math.random(), // Ensure unique ID
+                name: itemName,
+                periods: Array(13).fill(0) // Default periods, adjust as needed
+              };
+              handleAddLineItem(newLineItem);
+            }}
+          />
+        )}
         {filteredLineItems.map(lineItem => (
           <div
             key={lineItem.id}
@@ -434,25 +510,38 @@ const Outline: React.FC<OutlineProps> = ({ data = defaultTestData }) => {
           </div>
         ))}
       </div>
-      {selectedCategory && (
-        <div className="column line-item-details-column">
-          {/* <h3>{selectedCategory ? selectedCategory : 'Category Details'}</h3> */}
-          <div>
-            <LineItemsTable 
-              lineItems={selectedLineItems.length > 0 ? selectedLineItems : lineItems} // Show all if none selected
-              setLineItems={(newLineItems) => {
-                handleLineItemUpdate(newLineItems);
-              }}
-              onLineItemAdd={handleLineItemAdd}
-              onDeselectAll={handleDeselectAll}
-              selectedLineItems={selectedLineItems}
-              categoryName={selectedCategory || ''}
+      <div className="column details-column">
+        {selectedCategory ? (
+          <LineItemsTable 
+            lineItems={selectedLineItems.length > 0 ? selectedLineItems : lineItems} // Show all if none selected
+            setLineItems={(newLineItems) => {
+              handleLineItemUpdate(newLineItems);
+            }}
+            onLineItemAdd={handleLineItemAdd}
+            onDeselectAll={handleDeselectAll}
+            selectedLineItems={selectedLineItems}
+            categoryName={selectedCategory || ''}
+          />
+        ) : (
+          details && (
+            <DetailsComponent 
+              type={details.type} 
+              name={details.name} 
+              categories={
+                details.type === 'program' 
+                  ? Object.fromEntries(
+                      Object.entries(tableData[details.name].projects).map(([projectName, projectData]) => [
+                        projectName,
+                        Object.values(projectData.categories).flat()
+                      ])
+                    )
+                  : tableData[selectedProgram!].projects[details.name].categories
+              } 
             />
-          </div>
-        </div>
-      )}
+          )
+        )}
+      </div>
     </div>
   );
 };
-
 export default Outline;

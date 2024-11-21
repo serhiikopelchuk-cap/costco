@@ -142,3 +142,40 @@
 .add-toggle-button:hover {
   opacity: 0.9;
 }
+
+.program-item, .project-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-right: 10px; /* Adjust padding as needed */
+    cursor: pointer;
+    position: relative;
+}
+
+.icon-button {
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    opacity: 0; /* Initially hidden */
+}
+
+.program-item:hover .icon-button,
+.project-item:hover .icon-button {
+    opacity: 1; /* Visible on hover */
+}
+
+.icon-button:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.edit-icon {
+    color: #333;
+    font-size: 16px;
+}

@@ -1,3 +1,8 @@
+.line-items-table:hover {
+  /* Remove the background hover effect */
+  background-color: transparent !important; /* or any other style you prefer */
+} 
+
 .line-items-table {
   width: 100%;
   border-collapse: collapse;
@@ -148,6 +153,10 @@
   gap: 5px;
 }
 
+.action-buttons-container:hover {
+  background-color: unset !important;
+}
+
 .remove-item-button,
 .deselect-all-button,
 .add-item-button {
@@ -186,4 +195,18 @@
 
 .header-with-button h3 {
   margin-bottom: 0;
+}
+
+.period-input-container {
+  position: relative;
+  display: inline-block;
+}
+
+.period-input-container::before {
+  content: '$';
+  position: absolute;
+  left: 5px; /* Position the dollar sign */
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none; /* Ensure the dollar sign doesn't interfere with input */
 }

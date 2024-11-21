@@ -51,4 +51,31 @@
 
 .login-form button:hover {
   background-color: var(--dark-color);
+}
+
+.oauth-icons {
+    display: flex;
+    gap: 10px;
+}
+
+.oauth-button {
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.oauth-button img {
+    width: 24px; /* Adjust the size of the icons */
+    height: 24px;
+}
+
+.oauth-button.azure {
+    background-color: #002244; /* Darker Azure color */
+    color: white; /* Ensure text/icon contrast */
+}
+
+.oauth-button.gcp {
+    background-color: #174EA6; /* Darker GCP color */
+    color: white; /* Ensure text/icon contrast */
 } 
