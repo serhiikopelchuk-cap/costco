@@ -133,9 +133,15 @@ const Outline: React.FC<OutlineProps> = ({ data = defaultTestData }) => {
 
   const [details, setDetails] = useState<{ type: 'program' | 'project', name: string } | null>(null);
 
+  const [selectedProvider, setSelectedProvider] = useState<string>('');
+
   const filteredPrograms = programs.filter(program => program.toLowerCase().includes(programSearch.toLowerCase()));
   const filteredProjects = projects.filter(project => project.toLowerCase().includes(projectSearch.toLowerCase()));
-  const filteredCategories = categories.filter(category => category.toLowerCase().includes(categorySearch.toLowerCase()));
+  const filteredCategories = categories.filter(category => {
+    if (!selectedProvider) return true; // Show all if no provider is selected
+    const categoryData = tableData[selectedProgram!]?.projects[selectedProject!]?.categories[category];
+    return categoryData?.some(item => directCosts.categories.find(cat => cat.name === category)?.cloudProvider.includes(selectedProvider));
+  });
   const filteredLineItems = lineItems.filter(lineItem => lineItem.name.toLowerCase().includes(lineItemSearch.toLowerCase()));
 
   const handleProgramToggle = (program: string) => {
@@ -169,6 +175,7 @@ const Outline: React.FC<OutlineProps> = ({ data = defaultTestData }) => {
       setSelectedProject(null);
       setSelectedCategory(null);
       setSelectedLineItems([]); // Clear selected line items
+      setDetails({ type: 'program', name: selectedProgram! }); // Show program details
     } else {
       setSelectedProject(project);
       const newCategories = Object.keys(data[selectedProgram!]?.projects[project]?.categories || {});
@@ -180,6 +187,7 @@ const Outline: React.FC<OutlineProps> = ({ data = defaultTestData }) => {
         const newLineItems = data[selectedProgram!]?.projects[project]?.categories[firstCategory] || [];
         setSelectedLineItems([]); // Clear selected line items
       }
+      setDetails(null); // Clear details when a project is selected
     }
   };
 
@@ -187,10 +195,12 @@ const Outline: React.FC<OutlineProps> = ({ data = defaultTestData }) => {
     if (selectedCategory === category) {
       setSelectedCategory(null);
       setSelectedLineItems([]); // Clear selected line items
+      setDetails({ type: 'project', name: selectedProject! }); // Show project details
     } else {
       setSelectedCategory(category);
       const newLineItems = data[selectedProgram!]?.projects[selectedProject!]?.categories[category] || [];
       setSelectedLineItems([]); // Clear selected line items
+      setDetails(null); // Clear details when a category is selected
     }
   };
 
@@ -371,6 +381,28 @@ const Outline: React.FC<OutlineProps> = ({ data = defaultTestData }) => {
     }
   };
 
+  const handleProviderChange = (provider: string) => {
+    setSelectedProvider(provider);
+
+    // Find the first category and line item for the selected provider
+    const firstAvailableCategory = categories.find(category => {
+      const categoryData = tableData[selectedProgram!]?.projects[selectedProject!]?.categories[category];
+      return categoryData?.some(item => {
+        const categoryInfo = directCosts.categories.find(cat => cat.name === category);
+        return !provider || categoryInfo?.cloudProvider.includes(provider);
+      });
+    });
+
+    if (firstAvailableCategory) {
+      setSelectedCategory(firstAvailableCategory);
+      const firstLineItem = tableData[selectedProgram!]?.projects[selectedProject!]?.categories[firstAvailableCategory][0];
+      setSelectedLineItems(firstLineItem ? [firstLineItem] : []);
+    } else {
+      setSelectedCategory(null);
+      setSelectedLineItems([]);
+    }
+  };
+
   useEffect(() => {
     console.log('Table data updated:', tableData);
   }, [tableData]);
@@ -521,6 +553,9 @@ const Outline: React.FC<OutlineProps> = ({ data = defaultTestData }) => {
             onDeselectAll={handleDeselectAll}
             selectedLineItems={selectedLineItems}
             categoryName={selectedCategory || ''}
+            cloudProviders={['azure', 'gcp']} // Add available cloud providers
+            selectedProvider={selectedProvider}
+            onProviderChange={handleProviderChange}
           />
         ) : (
           details && (

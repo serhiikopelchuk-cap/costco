@@ -231,7 +231,7 @@
         ]
       },
       {
-        "name": "Test Category 1",
+        "name": "Test GCP Category 1",
         "description": "This is a test category for GCP services",
         "note": "Test note for GCP services",
         "cloudProvider": ["gcp"],
@@ -247,7 +247,7 @@
         ]
       },
       {
-        "name": "Test Category 2",
+        "name": "Test GCP Category 2",
         "description": "Another test category for GCP services",
         "note": "Additional test note for GCP services",
         "cloudProvider": ["gcp"],

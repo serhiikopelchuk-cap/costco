@@ -18,9 +18,22 @@ interface LineItemsTableProps {
   onDeselectAll: () => void;
   selectedLineItems: LineItem[];
   categoryName: string;
+  cloudProviders: string[];
+  selectedProvider: string;
+  onProviderChange: (provider: string) => void;
 }
 
-const LineItemsTable: React.FC<LineItemsTableProps> = ({ lineItems, setLineItems, onLineItemAdd, onDeselectAll, selectedLineItems, categoryName }) => {
+const LineItemsTable: React.FC<LineItemsTableProps> = ({
+  lineItems,
+  setLineItems,
+  onLineItemAdd,
+  onDeselectAll,
+  selectedLineItems,
+  categoryName,
+  cloudProviders,
+  selectedProvider,
+  onProviderChange
+}) => {
   const columns = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9', 'P10', 'P11', 'P12', 'P13', 'Total', 'Average'];
   const numberOfPeriods = 13;
 
@@ -108,9 +121,11 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({ lineItems, setLineItems
           handleRemoveLastLineItem={handleRemoveLastLineItem}
           handleDeselectAll={handleDeselectAll}
           handleAddLineItem={handleAddLineItem}
-          selectedLineItemsCount={selectedLineItems.length} cloudProviders={[]} selectedProvider={''} onProviderChange={function (provider: string): void {
-            throw new Error('Function not implemented.');
-          } }        />
+          selectedLineItemsCount={selectedLineItems.length}
+          cloudProviders={cloudProviders}
+          selectedProvider={selectedProvider}
+          onProviderChange={onProviderChange}
+        />
       </div>
       <table className="line-items-table">
         <thead>
