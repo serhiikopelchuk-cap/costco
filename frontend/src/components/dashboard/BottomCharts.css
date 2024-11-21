@@ -1,0 +1,9 @@
+.bottom-charts {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Adjust the gap as needed */
+  }
+  
+  .chart {
+    padding: 20px;
+  }

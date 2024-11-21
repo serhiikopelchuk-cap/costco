@@ -1,0 +1,5 @@
+.chart canvas {
+    background-color: var(--light-color);
+    border-radius: 8px;
+    border: 1px solid var(--primary-light-color);
+}

@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './ToggleButton.css';
 
-
 const ToggleButton: React.FC = () => {
-  const [isDirect, setIsDirect] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
+  const [isDirect, setIsDirect] = useState(true);
+
+  useEffect(() => {
+    setIsDirect(location.pathname === '/direct-costs');
+  }, [location.pathname]);
 
   const handleClick = () => {
     setIsDirect(!isDirect);
