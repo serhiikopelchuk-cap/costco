@@ -37,9 +37,10 @@ export class CategoryController {
         value: {
           name: 'Compute Costs',
           description: 'Costs associated with virtual machines',
+          project: { id: 1 },
           items: [
-            { name: 'Azure Container Instances', costs: [20, 20, 20] },
-            { name: 'Azure Kubernetes Service (AKS)', costs: [0, 0, 0] },
+            { name: 'Azure Container Instances', costs: Array(13).fill(20) },
+            { name: 'Azure Kubernetes Service (AKS)', costs: Array(13).fill(0) },
           ],
         },
       },
@@ -61,6 +62,11 @@ export class CategoryController {
         value: {
           name: 'Updated Compute Costs',
           description: 'Updated description for compute costs',
+          project: { id: 1 },
+          items: [
+            { name: 'Updated Azure Container Instances', costs: Array(13).fill(15) },
+            { name: 'Updated Azure Kubernetes Service (AKS)', costs: Array(13).fill(5) },
+          ],
         },
       },
     },
@@ -75,5 +81,13 @@ export class CategoryController {
   @ApiResponse({ status: 200, description: 'The category has been successfully deleted.' })
   async remove(@Param('id') id: number): Promise<void> {
     return this.categoryService.remove(id);
+  }
+
+  @Post(':id/clone')
+  @ApiOperation({ summary: 'Clone a category by ID' })
+  @ApiResponse({ status: 201, description: 'The category has been successfully cloned.' })
+  @ApiResponse({ status: 404, description: 'Category not found.' })
+  async clone(@Param('id') id: number): Promise<Category> {
+    return this.categoryService.clone(id);
   }
 } 

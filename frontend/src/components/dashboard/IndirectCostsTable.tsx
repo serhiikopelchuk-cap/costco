@@ -22,7 +22,7 @@ const IndirectCostsTable: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {indirectCostData.categories.map((category) => {
+          {/* {indirectCostData.categories.map((category) => {
             const periods = category.lineItems.length
               ? category.lineItems.reduce((acc, item) => {
                   return acc.map((sum, i) => sum + (isNaN(item.periods[i]) ? 0 : item.periods[i]));
@@ -39,7 +39,7 @@ const IndirectCostsTable: React.FC = () => {
                 <td>{calculateAverage(periods)}</td>
               </tr>
             );
-          })}
+          })} */}
         </tbody>
       </table>
     </div>

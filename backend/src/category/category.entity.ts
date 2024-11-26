@@ -1,6 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, ManyToMany, JoinTable } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Item } from '../item/item.entity';
+import { Project } from '../project/project.entity';
+import { Period } from '../period/period.entity';
 
 @Entity()
 export class Category {
@@ -17,9 +19,22 @@ export class Category {
   description: string;
 
   @Column({ nullable: true })
-  @ApiProperty({ example: 'Note1', description: 'The node associated with the category' })
+  @ApiProperty({ example: 'Note1', description: 'The note associated with the category' })
   note: string;
 
-  @OneToMany(() => Item, item => item.category)
+  @Column('simple-array', { nullable: true })
+  @ApiProperty({ example: ['AWS', 'Azure'], description: 'The cloud providers associated with the category' })
+  cloudProvider: string[];
+
+  @OneToMany(() => Item, item => item.category, { cascade: true })
+  @ApiProperty({ type: () => [Item], description: 'The items associated with the category' })
   items: Item[];
+
+  @ManyToOne(() => Project, project => project.categories)
+  project: Project;
+
+  // @ManyToMany(() => Period, period => period.categories)
+  // @JoinTable()
+  // @ApiProperty({ type: () => [Period], description: 'The periods associated with the category' })
+  // periods: Period[];
 } 

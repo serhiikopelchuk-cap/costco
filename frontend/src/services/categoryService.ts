@@ -52,4 +52,13 @@ export const updateCategory = async (id: number, category: Partial<Category>): P
 // Delete a category
 export const deleteCategory = async (id: number): Promise<void> => {
   await axios.delete(`${API_BASE_URL}/${id}`);
+};
+
+// Add this function to categoryService.ts
+export const cloneCategory = async (id: number, projectId?: number): Promise<Category> => {
+  const response = await axios.post<Category>(
+    `${API_BASE_URL}/${id}/clone`,
+    projectId ? { projectId } : {}
+  );
+  return response.data;
 }; 

@@ -32,4 +32,20 @@ export const updateItem = async (id: number, item: Partial<Item>): Promise<Item>
 // Delete an item
 export const deleteItem = async (id: number): Promise<void> => {
   await axios.delete(`${API_BASE_URL}/${id}`);
+};
+
+// Add this interface
+export interface ClonedItemResponse {
+  item: Item;
+  categoryId: number;
+  costIds: number[];
+}
+
+// Add this new function
+export const cloneItem = async (id: number, categoryId?: number): Promise<ClonedItemResponse> => {
+  const response = await axios.post<ClonedItemResponse>(
+    `${API_BASE_URL}/${id}/clone`,
+    categoryId ? { categoryId } : {}
+  );
+  return response.data;
 }; 

@@ -2,3 +2,75 @@
     /* Remove the background hover effect */
     background-color: transparent !important; /* or any other style you prefer */
   } 
+
+.header-with-clone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.clone-status-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.clone-button.details-clone {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease-in-out;
+}
+
+.clone-button.details-clone:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.clone-button.details-clone.success {
+  background-color: var(--success-color);
+}
+
+.clone-success-message {
+  position: absolute;
+  left: 100%;
+  margin-left: 10px;
+  white-space: nowrap;
+  color: var(--success-color);
+  font-size: 0.9em;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.fa-spin {
+  animation: fa-spin 1s infinite linear;
+}
+
+@keyframes fa-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+} 

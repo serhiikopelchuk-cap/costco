@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
-import { ItemService } from './item.service';
+import { ClonedItemResponse, ItemService } from './item.service';
 import { Item } from './item.entity';
 
 @ApiTags('items')
@@ -33,10 +33,7 @@ export class ItemController {
         summary: 'Example item',
         value: {
           name: 'Example Item',
-          costs: [
-            { value: 100 },
-            { value: 200 },
-          ],
+          costs: Array(13).fill({ value: 100 })
         },
       },
     },
@@ -55,10 +52,7 @@ export class ItemController {
         summary: 'Example item update',
         value: {
           name: 'Updated Item Name',
-          costs: [
-            { value: 150 },
-            { value: 250 },
-          ],
+          costs: Array(13).fill({ value: 150 })
         },
       },
     },
@@ -72,5 +66,13 @@ export class ItemController {
   @ApiResponse({ status: 200, description: 'The item has been successfully deleted.' })
   async remove(@Param('id') id: number): Promise<void> {
     return this.itemService.remove(id);
+  }
+
+  @Post(':id/clone')
+  @ApiOperation({ summary: 'Clone an item by ID' })
+  @ApiResponse({ status: 201, description: 'The item has been successfully cloned.' })
+  @ApiResponse({ status: 404, description: 'Item not found.' })
+  async clone(@Param('id') id: number): Promise<ClonedItemResponse> {
+    return this.itemService.clone(id);
   }
 } 

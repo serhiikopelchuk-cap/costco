@@ -1,6 +1,7 @@
 :root {
     --primary-color: #007bff; /* Example primary color */
     --primary-light-color: #cce5ff; /* Light version of primary color */
+    --primary-lighter-color: #d0e6ff; /* New lighter version of primary color */
     --secondary-color: #6c757d; /* Example secondary color */
     --success-color: #28a745; /* Example success color */
     --danger-color: #dc3545; /* Example danger color */

@@ -35,7 +35,7 @@ function App() {
             <Route path="/monthly-reports" element={<MonthlyReports />} />
             <Route path="/enter-team-spend" element={<EnterTeamSpend />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/outline" element={<Outline />} />
+            {/* <Route path="/outline" element={<Outline />} /> */}
           </Routes>
         </main>
         <Footer />

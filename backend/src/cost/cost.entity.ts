@@ -6,9 +6,9 @@ export class Cost {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: 'decimal', default: 0 })
   value: number;
 
-  @ManyToOne(() => Item, item => item.costs, { nullable: true })
+  @ManyToOne(() => Item, item => item.costs, { onDelete: 'CASCADE' })
   item: Item;
 } 

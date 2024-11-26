@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Category } from './category.entity';
 import { Item } from '../item/item.entity';
 import { Cost } from '../cost/cost.entity';
+import { ItemService } from '../item/item.service';
 
 @Injectable()
 export class CategoryService {
@@ -14,6 +15,7 @@ export class CategoryService {
     private itemRepository: Repository<Item>,
     @InjectRepository(Cost)
     private costRepository: Repository<Cost>,
+    private itemService: ItemService
   ) {}
 
   async findAll(): Promise<Category[]> {
@@ -23,7 +25,6 @@ export class CategoryService {
   async findOne(id: number): Promise<Category> {
     return await this.categoryRepository.findOne({ where: { id }, relations: ['items', 'items.costs'] });
   }
-
 
   async create(categoryData: Partial<Category>): Promise<Category> {
     // Create and save the category first
@@ -106,5 +107,47 @@ export class CategoryService {
 
   async remove(id: number): Promise<void> {
     await this.categoryRepository.delete(id);
+  }
+
+  async clone(id: number, projectId?: number): Promise<Category> {
+    // Include project in relations when fetching the category
+    const category = await this.categoryRepository.findOne({
+      where: { id },
+      relations: ['items', 'items.costs', 'project']
+    });
+    
+    if (!category) {
+      throw new NotFoundException(`Category with ID ${id} not found`);
+    }
+
+    // console.log('Category:', category);
+    // Create a new category with the specified project or original project
+    const clonedCategory = this.categoryRepository.create({
+      name: `${category.name} (Copy)`,
+      description: category.description,
+      note: category.note,
+      project: projectId ? { id: projectId } : category.project,
+      items: []
+    });
+
+    // Save the cloned category first to get its ID
+    const savedCategory = await this.categoryRepository.save(clonedCategory);
+
+    // Clone each item using the ItemService's clone method
+    const clonedItems = await Promise.all(
+      category.items.map(async (item) => {
+        const clonedItemResponse = await this.itemService.clone(item.id, savedCategory.id);
+        return clonedItemResponse.item;
+      })
+    );
+
+    // Assign the cloned items to the cloned category
+    savedCategory.items = clonedItems;
+
+    // Return the complete cloned category with items and costs
+    return await this.categoryRepository.findOne({
+      where: { id: savedCategory.id },
+      relations: ['items', 'items.costs', 'project']
+    });
   }
 } 

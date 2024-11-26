@@ -1,43 +1,60 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Outline from './Outline';
-import directCosts from '../data/direct-cost.json';
+import { fetchPrograms, Program } from '../services/programService';
+
+// Define the Cost type
+type Cost = {
+  id: number;
+  value: number;
+};
+
+// Define the Item type
+type Item = {
+  id: number;
+  name: string;
+  costs: Cost[];
+};
+
+// Define the Category type
+type Category = {
+  id: number;
+  name: string;
+  description?: string;
+  note?: string;
+  cloudProvider?: string[];
+  items: Item[];
+};
+
+// Define the Project type
+type Project = {
+  id: number;
+  name: string;
+  description?: string;
+  categories: Category[];
+};
+
+// Define the Data type as a record of programs
+type Data = Record<string, Program>;
+
 
 const DirectCosts: React.FC = () => {
-  // Prepare the data structure
-  const data = {
-    Program1: {
-      projects: {
-        Project1: {
-          categories: directCosts.categories.reduce((acc: Record<string, any>, category) => {
-            acc[category.name] = category.lineItems.map(item => ({
-              id: Date.now() + Math.random(), // Ensure unique IDs
-              name: item.name,
-              periods: item.periods
-            }));
-            return acc;
-          }, {})
-        },
-        Project2: {
-          categories: {
-            Category2: [
-              {
-                id: 1,
-                name: 'LINE ITEM-1 RELATED INFORMATION',
-                periods: Array(13).fill(40),
-              },
-              {
-                id: 2,
-                name: 'LINE ITEM-2 RELATED INFORMATION',
-                periods: Array(13).fill(50),
-              },
-            ],
-          },
-        },
-      }
-    }
-  };
+  const [data, setData] = useState<Program[] | null>(null);
 
-  return <Outline data={data} />;
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const programsArray = await fetchPrograms();
+        // console.log(`Programs:`, programsArray);
+        setData(programsArray); // Set the data as an array
+      } catch (error) {
+        console.error('Error fetching programs:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  return data ? <Outline data={data} /> : <div>Loading...</div>;
 };
 
 export default DirectCosts; 

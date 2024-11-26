@@ -30,7 +30,9 @@
   font-weight: bold;
   background-color: #fff;
   width: 100%;
-  min-width: 200px;
+  min-width: 300px;
+  display: flex;
+  align-items: center;
 }
 
 .line-item-row {
@@ -175,6 +177,9 @@
   margin: 0;
   font-size: 1.5em;
   font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .summary-row .summary-cell {
@@ -209,4 +214,37 @@
   top: 50%;
   transform: translateY(-50%);
   pointer-events: none; /* Ensure the dollar sign doesn't interfere with input */
+}
+
+.clone-button {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  margin-left: 10px;
+  transition: opacity 0.2s;
+}
+
+.line-item-row:hover .clone-button {
+  display: flex;
+}
+
+.clone-button:hover {
+  opacity: 0.9;
+}
+
+.clone-button.category-clone {
+  display: none;  /* Hidden by default */
+  width: 25px;   /* Slightly smaller than item clone button */
+  height: 25px;
+}
+
+.category-name:hover .clone-button.category-clone {
+  display: flex;  /* Show on hover */
 }
