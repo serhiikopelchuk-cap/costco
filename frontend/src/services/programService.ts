@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
 // Define the base URL for your API
-const API_BASE_URL = 'http://localhost:3000/programs'; // Adjust the URL as needed
+const PROGRAMS_URL = `${API_BASE_URL}/programs`;
 
 // Define the types for Program, Project, Category, Item, and Cost
 export interface Cost {
@@ -35,18 +36,18 @@ export interface Program {
 
 // Fetch all programs
 export const fetchPrograms = async (): Promise<Program[]> => {
-  const response = await axios.get<Program[]>(API_BASE_URL);
+  const response = await axios.get<Program[]>(PROGRAMS_URL);
   return response.data;
 };
 
 // Fetch a single program by ID
 export const fetchProgramById = async (id: number): Promise<Program> => {
-  const response = await axios.get<Program>(`${API_BASE_URL}/${id}`);
+  const response = await axios.get<Program>(`${PROGRAMS_URL}/${id}`);
   return response.data;
 };
 
 // Add clone function
 export const cloneProgram = async (id: number): Promise<Program> => {
-  const response = await axios.post<Program>(`${API_BASE_URL}/${id}/clone`);
+  const response = await axios.post<Program>(`${PROGRAMS_URL}/${id}/clone`);
   return response.data;
 };

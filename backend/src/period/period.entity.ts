@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToMany } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { Category } from '../category/category.entity';
+// import { Category } from '../category/category.entity';
 
 @Entity()
 export class Period {

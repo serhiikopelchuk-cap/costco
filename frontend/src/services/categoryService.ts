@@ -1,8 +1,8 @@
 import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
 // Define the base URL for your API
-// const API_BASE_URL = process.env.API_URL + '/categories' || 'http://localhost:3000/categories';
-const API_BASE_URL = 'http://localhost:3000/categories'; // Adjust the URL as needed
+const CATEGORIES_URL = `${API_BASE_URL}/categories`;
 
 // Define the types for Category, Item, and Cost
 export interface Cost {
@@ -27,37 +27,37 @@ export interface Category {
 
 // Fetch all categories
 export const fetchCategories = async (): Promise<Category[]> => {
-  const response = await axios.get<Category[]>(API_BASE_URL);
+  const response = await axios.get<Category[]>(CATEGORIES_URL);
   return response.data;
 };
 
 // Fetch a single category by ID
 export const fetchCategoryById = async (id: number): Promise<Category> => {
-  const response = await axios.get<Category>(`${API_BASE_URL}/${id}`);
+  const response = await axios.get<Category>(`${CATEGORIES_URL}/${id}`);
   return response.data;
 };
 
 // Create a new category
 export const createCategory = async (category: Partial<Category>): Promise<Category> => {
-  const response = await axios.post<Category>(API_BASE_URL, category);
+  const response = await axios.post<Category>(CATEGORIES_URL, category);
   return response.data;
 };
 
 // Update an existing category
 export const updateCategory = async (id: number, category: Partial<Category>): Promise<Category> => {
-  const response = await axios.put<Category>(`${API_BASE_URL}/${id}`, category);
+  const response = await axios.put<Category>(`${CATEGORIES_URL}/${id}`, category);
   return response.data;
 };
 
 // Delete a category
 export const deleteCategory = async (id: number): Promise<void> => {
-  await axios.delete(`${API_BASE_URL}/${id}`);
+  await axios.delete(`${CATEGORIES_URL}/${id}`);
 };
 
 // Add this function to categoryService.ts
 export const cloneCategory = async (id: number, projectId?: number): Promise<Category> => {
   const response = await axios.post<Category>(
-    `${API_BASE_URL}/${id}/clone`,
+    `${CATEGORIES_URL}/${id}/clone`,
     projectId ? { projectId } : {}
   );
   return response.data;

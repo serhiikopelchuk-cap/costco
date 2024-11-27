@@ -6,6 +6,7 @@ import { CategoryModule } from './category/category.module';
 import { ItemModule } from './item/item.module';
 import { ProjectModule } from './project/project.module';
 import { ProgramModule } from './program/program.module';
+import { PeriodModule } from './period/period.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { ProgramModule } from './program/program.module';
     ItemModule,
     ProjectModule,
     ProgramModule,
+    PeriodModule,
   ],
 })
 export class AppModule {}

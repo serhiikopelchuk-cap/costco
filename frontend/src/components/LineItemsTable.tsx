@@ -1,4 +1,4 @@
-import React, { SetStateAction, useState, useCallback } from 'react';
+import React, { SetStateAction, useState, useCallback, useEffect } from 'react';
 import './LineItemsTable.css';
 import { validateCellValue } from '../utils/validationUtils';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -7,6 +7,7 @@ import ActionButtons from './ActionButtons';
 import { Program } from '../services/programService';
 import { cloneItem } from '../services/itemService';
 import { cloneCategory } from '../services/categoryService';
+import { periodService } from '../services/periodService';
 
 interface LineItem {
   id?: number | undefined;
@@ -71,6 +72,20 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
   const averageOfAverages = lineItems.length > 0 ? totalOfTotals / (lineItems.length * numberOfCosts) : 0;
 
   const [errorMessages, setErrorMessages] = useState<{ [key: number]: string }>({});
+  const [frozenPeriods, setFrozenPeriods] = useState<{ [key: number]: boolean }>({});
+
+  useEffect(() => {
+    const loadFrozenPeriods = async () => {
+      const periods = await periodService.getAllPeriods();
+      const frozenStatus = periods.reduce((acc, period) => ({
+        ...acc,
+        [period.number]: period.isFrozen
+      }), {});
+      setFrozenPeriods(frozenStatus);
+    };
+
+    loadFrozenPeriods();
+  }, []);
 
   const handleAddLineItem = useCallback(() => {
     const newItem: LineItem = {
@@ -243,6 +258,7 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
                         value={`${cost.value}$`}
                         onChange={(e) => handleUpdateValue(item.id!, 'cost', e.target.value, costIndex)}
                         className="cost-input"
+                        disabled={frozenPeriods[costIndex + 1]}
                       />
                     </td>
                   ))}
