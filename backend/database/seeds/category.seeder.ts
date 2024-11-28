@@ -7,6 +7,7 @@ import { Item } from 'src/item/item.entity';
 import { Cost } from 'src/cost/cost.entity';
 import { Program } from 'src/program/program.entity';
 import { Project } from 'src/project/project.entity';
+import { CostType } from 'src/cost-type/cost-type.entity';
 
 export class CategorySeeder implements Seeder {
   async run(
@@ -18,25 +19,53 @@ export class CategorySeeder implements Seeder {
     const costRepository = dataSource.getRepository(Cost);
     const programRepository = dataSource.getRepository(Program);
     const projectRepository = dataSource.getRepository(Project);
+    const costTypeRepository = dataSource.getRepository(CostType);
 
-    // Create and save a Program
+    // Create CostTypes
+    const directCostType = await this.createCostType(costTypeRepository, 'direct_costs');
+    const indirectCostType = await this.createCostType(costTypeRepository, 'indirect_costs');
+
+    // Create Programs and Projects for each CostType
+    const directProgram = await this.createProgramAndProject(programRepository, projectRepository, directCostType, 'Direct');
+    const indirectProgram = await this.createProgramAndProject(programRepository, projectRepository, indirectCostType, 'Indirect');
+
+    // Seed categories for direct costs
+    const directData = this.readDirectCostJson();
+    await this.seedCategories(categoryRepository, itemRepository, costRepository, directData, directProgram.project);
+
+    // Seed categories for indirect costs
+    const indirectData = this.readIndirectCostJson();
+    await this.seedCategories(categoryRepository, itemRepository, costRepository, indirectData, indirectProgram.project);
+  }
+
+  private async createCostType(costTypeRepository, alias) {
+    let costType = await costTypeRepository.findOne({ where: { alias } });
+    if (!costType) {
+      costType = costTypeRepository.create({ alias });
+      costType = await costTypeRepository.save(costType);
+    }
+    return costType;
+  }
+
+  private async createProgramAndProject(programRepository, projectRepository, costType, type) {
     const program = programRepository.create({
-      name: 'Default Program',
-      description: 'This is a default program for seeding purposes',
+      name: `${type} Program`,
+      description: `This is a ${type.toLowerCase()} program for seeding purposes`,
+      costType
     });
     const savedProgram = await programRepository.save(program);
-    console.log(`Saved Program:`, savedProgram);
 
-    // Create and save a Project associated with the Program
     const project = projectRepository.create({
-      name: 'Default Project',
-      description: 'This is a default project for seeding purposes',
-      program: savedProgram, // Associate with the saved Program
+      name: `${type} Project`,
+      description: `This is a ${type.toLowerCase()} project for seeding purposes`,
+      program: savedProgram,
     });
     const savedProject = await projectRepository.save(project);
-    console.log(`Saved Project:`, savedProject);
-    const data = this.readDirectCostJson();
 
+    return { program: savedProgram, project: savedProject };
+  }
+
+  private async seedCategories(categoryRepository, itemRepository, costRepository, data, project) {
     for (const categoryData of data.categories) {
       console.log(`Adding category:`, categoryData.name);
       const category = categoryRepository.create({
@@ -44,37 +73,48 @@ export class CategorySeeder implements Seeder {
         description: categoryData.description,
         note: categoryData.note,
         cloudProvider: categoryData.cloudProvider,
-        project: savedProject, // Associate with the saved Project
+        project, // Associate with the project
       });
 
-      // Save the category first to get its ID
       const savedCategory = await categoryRepository.save(category);
 
-      const items = await Promise.all(categoryData.lineItems.map(async itemData => {
-        const item = itemRepository.create({
-          name: itemData.name,
-          category: savedCategory, // Assign the saved category
-        });
-
-        // Save the item first to get its ID
-        const savedItem = await itemRepository.save(item);
-
-        const costs = await Promise.all(itemData.periods.map(async period => {
-          const cost = costRepository.create({
-            value: period,
-            item: savedItem, // Assign the saved item
+      if (categoryData.lineItems && categoryData.lineItems.length > 0) {
+        const items = await Promise.all(categoryData.lineItems.map(async itemData => {
+          const item = itemRepository.create({
+            name: itemData.name,
+            category: savedCategory,
           });
-          return costRepository.save(cost);
+          const savedItem = await itemRepository.save(item);
+
+          console.log(`Adding item:`, savedItem);
+          const costs = await Promise.all(itemData.costs.map(async period => {
+            console.log(`Create cost:`, period);
+            const cost = costRepository.create({
+              value: period,
+              item: savedItem,
+            });
+            console.log(`Adding cost:`, cost);
+            return costRepository.save(cost);
+          }));
+
+          savedItem.costs = costs;
+          return savedItem;
         }));
 
-        savedItem.costs = costs; // Assign the costs to the item
-        return savedItem;
-      }));
+        savedCategory.items = items;
+      } else {
+        savedCategory.items = [];
+      }
 
-      savedCategory.items = items; // Assign the items to the category
-      await categoryRepository.save(savedCategory); // Save the category with its items
+      await categoryRepository.save(savedCategory);
       console.log(`Saved Category: Done`);
     }
+  }
+
+  private readIndirectCostJson() {
+    const filePath = path.join(__dirname, '../../../frontend/src/data/indirect-costs.json');
+    const jsonData = fs.readFileSync(filePath, 'utf8');
+    return JSON.parse(jsonData);
   }
 
   private readDirectCostJson() {

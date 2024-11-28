@@ -1,15 +1,16 @@
 import React, { useEffect } from 'react';
 import Outline from '../components/outline/Outline';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
-import { fetchProgramsAsync } from '../store/slices/programsSlice';
+import { fetchCostTypeByAliasAsync } from '../store/slices/costTypesSlice';
 
 const IndirectCost: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { items: data, status, error } = useAppSelector(state => state.programs);
+  const { item: costType, status, error } = useAppSelector(state => state.costTypes);
 
   useEffect(() => {
+    // Fetch CostType by alias
     if (status === 'idle') {
-      dispatch(fetchProgramsAsync());
+      dispatch(fetchCostTypeByAliasAsync('indirect_costs'));
     }
   }, [status, dispatch]);
 
@@ -21,7 +22,11 @@ const IndirectCost: React.FC = () => {
     return <div>Error: {error}</div>;
   }
 
-  return <Outline data={data} />;
+  if (!costType || !costType.programs || costType.programs.length === 0) {
+    return <div>No data available</div>;
+  }
+
+  return <Outline data={costType.programs} />;
 };
 
 export default IndirectCost; 

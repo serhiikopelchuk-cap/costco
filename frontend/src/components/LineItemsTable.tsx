@@ -9,7 +9,7 @@ import { cloneCategory } from '../services/categoryService';
 import { periodService } from '../services/periodService';
 import { Program, Item, Cost } from '../types/program';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
-import { updateLineItem, updateItemCostsAsync, createLineItemAsync, deleteLineItemAsync, updateItemNameAsync, updateCategory } from '../store/slices/programsSlice';
+import { updateLineItemInCostType, updateItemCostsAsync, createLineItemAsync, deleteLineItemAsync, updateItemNameAsync, updateCategory } from '../store/slices/costTypesSlice';
 
 interface LineItemsTableProps {
   lineItems: Item[];
@@ -142,7 +142,7 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
         );
 
         // Update Redux state
-        dispatch(updateLineItem({
+        dispatch(updateLineItemInCostType({
           programId: selectedProgramId,
           projectId: selectedProjectId,
           categoryId: selectedCategoryId,
@@ -164,40 +164,44 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
     const currentItem = lineItems.find(item => item.id === itemId);
     if (!currentItem) return;
 
-    // First update local state for immediate UI feedback
     if (field === 'cost' && costIndex !== undefined) {
-      const numericValue = parseFloat(value.replace(/\$/g, '')) || 0;
-      const newCosts = [...currentItem.costs];
-      newCosts[costIndex] = {
-        ...newCosts[costIndex],
-        value: numericValue
-      };
-
-        const updatedItem = {
-          ...currentItem,
-          costs: newCosts
+        const numericValue = parseFloat(value.replace(/\$/g, '')) || 0;
+        const newCosts = [...currentItem.costs];
+        newCosts[costIndex] = {
+            ...newCosts[costIndex],
+            value: numericValue
         };
 
-      // Update local state immediately
-      setLineItems(prevItems => 
-        prevItems.map(item => item.id === itemId ? updatedItem : item)
-      );
+        const updatedItem = {
+            ...currentItem,
+            costs: newCosts
+        };
 
-      // Then update backend if we have all required IDs
-      if (selectedProgramId && selectedProjectId && selectedCategoryId) {
-        try {
-          await dispatch(updateItemCostsAsync({
-            itemId,
-            updatedItem,
-            programId: selectedProgramId,
-            projectId: selectedProjectId,
-            categoryId: selectedCategoryId
-          })).unwrap();
-        } catch (error) {
-          console.error('Failed to update item costs:', error);
-          // Optionally revert the local state on error
+        setLineItems(prevItems => 
+            prevItems.map(item => item.id === itemId ? updatedItem : item)
+        );
+
+        if (selectedProgramId && selectedProjectId && selectedCategoryId) {
+            try {
+                await dispatch(updateItemCostsAsync({
+                    itemId,
+                    updatedItem,
+                    programId: selectedProgramId,
+                    projectId: selectedProjectId,
+                    categoryId: selectedCategoryId
+                })).unwrap();
+
+                // Update Redux state in costTypesSlice
+                dispatch(updateLineItemInCostType({
+                    programId: selectedProgramId,
+                    projectId: selectedProjectId,
+                    categoryId: selectedCategoryId,
+                    lineItem: updatedItem
+                }));
+            } catch (error) {
+                console.error('Failed to update item costs:', error);
+            }
         }
-      }
     }
   };
 
@@ -245,7 +249,7 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
       // Ensure IDs are not null before dispatching
       if (selectedProgramId !== null && selectedProjectId !== null && selectedCategoryId !== null) {
         // Dispatch an action to update Redux
-        dispatch(updateLineItem({
+        dispatch(updateLineItemInCostType({
           programId: selectedProgramId,
           projectId: selectedProjectId,
           categoryId: selectedCategoryId,

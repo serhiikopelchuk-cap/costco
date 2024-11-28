@@ -1,23 +1,33 @@
 import React, { useEffect } from 'react';
 import Outline from '../components/outline/Outline';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
-import { fetchProgramsAsync } from '../store/slices/programsSlice';
+import { fetchCostTypeByAliasAsync } from '../store/slices/costTypesSlice';
 
 const DirectCosts: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { items: data, status, error } = useAppSelector(state => state.programs);
+  const { item: costType, status, error } = useAppSelector(state => state.costTypes);
 
   useEffect(() => {
-    // Fetch initial data
-    if (status === 'idle' || (!data || data.length === 0)) {
-      dispatch(fetchProgramsAsync());
+    // Fetch CostType by alias
+    if (status === 'idle') {
+      dispatch(fetchCostTypeByAliasAsync('direct_costs'));
     }
-  }, [status, dispatch, data]);
+  }, [status, dispatch]);
 
   // Log state changes for debugging
   useEffect(() => {
-    console.log('Programs state updated:', { data, status });
-  }, [data, status]);
+    console.log('CostType state updated:', { costType, status });
+    if (costType) {
+      console.log('Fetched CostType:', costType);
+      costType.programs.forEach(program => {
+        console.log('Program:', program);
+        program.projects.forEach(project => {
+          console.log('Project:', project);
+          console.log('Categories:', project.categories);
+        });
+      });
+    }
+  }, [costType, status]);
 
   if (status === 'loading') {
     return <div>Loading...</div>;
@@ -27,11 +37,11 @@ const DirectCosts: React.FC = () => {
     return <div>Error: {error}</div>;
   }
 
-  if (!data || data.length === 0) {
+  if (!costType || !costType.programs || costType.programs.length === 0) {
     return <div>No data available</div>;
   }
 
-  return <Outline data={data} />;
+  return <Outline data={costType.programs} />;
 };
 
 export default DirectCosts;

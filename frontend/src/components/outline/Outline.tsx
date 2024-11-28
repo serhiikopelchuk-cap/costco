@@ -229,6 +229,7 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
         showAddCategoryInput={showAddCategoryInput}
         setShowAddCategoryInput={(value) => dispatch(setAddInputVisibility({ type: 'category', value }))}
         onAddCategory={handleAddCategory}
+        categories={selectedProjectCategories}
       />
       <LineItemList
         lineItems={lineItems}

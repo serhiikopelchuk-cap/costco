@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAppDispatch } from '../hooks/reduxHooks';
-import { deleteLineItemAsync } from '../store/slices/programsSlice';
+import { deleteLineItemAsync } from '../store/slices/costTypesSlice';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faFilter } from '@fortawesome/free-solid-svg-icons';
 import './ActionButtons.css';

@@ -3,6 +3,7 @@ import { useAppSelector } from '../../hooks/reduxHooks';
 import SearchInput from '../common/SearchInput';
 import AddItemInput from '../AddItemInput';
 import { Category } from '../../types/program';
+import { selectCategories } from '../../store/selectors';
 
 type CategoryListProps = {
   selectedCategoryId: number | null;
@@ -12,6 +13,7 @@ type CategoryListProps = {
   setCategorySearch: (search: string) => void;
   showAddCategoryInput: boolean;
   setShowAddCategoryInput: (show: boolean) => void;
+  categories: Category[];
 };
 
 const CategoryList: React.FC<CategoryListProps> = ({
@@ -21,13 +23,12 @@ const CategoryList: React.FC<CategoryListProps> = ({
   categorySearch,
   setCategorySearch,
   showAddCategoryInput,
-  setShowAddCategoryInput
+  setShowAddCategoryInput,
+  categories
 }) => {
-  const categories = useAppSelector(state => {
-    const program = state.programs.items.find(p => p.id === state.selection.selectedProgramId);
-    const project = program?.projects.find(p => p.id === state.selection.selectedProjectId);
-    return project?.categories || [];
-  });
+  // const categories = useAppSelector(selectCategories);
+
+  console.log('Categories:', categories);
 
   return (
     <div className="column minified">
@@ -46,7 +47,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
         onChange={setCategorySearch}
       />
       {showAddCategoryInput && <AddItemInput onAdd={onAddCategory} />}
-      {categories.map(category => (
+      {categories.map((category: Category) => (
         <div
           key={category.id}
           className={`category-item ${selectedCategoryId === category.id ? 'selected' : ''}`}

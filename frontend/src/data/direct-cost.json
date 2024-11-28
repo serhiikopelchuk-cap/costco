@@ -8,39 +8,39 @@
         "lineItems": [
           {
             "name": "Azure Container Instances",
-            "periods": [20, 20, 20, 20, 20, 20, 20, 20, 10, 10, 10, 10, 10]
+            "costs": [20, 20, 20, 20, 20, 20, 20, 20, 10, 10, 10, 10, 10]
           },
           {
             "name": "Azure Kubernetes Service (AKS)",
-            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           },
           {
             "name": "Azure Container Registry",
-            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           },
           {
             "name": "General Purpose VMs (D-series)",
-            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           },
           {
             "name": "Compute-Optimized VMs (F-series)",
-            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           },
           {
             "name": "Memory-Optimized VMs (M-series)",
-            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           },
           {
             "name": "Storage-Optimized VMs (H-series)",
-            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           },
           {
             "name": "GPU-Optimized VMs (N-series)",
-            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           },
           {
             "name": "Virtual Machine Scale Sets",
-            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           }
         ]
       },
@@ -52,27 +52,27 @@
         "lineItems": [
           {
             "name": "Azure Blob Storage",
-            "periods": [10, 10, 10, 15, 15, 15, 15, 15, 25, 25, 25, 25, 30]
+            "costs": [10, 10, 10, 15, 15, 15, 15, 15, 25, 25, 25, 25, 30]
           },
           {
             "name": "Azure File Storage",
-            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           },
           {
             "name": "Azure Disk Storage (Premium SSD)",
-            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           },
           {
             "name": "Azure Disk Storage (Standard SSD)",
-            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           },
           {
             "name": "Azure Disk Storage (HDD)",
-            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           },
           {
             "name": "Azure Data Lake Storage Gen2",
-            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           }
         ]
       },
@@ -84,31 +84,31 @@
         "lineItems": [
           {
             "name": "Virtual Networks",
-            "periods": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+            "costs": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
           },
           {
             "name": "VPN Gateway",
-            "periods": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+            "costs": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
           },
           {
             "name": "ExpressRoute",
-            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           },
           {
             "name": "Azure Load Balancer",
-            "periods": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+            "costs": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
           },
           {
             "name": "Azure Firewall",
-            "periods": [10, 10, 10, 15, 15, 15, 15, 15, 25, 25, 25, 25, 30]
+            "costs": [10, 10, 10, 15, 15, 15, 15, 15, 25, 25, 25, 25, 30]
           },
           {
             "name": "Azure Front Door",
-            "periods": [10, 10, 10, 15, 15, 15, 15, 15, 25, 25, 25, 25, 30]
+            "costs": [10, 10, 10, 15, 15, 15, 15, 15, 25, 25, 25, 25, 30]
           },
           {
             "name": "Azure Traffic Manager",
-            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           }
         ]
       },
@@ -120,27 +120,27 @@
         "lineItems": [
           {
             "name": "Azure SQL Database",
-            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           },
           {
             "name": "Azure Cosmos DB",
-            "periods": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+            "costs": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
           },
           {
             "name": "Azure Synapse Analytics",
-            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           },
           {
             "name": "Azure Database for PostgreSQL",
-            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           },
           {
             "name": "Azure Cache for Redis",
-            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           },
           {
             "name": "Azure Database for MySQL",
-            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           }
         ]
       },
@@ -152,15 +152,15 @@
         "lineItems": [
           {
             "name": "Azure Data Factory",
-            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           },
           {
             "name": "Azure Databricks",
-            "periods": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+            "costs": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
           },
           {
             "name": "Azure Synapse Analytics",
-            "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           }
         ]
       },
@@ -170,11 +170,11 @@
         "note": "Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period",
         "cloudProvider": ["azure"],
         "lineItems": [
-            {"name": "Azure Logic Apps", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-            {"name": "Azure Integration Services (SSIS)", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-            {"name": "Azure API Management", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-            {"name": "Azure Event Grid", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-            {"name": "Azure Service Bus", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
+            {"name": "Azure Logic Apps", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure Integration Services (SSIS)", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure API Management", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure Event Grid", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure Service Bus", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
         ]
       },
       {
@@ -183,10 +183,10 @@
         "note": "Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period",
         "cloudProvider": ["azure"],
         "lineItems": [
-            {"name": "Azure Key Vault", "periods": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]},
-            {"name": "Web Application Firewalls (WAF)", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-            {"name": "Intrusion Detection/Prevention (IDPS)", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-            {"name": "Other Security Tools", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
+            {"name": "Azure Key Vault", "costs": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]},
+            {"name": "Web Application Firewalls (WAF)", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Intrusion Detection/Prevention (IDPS)", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Other Security Tools", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
         ]
       },
       {
@@ -195,10 +195,10 @@
         "note": "Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period",
         "cloudProvider": ["azure"],
         "lineItems": [
-            {"name": "Azure Monitor", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-            {"name": "Azure Log Analytics", "periods": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]},
-            {"name": "Other Monitoring Tools", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-            {"name": "Other Management Tools", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
+            {"name": "Azure Monitor", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure Log Analytics", "costs": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]},
+            {"name": "Other Monitoring Tools", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Other Management Tools", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
         ]
       },
       {
@@ -207,13 +207,13 @@
         "note": "Azure Cost Management + Billing > Cost Analysis. Filter resource type (App Service, Functions) & period",
         "cloudProvider": ["azure"],
         "lineItems": [
-            {"name": "Azure App Service", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-            {"name": "Azure Functions", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-            {"name": "Azure Static Web Apps", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-            {"name": "Azure App Service (Web Apps)", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-            {"name": "Azure App Service (API Apps)", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-            {"name": "Azure App Service (Mobile Apps)", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-            {"name": "Azure App Service (Static Web Apps)", "periods": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]}
+            {"name": "Azure App Service", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure Functions", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure Static Web Apps", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure App Service (Web Apps)", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure App Service (API Apps)", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure App Service (Mobile Apps)", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Azure App Service (Static Web Apps)", "costs": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]}
         ]
       },
       {
@@ -222,12 +222,12 @@
         "note": "Third-party provider invoices and billing portal",
         "cloudProvider": ["azure"],
         "lineItems": [
-            {"name": "Third-party cloud storage", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-            {"name": "Third-party security solutions", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-            {"name": "Third-party monitoring tools", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-            {"name": "Third-party collaboration tools", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-            {"name": "Third-party CI/CD tools", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-            {"name": "Third-party database solutions", "periods": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
+            {"name": "Third-party cloud storage", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Third-party security solutions", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Third-party monitoring tools", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Third-party collaboration tools", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Third-party CI/CD tools", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {"name": "Third-party database solutions", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
         ]
       },
       {
@@ -238,11 +238,11 @@
         "lineItems": [
           {
             "name": "GCP Compute Engine",
-            "periods": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
+            "costs": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
           },
           {
             "name": "GCP Cloud Storage",
-            "periods": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+            "costs": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
           }
         ]
       },
@@ -254,11 +254,11 @@
         "lineItems": [
           {
             "name": "GCP BigQuery",
-            "periods": [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15]
+            "costs": [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15]
           },
           {
             "name": "GCP Kubernetes Engine",
-            "periods": [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
+            "costs": [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
           }
         ]
       }

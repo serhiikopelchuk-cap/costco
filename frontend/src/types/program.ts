@@ -1,4 +1,11 @@
 // Base types
+export interface CostType {
+  id: number;
+  name: string;
+  alias: string;
+  programs: Program[];
+}
+
 export interface Cost {
   id?: number;
   value: number;

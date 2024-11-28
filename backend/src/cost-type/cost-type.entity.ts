@@ -12,6 +12,6 @@ export class CostType {
   @Column({ nullable: true, unique: true })
   alias: string;
 
-  @OneToMany(() => Program, program => program.costType)
+  @OneToMany(() => Program, program => program.costType, { cascade: true, nullable: true })
   programs: Program[];
 } 

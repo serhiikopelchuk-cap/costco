@@ -51,13 +51,13 @@ const DirectCostsTable: React.FC<DirectCostsTableProps> = ({ directCostsData }) 
             {directCostData.categories.map((category) => (
               <tr key={category.name}>
                 <td>{category.name}</td>
-                {category.lineItems[0].periods.map((_, index) => (
+                {category.lineItems[0].costs.map((_, index) => (
                   <td key={index}>
-                    {category.lineItems.reduce((sum, item) => sum + item.periods[index], 0)}
+                    {category.lineItems.reduce((sum, item) => sum + item.costs[index], 0)}
                   </td>
                 ))}
-                <td>{calculateTotal(category.lineItems.flatMap(item => item.periods))}</td>
-                <td>{calculateAverage(category.lineItems.flatMap(item => item.periods))}</td>
+                <td>{calculateTotal(category.lineItems.flatMap(item => item.costs))}</td>
+                <td>{calculateAverage(category.lineItems.flatMap(item => item.costs))}</td>
               </tr>
             ))}
           </tbody>
