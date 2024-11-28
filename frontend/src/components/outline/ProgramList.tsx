@@ -1,16 +1,16 @@
 import React from 'react';
-import SearchInput from '../SearchInput';
+import SearchInput from '../common/SearchInput';
 import AddItemInput from '../AddItemInput';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEllipsisV } from '@fortawesome/free-solid-svg-icons';
-import { Program } from '../../services/programService';
+import { Program } from '../../types/program';
 
 type ProgramListProps = {
   programs: Program[];
   selectedProgramId: number | null;
   onProgramToggle: (programId: number) => void;
   onAddProgram: (programName: string) => void;
-  onDetailsClick: (type: 'program', name: string) => void;
+  onDetailsClick: (type: 'program', id: number) => void;
   programSearch: string;
   setProgramSearch: (search: string) => void;
   showAddProgramInput: boolean;
@@ -55,7 +55,7 @@ const ProgramList: React.FC<ProgramListProps> = ({
           className="icon-button"
           onClick={(e) => {
             e.stopPropagation();
-            onDetailsClick('program', program.name);
+            onDetailsClick('program', program.id);
           }}
         >
           <FontAwesomeIcon icon={faEllipsisV} className="edit-icon" />

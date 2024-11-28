@@ -41,7 +41,11 @@ export class ProgramService {
   }
 
   async clone(id: number): Promise<Program> {
-    const program = await this.findOne(id);
+    const program = await this.programRepository.findOne({
+      where: { id },
+      relations: ['projects', 'projects.categories', 'projects.categories.items', 'projects.categories.items.costs', 'costType']
+    });
+
     if (!program) {
       throw new NotFoundException(`Program with ID ${id} not found`);
     }
@@ -50,7 +54,8 @@ export class ProgramService {
       ...program,
       name: `${program.name} (Copy)`,
       id: undefined,
-      projects: []
+      projects: [],
+      costType: program.costType
     });
 
     const savedProgram = await this.programRepository.save(clonedProgram);
@@ -66,7 +71,7 @@ export class ProgramService {
 
     return await this.programRepository.findOne({
       where: { id: savedProgram.id },
-      relations: ['projects', 'projects.categories', 'projects.categories.items', 'projects.categories.items.costs']
+      relations: ['projects', 'projects.categories', 'projects.categories.items', 'projects.categories.items.costs', 'costType']
     });
   }
 } 

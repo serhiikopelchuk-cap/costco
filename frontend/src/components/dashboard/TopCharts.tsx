@@ -15,28 +15,28 @@ const TopCharts: React.FC<{ lineData: any; barData: any }> = ({ lineData, barDat
     })),
   };
 
-  // Update barData with light blue colors
-  const updatedBarData = {
-    ...barData,
-    datasets: barData.datasets.map((dataset: any) => ({
-      ...dataset,
-      backgroundColor: '#cce5ff', // Light blue bar color
-      borderColor: '#007bff', // Blue border color
-      borderWidth: 1, // Ensure border is visible
-    })),
-  };
+  // // Update barData with light blue colors
+  // const updatedBarData = {
+  //   ...barData,
+  //   datasets: barData.datasets.map((dataset: any) => ({
+  //     ...dataset,
+  //     backgroundColor: '#cce5ff', // Light blue bar color
+  //     borderColor: '#007bff', // Blue border color
+  //     borderWidth: 1, // Ensure border is visible
+  //   })),
+  // };
 
   return (
-    <div className="charts">
-      <div className="chart">
+    // <div className="charts">
+      <div>
         <h3>Annual and Cumulative Costs</h3>
         <Line data={updatedLineData} />
       </div>
-      <div className="chart">
+      /* <div className="chart">
         <h3>Total Costs (Year 1)</h3>
         <Bar data={updatedBarData} />
-      </div>
-    </div>
+      </div> */
+    // </div>
   );
 };
 

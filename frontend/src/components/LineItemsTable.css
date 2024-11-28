@@ -248,3 +248,25 @@
 .category-name:hover .clone-button.category-clone {
   display: flex;  /* Show on hover */
 }
+
+.clone-button.cloning {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.clone-button.success {
+  background-color: var(--success-color);
+}
+
+.fa-spin {
+  animation: fa-spin 1s infinite linear;
+}
+
+@keyframes fa-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

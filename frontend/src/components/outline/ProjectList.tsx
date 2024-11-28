@@ -1,16 +1,16 @@
 import React from 'react';
-import SearchInput from '../SearchInput';
+import SearchInput from '../common/SearchInput';
 import AddItemInput from '../AddItemInput';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEllipsisV } from '@fortawesome/free-solid-svg-icons';
-import { Project } from '../../services/programService';
+import { Project } from '../../types/program';
 
 type ProjectListProps = {
   projects: Project[];
   selectedProjectId: number | null;
   onProjectToggle: (projectId: number) => void;
   onAddProject: (projectName: string) => void;
-  onDetailsClick: (type: 'project', name: string) => void;
+  onDetailsClick: (type: 'project', name: number) => void;
   projectSearch: string;
   setProjectSearch: (search: string) => void;
   showAddProjectInput: boolean;
@@ -55,7 +55,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
           className="icon-button"
           onClick={(e) => {
             e.stopPropagation();
-            onDetailsClick('project', project.name);
+            onDetailsClick('project', project.id);
           }}
         >
           <FontAwesomeIcon icon={faEllipsisV} className="edit-icon" />

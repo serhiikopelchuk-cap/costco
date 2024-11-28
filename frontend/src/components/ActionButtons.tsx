@@ -1,27 +1,58 @@
 import React from 'react';
+import { useAppDispatch } from '../hooks/reduxHooks';
+import { deleteLineItemAsync } from '../store/slices/programsSlice';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faFilter } from '@fortawesome/free-solid-svg-icons';
 import './ActionButtons.css';
+import { Item } from '../types/program';
 
 interface ActionButtonsProps {
-  handleRemoveLastLineItem: () => void;
   handleDeselectAll: () => void;
   handleAddLineItem: () => void;
   selectedLineItemsCount: number;
   cloudProviders: string[];
   selectedProvider: string;
   onProviderChange: (provider: string) => void;
+  selectedProgramId: number | null;
+  selectedProjectId: number | null;
+  selectedCategoryId: number | null;
+  lineItems: Item[];
 }
 
 const ActionButtons: React.FC<ActionButtonsProps> = ({
-  handleRemoveLastLineItem,
   handleDeselectAll,
   handleAddLineItem,
   selectedLineItemsCount,
   cloudProviders,
   selectedProvider,
-  onProviderChange
+  onProviderChange,
+  selectedProgramId,
+  selectedProjectId,
+  selectedCategoryId,
+  lineItems
 }) => {
+  const dispatch = useAppDispatch();
+
+  const handleRemoveLastLineItem = async () => {
+    if (!selectedProgramId || !selectedProjectId || !selectedCategoryId || lineItems.length === 0) {
+      console.error('Cannot remove item: missing required IDs or no items');
+      return;
+    }
+
+    const lastItem = lineItems[lineItems.length - 1];
+    
+    try {
+      await dispatch(deleteLineItemAsync({
+        itemId: lastItem.id!,
+        programId: selectedProgramId,
+        projectId: selectedProjectId,
+        categoryId: selectedCategoryId
+      })).unwrap();
+    } catch (error) {
+      console.error('Failed to delete line item:', error);
+    }
+  };
+
   return (
     <div className="action-buttons-container">
       <div className="filter-container">
@@ -43,6 +74,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
         className="remove-item-button"
         onClick={handleRemoveLastLineItem}
         aria-label="Remove last line item"
+        disabled={lineItems.length === 0}
       >
         -
       </button>

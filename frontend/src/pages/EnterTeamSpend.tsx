@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '../components/Sidebar';
+import Sidebar from '../components/layout/Sidebar';
 import './EnterTeamSpend.css';
-import '../components/Button.css'; // Import button styles
+import '../components/common/Button.css'; // Import button styles
 import {
   getTeamSpends,
   createTeamSpend,

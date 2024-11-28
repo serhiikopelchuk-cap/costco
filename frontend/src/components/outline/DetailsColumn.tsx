@@ -1,8 +1,7 @@
 import React from 'react';
-import { Item } from '../../pages/Outline';
 import LineItemsTable from '../LineItemsTable';
 import DetailsComponent from '../DetailsComponent';
-import { Program, Project } from '../../services/programService';
+import { Category, Item, Program, Project } from '../../types/program';
 
 type DetailsColumnProps = {
   selectedCategoryId: number | null;
@@ -62,17 +61,17 @@ const DetailsColumn: React.FC<DetailsColumnProps> = ({
           type={details.type} 
           name={details.name}
           id={details.id}
-          // programId={details.type === 'project' ? selectedProgramId : undefined}
+          programId={details.type === 'project' && selectedProgramId !== null ? selectedProgramId : undefined}
           categories={
             details.type === 'program' 
               ? Object.fromEntries(
                   tableData.find((program: Program) => program.name === details.name)?.projects.map((project: Project) => [
                     project.name,
-                    project.categories.flatMap(category => category.items)
+                    project.categories.flatMap((category: Category) => category.items)
                   ]) || []
                 )
               : Object.fromEntries(
-                  tableData.find((program: Program) => program.id === selectedProgramId)?.projects.find(project => project.name === details.name)?.categories.map(category => [
+                  tableData.find((program: Program) => program.id === selectedProgramId)?.projects.find((project: Project) => project.name === details.name)?.categories.map(category => [
                     category.name,
                     category.items
                   ]) || []

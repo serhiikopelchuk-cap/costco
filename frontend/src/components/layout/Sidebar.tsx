@@ -1,6 +1,6 @@
 import React from 'react';
 import './Sidebar.css';
-import './Button.css'; // Import button styles
+import '../common/Button.css'; // Import button styles
 
 interface SidebarProps {
   isOpen: boolean;

@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne } from 'typeorm';
 import { Project } from '../project/project.entity';
+import { CostType } from '../cost-type/cost-type.entity';
 
 @Entity()
 export class Program {
@@ -14,4 +15,7 @@ export class Program {
 
   @OneToMany(() => Project, project => project.program, { cascade: true })
   projects: Project[];
+
+  @ManyToOne(() => CostType, costType => costType.programs)
+  costType: CostType;
 } 

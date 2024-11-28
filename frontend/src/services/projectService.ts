@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
-import { Project } from './programService';
+import { Project } from '../types/program';
 
 // Define the base URL for your API
 const PROJECTS_URL = `${API_BASE_URL}/projects`;
@@ -35,10 +35,10 @@ export const deleteProject = async (id: number): Promise<void> => {
 };
 
 // Clone a project
-export const cloneProject = async (id: number, programId?: number): Promise<Project> => {
+export const cloneProject = async (id: number, programId: number): Promise<Project> => {
   const response = await axios.post<Project>(
     `${PROJECTS_URL}/${id}/clone`,
-    programId ? { programId } : {}
+    { programId }
   );
   return response.data;
 }; 

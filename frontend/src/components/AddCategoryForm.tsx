@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './AddCategoryForm.css';
-import { Category } from '../services/categoryService';
+import { Category } from '../types/program';
 
 interface AddCategoryFormProps {
   onAddCategory: (category: Partial<Category>) => void;

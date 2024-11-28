@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPencilAlt, faSave, faTrash } from '@fortawesome/free-solid-svg-icons';
 import './CostItemRow.css';
-import { Item, Cost } from '../services/categoryService';
+import { Cost, Item } from '../types/program';
 
 interface CostItemRowProps {
   item: Item;

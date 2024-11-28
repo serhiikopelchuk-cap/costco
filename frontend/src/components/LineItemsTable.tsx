@@ -2,25 +2,21 @@ import React, { SetStateAction, useState, useCallback, useEffect } from 'react';
 import './LineItemsTable.css';
 import { validateCellValue } from '../utils/validationUtils';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronDown, faClone } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown, faClone, faSpinner, faCheck } from '@fortawesome/free-solid-svg-icons';
 import ActionButtons from './ActionButtons';
-import { Program } from '../services/programService';
 import { cloneItem } from '../services/itemService';
 import { cloneCategory } from '../services/categoryService';
 import { periodService } from '../services/periodService';
-
-interface LineItem {
-  id?: number | undefined;
-  name: string;
-  costs: { value: number }[];
-}
+import { Program, Item, Cost } from '../types/program';
+import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
+import { updateLineItem, updateItemCostsAsync, createLineItemAsync, deleteLineItemAsync, updateItemNameAsync, updateCategory } from '../store/slices/programsSlice';
 
 interface LineItemsTableProps {
-  lineItems: LineItem[];
-  setLineItems: (newLineItems: SetStateAction<LineItem[]>) => void;
-  onLineItemAdd: (newLineItem: LineItem) => void;
+  lineItems: Item[];
+  setLineItems: (newLineItems: SetStateAction<Item[]>) => void;
+  onLineItemAdd: (newLineItem: Item) => void;
   onDeselectAll: () => void;
-  selectedLineItems: LineItem[];
+  selectedLineItems: Item[];
   categoryName: string;
   cloudProviders: string[];
   selectedProvider: string;
@@ -46,6 +42,8 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
   selectedProjectId,
   selectedCategoryId,
 }) => {
+  const dispatch = useAppDispatch();
+  const programsState = useAppSelector(state => state.programs);
   const categoryName = tableData
     .find(program => program.id === selectedProgramId)
     ?.projects.find(project => project.id === selectedProjectId)
@@ -63,16 +61,21 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
       console.warn(`LineItem with id ${item.id} has no costs array.`);
       item.costs = Array(numberOfCosts).fill({ value: 0 });
     }
-    item.costs.forEach((cost, index) => {
-      costTotals[index] += Number(cost.value);
+    item.costs.forEach((cost: Cost, index: number) => {
+      costTotals[index] += Number(cost.value) || 0;
     });
-    totalOfTotals += item.costs.reduce((sum, cost) => sum + Number(cost.value), 0);
+    totalOfTotals += item.costs.reduce((sum: number, cost: Cost) => sum + (Number(cost.value) || 0), 0);
   });
 
   const averageOfAverages = lineItems.length > 0 ? totalOfTotals / (lineItems.length * numberOfCosts) : 0;
 
   const [errorMessages, setErrorMessages] = useState<{ [key: number]: string }>({});
   const [frozenPeriods, setFrozenPeriods] = useState<{ [key: number]: boolean }>({});
+  const [editingName, setEditingName] = useState<{ [key: number]: string }>({});
+  const [isCloningCategory, setIsCloningCategory] = useState(false);
+  const [cloneCategorySuccess, setCloneCategorySuccess] = useState(false);
+  const [cloningLineItems, setCloningLineItems] = useState<{ [key: number]: boolean }>({});
+  const [cloneLineItemSuccess, setCloneLineItemSuccess] = useState<{ [key: number]: boolean }>({});
 
   useEffect(() => {
     const loadFrozenPeriods = async () => {
@@ -87,102 +90,206 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
     loadFrozenPeriods();
   }, []);
 
-  const handleAddLineItem = useCallback(() => {
-    const newItem: LineItem = {
-      id: Date.now() + Math.random(),
-      name: `LINE ITEM-${Date.now()}`,
-      costs: Array(numberOfCosts).fill({ value: 0 }),
-    };
-    setLineItems(prevItems => [...prevItems, newItem]);
-
-    if (onLineItemAdd) {
-      onLineItemAdd(newItem);
-    }
-  }, [setLineItems, onLineItemAdd]);
-
-  const handleUpdateValue = (itemId: number, field: string, value: string, costIndex?: number) => {
-    console.log(`Updating item ${itemId}, field: ${field}, value: ${value}, costIndex: ${costIndex}`);
-    const { isValid, message } = validateCellValue(value.replace(/\$/g, ''));
-
-    if (!isValid) {
-      setErrorMessages(prevErrors => ({
-        ...prevErrors,
-        [itemId]: message || ''
-      }));
+  const handleAddLineItem = async () => {
+    if (!selectedProgramId || !selectedProjectId || !selectedCategoryId) {
+      console.error('Missing required IDs for adding line item');
       return;
     }
 
-    const numericValue = parseFloat(value.replace(/\$/g, '')) || 0;
+    try {
+      const newItem: Partial<Item> = {
+        name: 'New Line Item',
+        costs: Array(13).fill({ value: 0 })
+      };
 
-    if (field === 'cost' && costIndex !== undefined) {
-      setLineItems(prevItems => 
-        prevItems.map(item => {
-          if (item.id === itemId) {
-            const newCosts = [...item.costs];
-            newCosts[costIndex] = { value: numericValue };
-            return { ...item, costs: newCosts };
-          }
-          return item;
-        })
-      );
-    } else if (field === 'name') {
-      setLineItems(prevItems => 
-        prevItems.map(item => {
-          if (item.id === itemId) {
-            return { ...item, name: value };
-          }
-          return item;
-        })
-      );
+      await dispatch(createLineItemAsync({
+        programId: selectedProgramId,
+        projectId: selectedProjectId,
+        categoryId: selectedCategoryId,
+        item: newItem
+      })).unwrap();
+    } catch (error) {
+      console.error('Failed to create line item:', error);
     }
-
-    setErrorMessages(prevErrors => ({
-      ...prevErrors,
-      [itemId]: ''
-    }));
   };
 
-  const handleRemoveLastLineItem = () => {
-    setLineItems(prevItems => {
-      if (prevItems.length > 0) {
-        return prevItems.slice(0, -1);
+  const handleNameChange = (itemId: number, value: string) => {
+    setEditingName(prev => ({ ...prev, [itemId]: value }));
+  };
+
+  const handleNameBlur = async (itemId: number) => {
+    if (!selectedProgramId || !selectedProjectId || !selectedCategoryId) {
+      console.error('Missing required IDs for update');
+      return;
+    }
+
+    const newName = editingName[itemId];
+    if (newName !== undefined) {
+      try {
+        const response = await dispatch(updateItemNameAsync({
+          itemId,
+          name: newName,
+          programId: selectedProgramId,
+          projectId: selectedProjectId,
+          categoryId: selectedCategoryId
+        })).unwrap();
+
+        const updatedName = response.item.name;
+
+        // Update local state
+        setLineItems(prevItems => 
+          prevItems.map(item => item.id === itemId ? { ...item, name: updatedName } : item)
+        );
+
+        // Update Redux state
+        dispatch(updateLineItem({
+          programId: selectedProgramId,
+          projectId: selectedProjectId,
+          categoryId: selectedCategoryId,
+          lineItem: { ...response.item, name: updatedName }
+        }));
+
+        setEditingName(prev => {
+          const newState = { ...prev };
+          delete newState[itemId];
+          return newState;
+        });
+      } catch (error) {
+        console.error('Failed to update item name:', error);
       }
-      return prevItems;
-    });
+    }
+  };
+
+  const handleUpdateValue = async (itemId: number, field: string, value: string, costIndex?: number) => {
+    const currentItem = lineItems.find(item => item.id === itemId);
+    if (!currentItem) return;
+
+    // First update local state for immediate UI feedback
+    if (field === 'cost' && costIndex !== undefined) {
+      const numericValue = parseFloat(value.replace(/\$/g, '')) || 0;
+      const newCosts = [...currentItem.costs];
+      newCosts[costIndex] = {
+        ...newCosts[costIndex],
+        value: numericValue
+      };
+
+        const updatedItem = {
+          ...currentItem,
+          costs: newCosts
+        };
+
+      // Update local state immediately
+      setLineItems(prevItems => 
+        prevItems.map(item => item.id === itemId ? updatedItem : item)
+      );
+
+      // Then update backend if we have all required IDs
+      if (selectedProgramId && selectedProjectId && selectedCategoryId) {
+        try {
+          await dispatch(updateItemCostsAsync({
+            itemId,
+            updatedItem,
+            programId: selectedProgramId,
+            projectId: selectedProjectId,
+            categoryId: selectedCategoryId
+          })).unwrap();
+        } catch (error) {
+          console.error('Failed to update item costs:', error);
+          // Optionally revert the local state on error
+        }
+      }
+    }
+  };
+
+  const handleRemoveLastLineItem = async () => {
+    if (!selectedProgramId || !selectedProjectId || !selectedCategoryId) {
+      console.error('Missing required IDs for removing line item');
+      return;
+    }
+
+    if (lineItems.length === 0) return;
+
+    const lastItem = lineItems[lineItems.length - 1];
+    try {
+      await dispatch(deleteLineItemAsync({
+        itemId: lastItem.id!,
+        programId: selectedProgramId,
+        projectId: selectedProjectId,
+        categoryId: selectedCategoryId
+      })).unwrap();
+    } catch (error) {
+      console.error('Failed to delete line item:', error);
+    }
   };
 
   const handleDeselectAll = () => {
     onDeselectAll();
   };
 
-  const handleCloneLineItem = async (item: LineItem) => {
+  const handleCloneLineItem = async (item: Item) => {
     console.log('Cloning line item:', item);
+    setCloningLineItems(prev => ({ ...prev, [item.id!]: true }));
+    setCloneLineItemSuccess(prev => ({ ...prev, [item.id!]: false }));
     try {
       const response = await cloneItem(item.id!, selectedCategoryId || undefined);
       console.log('Response:', response);
-      // Create a new line item from the response
-      const clonedItem: LineItem = {
+      const clonedItem: Item = {
         id: response.item.id,
         name: response.item.name,
         costs: response.item.costs,
       };
-      
+
+      // Update local state
       setLineItems(prevItems => [...prevItems, clonedItem]);
+
+      // Ensure IDs are not null before dispatching
+      if (selectedProgramId !== null && selectedProjectId !== null && selectedCategoryId !== null) {
+        // Dispatch an action to update Redux
+        dispatch(updateLineItem({
+          programId: selectedProgramId,
+          projectId: selectedProjectId,
+          categoryId: selectedCategoryId,
+          lineItem: clonedItem
+        }));
+      } else {
+        console.error('Cannot update Redux: Missing required IDs');
+      }
+
+      setCloneLineItemSuccess(prev => ({ ...prev, [item.id!]: true }));
+      setTimeout(() => setCloneLineItemSuccess(prev => ({ ...prev, [item.id!]: false })), 3000);
     } catch (error) {
       console.error('Error cloning line item:', error);
-      // You might want to add error handling/notification here
+    } finally {
+      setCloningLineItems(prev => ({ ...prev, [item.id!]: false }));
     }
   };
 
   const handleCloneCategory = async () => {
     if (!selectedCategoryId) return;
-    
+
+    setIsCloningCategory(true);
+    setCloneCategorySuccess(false);
     try {
-      const response = await cloneCategory(selectedCategoryId, selectedProjectId || undefined);
-      // You might want to add some feedback or refresh mechanism here
-      console.log('Category cloned successfully:', response);
+      const clonedCategory = await cloneCategory(selectedCategoryId, selectedProjectId || undefined);
+      console.log('Category cloned successfully:', clonedCategory);
+
+      // Dispatch an action to update Redux
+      if (selectedProgramId !== null && selectedProjectId !== null) {
+        dispatch(updateCategory({
+          programId: selectedProgramId,
+          projectId: selectedProjectId,
+          category: clonedCategory
+        }));
+      } else {
+        console.error('Cannot update Redux: Missing required IDs');
+      }
+
+      setCloneCategorySuccess(true);
+      setTimeout(() => setCloneCategorySuccess(false), 3000);
     } catch (error) {
       console.error('Error cloning category:', error);
+    } finally {
+      setIsCloningCategory(false);
     }
   };
 
@@ -192,21 +299,28 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
         <h3 className="category-name">
           {categoryName}
           <button 
-            className="clone-button category-clone"
+            className={`clone-button category-clone ${isCloningCategory ? 'cloning' : ''} ${cloneCategorySuccess ? 'success' : ''}`}
             onClick={handleCloneCategory}
             title="Clone category"
+            disabled={isCloningCategory}
           >
-            <FontAwesomeIcon icon={faClone} />
+            <FontAwesomeIcon 
+              icon={isCloningCategory ? faSpinner : cloneCategorySuccess ? faCheck : faClone} 
+              className={isCloningCategory ? 'fa-spin' : ''}
+            />
           </button>
         </h3>
         <ActionButtons
-          handleRemoveLastLineItem={handleRemoveLastLineItem}
           handleDeselectAll={handleDeselectAll}
           handleAddLineItem={handleAddLineItem}
           selectedLineItemsCount={selectedLineItems.length}
           cloudProviders={cloudProviders}
           selectedProvider={selectedProvider}
           onProviderChange={onProviderChange}
+          selectedProgramId={selectedProgramId}
+          selectedProjectId={selectedProjectId}
+          selectedCategoryId={selectedCategoryId}
+          lineItems={lineItems}
         />
       </div>
       <table className="line-items-table">
@@ -222,14 +336,17 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
         <tbody>
           <tr className="summary-row">
             {costTotals.map((total, index) => (
-              <td key={index} className="summary-cell">{total.toFixed(0)}$</td>
+              <td key={index} className="summary-cell">{Number(total).toFixed(0)}$</td>
             ))}
-            <td className="summary-cell">{totalOfTotals.toFixed(2)}$</td>
-            <td className="summary-cell">{averageOfAverages.toFixed(2)}$</td>
+            <td className="summary-cell">{Number(totalOfTotals).toFixed(2)}$</td>
+            <td className="summary-cell">{Number(averageOfAverages).toFixed(2)}$</td>
           </tr>
           {lineItems.map((item) => {
-            const total = item.costs.reduce((sum, cost) => sum + Number(cost.value), 0);
-            const average = total / numberOfCosts;
+            const itemTotal = item.costs.reduce((sum: number, cost: Cost) => {
+              return sum + (Number(cost.value) || 0);
+            }, 0);
+            
+            const itemAverage = itemTotal / numberOfCosts;
 
             return (
               <React.Fragment key={item.id}>
@@ -237,16 +354,21 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
                   <td className="line-item-label" colSpan={columns.length}>
                     <input
                       type="text"
-                      value={item.name}
-                      onChange={(e) => handleUpdateValue(item.id!, 'name', e.target.value)}
+                      value={editingName[item.id!] !== undefined ? editingName[item.id!] : item.name}
+                      onChange={(e) => handleNameChange(item.id!, e.target.value)}
+                      onBlur={() => handleNameBlur(item.id!)}
                       className="line-item-input"
                     />
                     <button 
-                      className="clone-button"
+                      className={`clone-button ${cloningLineItems[item.id!] ? 'cloning' : ''} ${cloneLineItemSuccess[item.id!] ? 'success' : ''}`}
                       onClick={() => handleCloneLineItem(item)}
                       title="Clone line item"
+                      disabled={cloningLineItems[item.id!]}
                     >
-                      <FontAwesomeIcon icon={faClone} />
+                      <FontAwesomeIcon 
+                        icon={cloningLineItems[item.id!] ? faSpinner : cloneLineItemSuccess[item.id!] ? faCheck : faClone} 
+                        className={cloningLineItems[item.id!] ? 'fa-spin' : ''}
+                      />
                     </button>
                   </td>
                 </tr>
@@ -262,8 +384,8 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
                       />
                     </td>
                   ))}
-                  <td className="line-item-cell">{total.toFixed(2)}$</td>
-                  <td className="line-item-cell">{average.toFixed(2)}$</td>
+                  <td className="line-item-cell">{Number(itemTotal).toFixed(2)}$</td>
+                  <td className="line-item-cell">{Number(itemAverage).toFixed(2)}$</td>
                 </tr>
               </React.Fragment>
             );

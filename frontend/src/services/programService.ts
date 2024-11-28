@@ -1,38 +1,10 @@
+// import { Program } from '../types/program';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
+import { Program } from '../types/program';
 
 // Define the base URL for your API
 const PROGRAMS_URL = `${API_BASE_URL}/programs`;
-
-// Define the types for Program, Project, Category, Item, and Cost
-export interface Cost {
-  id?: number;
-  value: number;
-}
-
-export interface Item {
-  id?: number;
-  name: string;
-  costs: Cost[];
-}
-
-export interface Category {
-  id?: number;
-  name: string;
-  items: Item[];
-}
-
-export interface Project {
-  id?: number;
-  name: string;
-  categories: Category[];
-}
-
-export interface Program {
-  id?: number;
-  name: string;
-  projects: Project[];
-}
 
 // Fetch all programs
 export const fetchPrograms = async (): Promise<Program[]> => {

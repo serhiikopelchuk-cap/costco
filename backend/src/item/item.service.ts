@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Item } from './item.entity';
 import { Cost } from '../cost/cost.entity';
+import { Category } from '../category/category.entity';
 
 export interface ClonedItemResponse {
   item: Item;
@@ -17,6 +18,8 @@ export class ItemService {
     private itemRepository: Repository<Item>,
     @InjectRepository(Cost)
     private costRepository: Repository<Cost>,
+    @InjectRepository(Category)
+    private categoryRepository: Repository<Category>,
   ) {}
 
   async findAll(): Promise<Item[]> {
@@ -31,9 +34,27 @@ export class ItemService {
     return item;
   }
 
-  async create(itemData: Partial<Item>): Promise<Item> {
-    this.validateCosts(itemData.costs);
-    const item = this.itemRepository.create(itemData);
+  async create(itemData: Partial<Item> & { categoryId: number }): Promise<Item> {
+    const { categoryId, ...itemDetails } = itemData;
+    
+    // Find the category
+    const category = await this.categoryRepository.findOne({ 
+      where: { id: categoryId } 
+    });
+    
+    if (!category) {
+      throw new NotFoundException(`Category with ID ${categoryId} not found`);
+    }
+
+    // Validate costs
+    this.validateCosts(itemDetails.costs);
+
+    // Create the item with category
+    const item = this.itemRepository.create({
+      ...itemDetails,
+      category
+    });
+
     return await this.itemRepository.save(item);
   }
 

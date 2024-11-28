@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import './DetailsComponent.css';
-import { Item } from '../pages/Outline';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClone, faSpinner, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { cloneProgram } from '../services/programService';
 import { cloneProject } from '../services/projectService';
+import { Item } from '../types/program';
+import { useDispatch } from 'react-redux';
+import { updateProgram, updateProject } from '../store/slices/programsSlice';
 
 interface DetailsComponentProps {
   type: 'program' | 'project';
@@ -24,6 +26,8 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, name, id, pro
   const [overallAverageSum, setOverallAverageSum] = useState<number>(0);
   const [isCloning, setIsCloning] = useState(false);
   const [cloneSuccess, setCloneSuccess] = useState(false);
+
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const calculateSums = (items: Record<string, Item[]>) => {
@@ -71,17 +75,21 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, name, id, pro
     setCloneSuccess(false);
     try {
       if (type === 'program') {
-        const response = await cloneProgram(id);
-        console.log('Program cloned:', response);
+        const clonedProgram = await cloneProgram(id);
+        console.log('Program cloned successfully:', clonedProgram);
+        dispatch(updateProgram(clonedProgram));
       } else {
-        const response = await cloneProject(id, programId);
-        console.log('Project cloned:', response);
+        if (programId === undefined) {
+          console.error('Program ID is required to clone a project');
+          return;
+        }
+        const clonedProject = await cloneProject(id, programId);
+        console.log('Project cloned successfully:', clonedProject);
+        dispatch(updateProject({ programId, project: clonedProject }));
       }
+
       setCloneSuccess(true);
-      // Reset success message after 3 seconds
-      setTimeout(() => {
-        setCloneSuccess(false);
-      }, 3000);
+      setTimeout(() => setCloneSuccess(false), 3000);
     } catch (error) {
       console.error(`Error cloning ${type}:`, error);
     } finally {

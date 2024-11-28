@@ -33,12 +33,13 @@ export class ItemController {
         summary: 'Example item',
         value: {
           name: 'Example Item',
+          categoryId: 1,
           costs: Array(13).fill({ value: 100 })
         },
       },
     },
   })
-  async create(@Body() itemData: Partial<Item>): Promise<Item> {
+  async create(@Body() itemData: Partial<Item> & { categoryId: number }): Promise<Item> {
     return this.itemService.create(itemData);
   }
 

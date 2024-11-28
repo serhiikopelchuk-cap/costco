@@ -60,11 +60,17 @@ function Dashboard() {
   return (
     <div className="dashboard">
       <h2>Dashboard</h2>
-      <TopCharts lineData={lineData} barData={barData} />
+      <div className="top-section">
+        <div className="forecast-table">
+          <ForecastTable />
+        </div>
+        <div className="top-charts">
+          <TopCharts lineData={lineData} barData={barData} />
+        </div>
+      </div>
       <div className="tables">
-        <ForecastTable />
         <TotalCostsTable />
-        <DirectCostsTable />
+        <DirectCostsTable directCostsData={directCostsData} />
         <IndirectCostsTable />
       </div>
       <BottomCharts directCostsData={directCostsData} indirectCostsData={indirectCostsData} />

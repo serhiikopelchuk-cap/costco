@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
-import { Item } from './categoryService';
+import { Item } from '../types/program';
 
 // Define the base URL for your API
 const ITEMS_URL = `${API_BASE_URL}/items`;
@@ -47,5 +47,37 @@ export const cloneItem = async (id: number, categoryId?: number): Promise<Cloned
     `${ITEMS_URL}/${id}/clone`,
     categoryId ? { categoryId } : {}
   );
+  return response.data;
+};
+
+export const updateItemCosts = async (itemId: number, updatedItem: Partial<Item>): Promise<Item> => {
+  const response = await axios.put<Item>(`${API_BASE_URL}/items/${itemId}`, updatedItem);
+  return response.data;
+};
+
+// Create a new line item
+export const createLineItem = async (
+  categoryId: number,
+  item: Partial<Item>
+): Promise<Item> => {
+  const response = await axios.post<Item>(`${API_BASE_URL}/items`, {
+    ...item,
+    categoryId
+  });
+  return response.data;
+};
+
+// Delete a line item
+export const deleteLineItem = async (
+  itemId: number
+): Promise<void> => {
+  await axios.delete(`${API_BASE_URL}/items/${itemId}`);
+};
+
+export const updateItemName = async (
+  itemId: number,
+  name: string
+): Promise<Item> => {
+  const response = await axios.put<Item>(`${API_BASE_URL}/items/${itemId}`, { name });
   return response.data;
 }; 

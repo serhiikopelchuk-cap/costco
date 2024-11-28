@@ -7,6 +7,7 @@ import { ItemModule } from './item/item.module';
 import { ProjectModule } from './project/project.module';
 import { ProgramModule } from './program/program.module';
 import { PeriodModule } from './period/period.module';
+import { CostTypeModule } from './cost-type/cost-type.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { PeriodModule } from './period/period.module';
     ProjectModule,
     ProgramModule,
     PeriodModule,
+    CostTypeModule,
   ],
 })
 export class AppModule {}

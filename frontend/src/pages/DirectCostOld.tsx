@@ -3,9 +3,10 @@ import './DirectCostOld.css';
 import AddCategoryForm from '../components/AddCategoryForm';
 import CostItemRow from '../components/CostItemRow';
 import CategoryHeader from '../components/CategoryHeader';
-import NoteEditor from '../components/NoteEditor';
-import { fetchCategories, createCategory, updateCategory, deleteCategory, Category, Item, Cost } from '../services/categoryService';
+import NoteEditor from '../components/common/NoteEditor';
+import { fetchCategories, createCategory, updateCategory, deleteCategory } from '../services/categoryService';
 import { createItem, updateItem, deleteItem } from '../services/itemService';
+import { Category, Cost, Item } from '../types/program';
 
 const DirectCostOld: React.FC = () => {
   const [data, setData] = useState<Category[]>([]);
@@ -75,9 +76,9 @@ const DirectCostOld: React.FC = () => {
   const addItem = async (categoryIndex: number) => {
     try {
       const category = data[categoryIndex];
-      const createdItem = await createItem({ ...newItem, category });
+      // const createdItem = await createItem({ ...newItem, category });
       const updatedData = [...data];
-      updatedData[categoryIndex].items.push(createdItem);
+      // updatedData[categoryIndex].items.push(createdItem);
       setData(updatedData);
       setNewItem({ name: '', costs: Array(13).fill({ value: 0 }) });
     } catch (error) {
@@ -90,7 +91,7 @@ const DirectCostOld: React.FC = () => {
       const item = data[categoryIndex].items[itemIndex];
       const updated = await updateItem(item.id!, updatedItem);
       const updatedData = [...data];
-      updatedData[categoryIndex].items[itemIndex] = updated;
+      // updatedData[categoryIndex].items[itemIndex] = updated;
       setData(updatedData);
     } catch (error) {
       console.error('Failed to save item:', error);
@@ -114,20 +115,20 @@ const DirectCostOld: React.FC = () => {
       <h1>Annual Direct Cost</h1>
       {data.map((category, categoryIndex) => (
         <div key={categoryIndex} className="category">
-          <CategoryHeader
+          {/* <CategoryHeader
             name={category.name}
             description={category.description}
             onSave={(updatedCategory) => handleCategorySave(categoryIndex, updatedCategory)}
             onDelete={() => handleCategoryDelete(categoryIndex)}
-          />
+          /> */}
           <table>
             <thead>
               <tr className="note-row">
                 <th colSpan={15} className="note">
-                  <NoteEditor
+                  {/* <NoteEditor
                     initialNote={category.note}
                     onSave={(newNote) => handleCategorySave(categoryIndex, { note: newNote })}
-                  />
+                  /> */}
                 </th>
               </tr>
               <tr>
