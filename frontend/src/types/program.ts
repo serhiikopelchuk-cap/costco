@@ -24,6 +24,7 @@ export type Category = {
   note?: string;
   cloudProvider?: string[];
   items: Item[];
+  project?: { id: number };
 };
 
 export type Project = {

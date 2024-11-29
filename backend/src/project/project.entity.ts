@@ -7,15 +7,15 @@ export class Project {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  name: string;
+  @Column({ nullable: true })
+  name?: string;
 
   @Column({ nullable: true })
-  description: string;
+  description?: string;
   
-  @ManyToOne(() => Program, program => program.projects)
-  program: Program;
+  @ManyToOne(() => Program, program => program.projects, { onDelete: 'CASCADE', nullable: true })
+  program?: Program;
   
-  @OneToMany(() => Category, category => category.project, { cascade: true })
-  categories: Category[];
+  @OneToMany(() => Category, category => category.project, { cascade: true, onDelete: 'CASCADE', nullable: true })
+  categories?: Category[];
 } 

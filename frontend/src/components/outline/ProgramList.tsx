@@ -1,9 +1,12 @@
 import React from 'react';
 import SearchInput from '../common/SearchInput';
 import AddItemInput from '../AddItemInput';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 import { Program } from '../../types/program';
+import DetailsButton from '../buttons/DetailsButton';
+import { useAppDispatch } from '../../hooks/reduxHooks';
+import { createProgramAsync } from '../../store/slices/programsSlice';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 
 type ProgramListProps = {
   programs: Program[];
@@ -18,7 +21,7 @@ type ProgramListProps = {
 };
 
 const ProgramList: React.FC<ProgramListProps> = ({
-  programs,
+  // programs,
   selectedProgramId,
   onProgramToggle,
   onAddProgram,
@@ -27,42 +30,50 @@ const ProgramList: React.FC<ProgramListProps> = ({
   setProgramSearch,
   showAddProgramInput,
   setShowAddProgramInput
-}) => (
-  <div className="column minified">
-    <div className="header-with-button">
-      <h3>Programs</h3>
-      <button
-        className={`add-toggle-button ${showAddProgramInput ? 'active' : ''}`}
-        onClick={() => setShowAddProgramInput(!showAddProgramInput)}
-      >
-        {showAddProgramInput ? '×' : '+'}
-      </button>
-    </div>
-    <SearchInput
-      placeholder="Search Programs"
-      value={programSearch}
-      onChange={setProgramSearch}
-    />
-    {showAddProgramInput && <AddItemInput onAdd={onAddProgram} />}
-    {programs.map((program) => (
-      <div
-        key={program.id ?? `temp-${program.name}`}
-        className={`program-item ${selectedProgramId === program.id ? 'selected' : ''}`}
-        onClick={() => program.id && onProgramToggle(program.id)}
-      >
-        <span>{program.name}</span>
+}) => {
+  const dispatch = useAppDispatch();
+  const programs = useSelector((state: RootState) => state.programs.items);
+
+  const handleAddProgram = (programName: string) => {
+    const costTypeId = 1; // Replace with actual logic to determine costTypeId
+    const newProgram: Partial<Program> = { name: programName, projects: [] };
+    dispatch(createProgramAsync({ program: newProgram, costTypeId }));
+  };
+
+  return (
+    <div className="column minified">
+      <div className="header-with-button">
+        <h3>Programs</h3>
         <button
-          className="icon-button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDetailsClick('program', program.id);
-          }}
+          className={`add-toggle-button ${showAddProgramInput ? 'active' : ''}`}
+          onClick={() => setShowAddProgramInput(!showAddProgramInput)}
         >
-          <FontAwesomeIcon icon={faEllipsisV} className="edit-icon" />
+          {showAddProgramInput ? '×' : '+'}
         </button>
       </div>
-    ))}
-  </div>
-);
+      <SearchInput
+        placeholder="Search Programs"
+        value={programSearch}
+        onChange={setProgramSearch}
+      />
+      {showAddProgramInput && <AddItemInput onAdd={handleAddProgram} />}
+      {programs.map(program => (
+        <div
+          key={program.id}
+          className={`program-item ${selectedProgramId === program.id ? 'selected' : ''}`}
+          onClick={() => program.id && onProgramToggle(program.id)}
+        >
+          <span>{program.name}</span>
+          <DetailsButton
+            onClick={(e) => {
+              e.stopPropagation();
+              onDetailsClick('program', program.id);
+            }}
+          />
+        </div>
+      ))}
+    </div>
+  );
+};
 
 export default ProgramList; 

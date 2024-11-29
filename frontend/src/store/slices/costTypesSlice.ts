@@ -3,6 +3,9 @@ import { fetchCostTypeByAlias } from '../../services/costTypeService';
 import { CostType, Item, Cost, Category, Program, Project } from '../../types/program';
 import { updateItemCosts, createLineItem, deleteLineItem, updateItemName } from '../../services/itemService';
 import { fetchPrograms } from '../../services/programService';
+import { deleteCategory } from '../../services/categoryService';
+import { createSelector } from '@reduxjs/toolkit';
+import { RootState } from '../index';
 
 interface CostTypesState {
   item: CostType | null;
@@ -112,6 +115,14 @@ export const updateItemNameAsync = createAsyncThunk(
       categoryId,
       item: response
     };
+  }
+);
+
+export const deleteCategoryAsync = createAsyncThunk(
+  'categories/deleteCategory',
+  async (categoryId: number) => {
+    await deleteCategory(categoryId);
+    return categoryId;
   }
 );
 
@@ -265,4 +276,15 @@ const costTypesSlice = createSlice({
 });
 
 export const { updateLineItemInCostType, updateCategory, updateProgram, updateProject } = costTypesSlice.actions;
-export default costTypesSlice.reducer; 
+export default costTypesSlice.reducer;
+
+export const selectCategories = (selectedProgramId: number | null, selectedProjectId: number | null) =>
+  createSelector(
+    (state: RootState) => state.costTypes.item,
+    (costType) => {
+      if (!costType || selectedProgramId === null || selectedProjectId === null) return [];
+      const program = costType.programs.find(p => p.id === selectedProgramId);
+      const project = program?.projects.find(p => p.id === selectedProjectId);
+      return project?.categories || [];
+    }
+  ); 

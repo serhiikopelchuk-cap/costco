@@ -2,6 +2,8 @@ import React, { useEffect } from 'react';
 import Outline from '../components/outline/Outline';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
 import { fetchCostTypeByAliasAsync } from '../store/slices/costTypesSlice';
+import { setProgramId, setProjectId, setCategoryId, setLineItems } from '../store/slices/selectionSlice';
+import { setCurrentPage } from '../store/slices/uiSlice';
 
 const DirectCosts: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -9,25 +11,26 @@ const DirectCosts: React.FC = () => {
 
   useEffect(() => {
     // Fetch CostType by alias
-    if (status === 'idle') {
-      dispatch(fetchCostTypeByAliasAsync('direct_costs'));
-    }
-  }, [status, dispatch]);
+    dispatch(fetchCostTypeByAliasAsync('direct_costs'));
+  }, [dispatch]);
 
-  // Log state changes for debugging
   useEffect(() => {
-    console.log('CostType state updated:', { costType, status });
-    if (costType) {
-      console.log('Fetched CostType:', costType);
-      costType.programs.forEach(program => {
-        console.log('Program:', program);
-        program.projects.forEach(project => {
-          console.log('Project:', project);
-          console.log('Categories:', project.categories);
-        });
-      });
+    if (costType && costType.programs.length > 0) {
+      const firstProgram = costType.programs[0];
+      const firstProject = firstProgram.projects[0];
+      const firstCategory = firstProject.categories[0];
+      const firstItem = firstCategory.items[0];
+
+      dispatch(setProgramId(firstProgram.id));
+      dispatch(setProjectId(firstProject.id));
+      dispatch(setCategoryId(firstCategory.id));
+      dispatch(setLineItems(firstItem ? [firstItem] : []));
     }
-  }, [costType, status]);
+  }, [costType, dispatch]);
+
+  useEffect(() => {
+    dispatch(setCurrentPage('direct_costs'));
+  }, [dispatch]);
 
   if (status === 'loading') {
     return <div>Loading...</div>;

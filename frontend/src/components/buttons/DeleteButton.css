@@ -1,0 +1,23 @@
+/* .delete-button {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background-color: red;
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+
+.delete-button:hover {
+  opacity: 0.9;
+} 
+
+.delete-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+} */

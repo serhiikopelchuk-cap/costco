@@ -1,16 +1,20 @@
 import React from 'react';
 import SearchInput from '../common/SearchInput';
 import AddItemInput from '../AddItemInput';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEllipsisV } from '@fortawesome/free-solid-svg-icons';
+import { RootState } from '../../store';
+import { deleteProject } from '../../store/slices/programsSlice';
+import DetailsButton from '../buttons/DetailsButton';
+import { clearCategoryId } from '../../store/slices/selectionSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch } from '../../hooks/reduxHooks';
+import { createProjectAsync } from '../../store/slices/programsSlice';
 import { Project } from '../../types/program';
 
 type ProjectListProps = {
-  projects: Project[];
   selectedProjectId: number | null;
   onProjectToggle: (projectId: number) => void;
   onAddProject: (projectName: string) => void;
-  onDetailsClick: (type: 'project', name: number) => void;
+  onDetailsClick: (type: 'project', id: number) => void;
   projectSearch: string;
   setProjectSearch: (search: string) => void;
   showAddProjectInput: boolean;
@@ -18,7 +22,6 @@ type ProjectListProps = {
 };
 
 const ProjectList: React.FC<ProjectListProps> = ({
-  projects,
   selectedProjectId,
   onProjectToggle,
   onAddProject,
@@ -27,42 +30,57 @@ const ProjectList: React.FC<ProjectListProps> = ({
   setProjectSearch,
   showAddProjectInput,
   setShowAddProjectInput
-}) => (
-  <div className="column minified">
-    <div className="header-with-button">
-      <h3>Projects</h3>
-      <button
-        className={`add-toggle-button ${showAddProjectInput ? 'active' : ''}`}
-        onClick={() => setShowAddProjectInput(!showAddProjectInput)}
-      >
-        {showAddProjectInput ? '×' : '+'}
-      </button>
-    </div>
-    <SearchInput
-      placeholder="Search Projects"
-      value={projectSearch}
-      onChange={setProjectSearch}
-    />
-    {showAddProjectInput && <AddItemInput onAdd={onAddProject} />}
-    {projects.map(project => (
-      <div
-        key={project.id}
-        className={`project-item ${selectedProjectId === project.id ? 'selected' : ''}`}
-        onClick={() => project.id && onProjectToggle(project.id)}
-      >
-        <span>{project.name}</span>
+}) => {
+  const dispatch = useAppDispatch();
+  const projects = useSelector((state: RootState) => {
+    const selectedProgram = state.programs.items.find(p => p.id === state.selection.selectedProgramId);
+    return selectedProgram ? selectedProgram.projects : [];
+  });
+
+  const programId = useSelector((state: RootState) => state.selection.selectedProgramId);
+
+  const handleAddProject = (projectName: string) => {
+    if (programId !== null) {
+      const newProject: Partial<Project> = { name: projectName, categories: [] };
+      dispatch(createProjectAsync({ programId, project: newProject }));
+    }
+  };
+
+  return (
+    <div className="column minified">
+      <div className="header-with-button">
+        <h3>Projects</h3>
         <button
-          className="icon-button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDetailsClick('project', project.id);
-          }}
+          className={`add-toggle-button ${showAddProjectInput ? 'active' : ''}`}
+          onClick={() => setShowAddProjectInput(!showAddProjectInput)}
         >
-          <FontAwesomeIcon icon={faEllipsisV} className="edit-icon" />
+          {showAddProjectInput ? '×' : '+'}
         </button>
       </div>
-    ))}
-  </div>
-);
+      <SearchInput
+        placeholder="Search Projects"
+        value={projectSearch}
+        onChange={setProjectSearch}
+      />
+      {showAddProjectInput && <AddItemInput onAdd={handleAddProject} />}
+      {projects.map(project => (
+        <div
+          key={project.id}
+          className={`project-item ${selectedProjectId === project.id ? 'selected' : ''}`}
+          onClick={() => project.id && onProjectToggle(project.id)}
+        >
+          <span>{project.name}</span>
+          <DetailsButton
+            onClick={(e) => {
+              e.stopPropagation();
+              dispatch(clearCategoryId());
+              onDetailsClick('project', project.id);
+            }}
+          />
+        </div>
+      ))}
+    </div>
+  );
+};
 
 export default ProjectList; 

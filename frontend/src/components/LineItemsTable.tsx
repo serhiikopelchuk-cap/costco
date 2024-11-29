@@ -1,15 +1,18 @@
 import React, { SetStateAction, useState, useCallback, useEffect } from 'react';
 import './LineItemsTable.css';
-import { validateCellValue } from '../utils/validationUtils';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronDown, faClone, faSpinner, faCheck } from '@fortawesome/free-solid-svg-icons';
+// import { validateCellValue } from '../utils/validationUtils';
+// import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+// import { faChevronDown, faClone, faSpinner, faCheck } from '@fortawesome/free-solid-svg-icons';
 import ActionButtons from './ActionButtons';
 import { cloneItem } from '../services/itemService';
 import { cloneCategory } from '../services/categoryService';
 import { periodService } from '../services/periodService';
 import { Program, Item, Cost } from '../types/program';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
-import { updateLineItemInCostType, updateItemCostsAsync, createLineItemAsync, deleteLineItemAsync, updateItemNameAsync, updateCategory } from '../store/slices/costTypesSlice';
+import { updateLineItemInCostType, updateItemCostsAsync, createLineItemAsync, deleteLineItemAsync, updateItemNameAsync, updateCategory, deleteCategoryAsync } from '../store/slices/costTypesSlice';
+import CloneButton from './buttons/CloneButton';
+import DeleteButton from './buttons/DeleteButton';
+
 
 interface LineItemsTableProps {
   lineItems: Item[];
@@ -297,22 +300,68 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
     }
   };
 
+  const handleRemoveCategory = async () => {
+    if (!selectedCategoryId || !selectedProgramId || !selectedProjectId) {
+      console.error('Missing required IDs for removing category');
+      return;
+    }
+
+    setIsCloningCategory(true);
+    setCloneCategorySuccess(false);
+    try {
+      // Call the API to delete the category
+      await dispatch(deleteCategoryAsync(selectedCategoryId)).unwrap();
+
+      // Update Redux state
+      dispatch(updateCategory({
+        programId: selectedProgramId,
+        projectId: selectedProjectId,
+        category: { id: selectedCategoryId, name: '', items: [] } // Provide a valid empty category
+      }));
+
+      setCloneCategorySuccess(true);
+      setTimeout(() => setCloneCategorySuccess(false), 3000);
+    } catch (error) {
+      console.error('Error deleting category:', error);
+    } finally {
+      setIsCloningCategory(false);
+    }
+  };
+
+  const handleRemoveLineItem = async (itemId: number) => {
+    if (!selectedProgramId || !selectedProjectId || !selectedCategoryId) {
+      console.error('Missing required IDs for removing line item');
+      return;
+    }
+
+    try {
+      await dispatch(deleteLineItemAsync({
+        itemId,
+        programId: selectedProgramId,
+        projectId: selectedProjectId,
+        categoryId: selectedCategoryId
+      })).unwrap();
+    } catch (error) {
+      console.error('Failed to delete line item:', error);
+    }
+  };
+
   return (
     <div className="line-items-table">
       <div className="table-header">
         <h3 className="category-name">
           {categoryName}
-          <button 
-            className={`clone-button category-clone ${isCloningCategory ? 'cloning' : ''} ${cloneCategorySuccess ? 'success' : ''}`}
+          <CloneButton
+            isCloning={isCloningCategory}
+            cloneSuccess={cloneCategorySuccess}
             onClick={handleCloneCategory}
             title="Clone category"
+          />
+          <DeleteButton
+            onClick={handleRemoveCategory}
+            title="Delete category"
             disabled={isCloningCategory}
-          >
-            <FontAwesomeIcon 
-              icon={isCloningCategory ? faSpinner : cloneCategorySuccess ? faCheck : faClone} 
-              className={isCloningCategory ? 'fa-spin' : ''}
-            />
-          </button>
+          />
         </h3>
         <ActionButtons
           handleDeselectAll={handleDeselectAll}
@@ -363,17 +412,17 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
                       onBlur={() => handleNameBlur(item.id!)}
                       className="line-item-input"
                     />
-                    <button 
-                      className={`clone-button ${cloningLineItems[item.id!] ? 'cloning' : ''} ${cloneLineItemSuccess[item.id!] ? 'success' : ''}`}
+                    <CloneButton
+                      isCloning={cloningLineItems[item.id!]}
+                      cloneSuccess={cloneLineItemSuccess[item.id!]}
                       onClick={() => handleCloneLineItem(item)}
                       title="Clone line item"
+                    />
+                    <DeleteButton
+                      onClick={() => handleRemoveLineItem(item.id!)}
+                      title="Delete line item"
                       disabled={cloningLineItems[item.id!]}
-                    >
-                      <FontAwesomeIcon 
-                        icon={cloningLineItems[item.id!] ? faSpinner : cloneLineItemSuccess[item.id!] ? faCheck : faClone} 
-                        className={cloningLineItems[item.id!] ? 'fa-spin' : ''}
-                      />
-                    </button>
+                    />
                   </td>
                 </tr>
                 <tr>

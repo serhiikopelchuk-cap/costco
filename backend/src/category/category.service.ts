@@ -32,6 +32,12 @@ export class CategoryService {
     category.name = categoryData.name;
     category.description = categoryData.description;
     category.note = categoryData.note;
+
+    // Assign the category to a project if project.id exists
+    if (categoryData.project && categoryData.project.id) {
+      category.project = { id: categoryData.project.id };
+    }
+
     const savedCategory = await this.categoryRepository.save(category);
 
     // Process and save each item
@@ -71,7 +77,7 @@ export class CategoryService {
       savedCategory.items = items;
     }
 
-    return await this.categoryRepository.findOne({ where: { id: savedCategory.id }, relations: ['items', 'items.costs'] });
+    return await this.categoryRepository.findOne({ where: { id: savedCategory.id }, relations: ['items', 'items.costs', 'project'] });
   }
 
   async update(id: number, categoryData: Partial<Category>): Promise<Category> {

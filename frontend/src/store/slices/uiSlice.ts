@@ -18,6 +18,7 @@ interface UiState {
     name: string;
     id: number;
   } | null;
+  currentPage: 'direct_costs' | 'indirect_costs' | null;
 }
 
 const initialState: UiState = {
@@ -34,6 +35,7 @@ const initialState: UiState = {
     lineItem: false,
   },
   details: null,
+  currentPage: null,
 };
 
 const uiSlice = createSlice({
@@ -58,6 +60,9 @@ const uiSlice = createSlice({
     resetUi: (state) => {
       return initialState;
     },
+    setCurrentPage: (state, action: PayloadAction<'direct_costs' | 'indirect_costs'>) => {
+      state.currentPage = action.payload;
+    },
   },
 });
 
@@ -66,6 +71,7 @@ export const {
   setAddInputVisibility,
   setDetails,
   resetUi,
+  setCurrentPage,
 } = uiSlice.actions;
 
 export default uiSlice.reducer; 

@@ -216,7 +216,8 @@
   pointer-events: none; /* Ensure the dollar sign doesn't interfere with input */
 }
 
-.clone-button {
+.clone-button,
+.delete-button {
   width: 30px;
   height: 30px;
   border-radius: 50%;
@@ -224,37 +225,45 @@
   border: none;
   color: white;
   cursor: pointer;
-  display: none;
+  display: none; /* Hidden by default */
   align-items: center;
   justify-content: center;
   margin-left: 10px;
   transition: opacity 0.2s;
 }
 
-.line-item-row:hover .clone-button {
-  display: flex;
+.line-item-row:hover .clone-button,
+.line-item-row:hover .delete-button,
+.category-name:hover .clone-button,
+.category-name:hover .delete-button {
+  display: flex; /* Show on hover */
 }
 
-.clone-button:hover {
+.clone-button:hover,
+.delete-button:hover {
   opacity: 0.9;
 }
 
-.clone-button.category-clone {
+.clone-button.category-clone,
+.delete-button.category-delete {
   display: none;  /* Hidden by default */
   width: 25px;   /* Slightly smaller than item clone button */
   height: 25px;
 }
 
-.category-name:hover .clone-button.category-clone {
+.category-name:hover .clone-button.category-clone,
+.category-name:hover .delete-button.category-delete {
   display: flex;  /* Show on hover */
 }
 
-.clone-button.cloning {
+.clone-button.cloning,
+.delete-button.cloning {
   cursor: not-allowed;
   opacity: 0.7;
 }
 
-.clone-button.success {
+.clone-button.success,
+.delete-button.success {
   background-color: var(--success-color);
 }
 
@@ -269,4 +278,38 @@
   100% {
     transform: rotate(360deg);
   }
+}
+
+.line-item-row:hover .delete-button,
+.category-name:hover .delete-button {
+  display: flex; /* Show on hover */
+}
+
+.delete-button {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background-color: red;
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: none; /* Hidden by default */
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+
+.line-item-row:hover .delete-button,
+.category-name:hover .delete-button {
+  display: flex; /* Show on hover */
+}
+
+.delete-button:hover {
+  opacity: 0.9;
+}
+
+.delete-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.6;
 }

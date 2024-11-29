@@ -2,11 +2,15 @@ import React, { useEffect, useState } from 'react';
 import './DetailsComponent.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClone, faSpinner, faCheck } from '@fortawesome/free-solid-svg-icons';
-import { cloneProgram } from '../services/programService';
-import { cloneProject } from '../services/projectService';
+import { cloneProgram, deleteProgram } from '../services/programService';
+import { cloneProject, deleteProject } from '../services/projectService';
 import { Item } from '../types/program';
-import { useDispatch } from 'react-redux';
-import { updateProgram, updateProject } from '../store/slices/programsSlice';
+import { useAppDispatch } from '../hooks/reduxHooks';
+import { updateProgram, updateProject, deleteProgram as deleteProgramAction, deleteProject as deleteProjectAction } from '../store/slices/programsSlice';
+import DeleteButton from './buttons/DeleteButton';
+import { fetchCostTypeByAliasAsync } from '../store/slices/costTypesSlice';
+import { RootState } from '../store';
+import { useSelector } from 'react-redux';
 
 interface DetailsComponentProps {
   type: 'program' | 'project';
@@ -27,7 +31,8 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, name, id, pro
   const [isCloning, setIsCloning] = useState(false);
   const [cloneSuccess, setCloneSuccess] = useState(false);
 
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
+  const currentPage = useSelector((state: RootState) => state.ui.currentPage);
 
   useEffect(() => {
     const calculateSums = (items: Record<string, Item[]>) => {
@@ -90,6 +95,7 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, name, id, pro
 
       setCloneSuccess(true);
       setTimeout(() => setCloneSuccess(false), 3000);
+      dispatch(fetchCostTypeByAliasAsync(currentPage === 'direct_costs' ? 'direct_costs' : 'indirect_costs'));
     } catch (error) {
       console.error(`Error cloning ${type}:`, error);
     } finally {
@@ -97,8 +103,27 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, name, id, pro
     }
   };
 
+  const handleDelete = async () => {
+    try {
+      if (type === 'program') {
+        await deleteProgram(id);
+        console.log('Program deleted successfully');
+        dispatch(deleteProgramAction(id));
+      } else {
+        await deleteProject(id);
+        console.log('Project deleted successfully');
+        if (programId !== undefined) {
+          dispatch(deleteProjectAction({ programId, projectId: id }));
+        }
+      }
+      dispatch(fetchCostTypeByAliasAsync(currentPage === 'direct_costs' ? 'direct_costs' : 'indirect_costs'));
+    } catch (error) {
+      console.error(`Error deleting ${type}:`, error);
+    }
+  };
+
   return (
-    <div className="container">
+    <div className="container details-container">
       <div className="header-with-clone">
         <h4>{type === 'program' ? 'Program Details' : 'Project Details'}</h4>
         <div className="clone-status-wrapper">
@@ -118,6 +143,10 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, name, id, pro
               {type === 'program' ? 'Program' : 'Project'} cloned successfully!
             </span>
           )}
+          <DeleteButton
+            onClick={handleDelete}
+            title={`Delete ${type}`}
+          />
         </div>
       </div>
       <p>Details for {type === 'program' ? 'Program' : 'Project'}: {name}</p>

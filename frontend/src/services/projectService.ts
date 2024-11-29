@@ -18,8 +18,11 @@ export const fetchProjectById = async (id: number): Promise<Project> => {
 };
 
 // Create a new project
-export const createProject = async (project: Partial<Project>): Promise<Project> => {
-  const response = await axios.post<Project>(PROJECTS_URL, project);
+export const createProject = async (programId: number, project: Partial<Project>): Promise<Project> => {
+  const response = await axios.post<Project>(PROJECTS_URL, {
+    ...project,
+    program: { id: programId }
+  });
   return response.data;
 };
 

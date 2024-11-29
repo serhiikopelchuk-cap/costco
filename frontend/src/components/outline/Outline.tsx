@@ -1,16 +1,16 @@
-import React, { useCallback } from 'react';
+import React, { useEffect } from 'react';
 import './Outline.css';
-import directCosts from '../../data/direct-cost.json';
-import { Program, Item } from '../../types/program';
+import { Program, Item, Category } from '../../types/program';
 import ProgramList from './ProgramList';
 import ProjectList from './ProjectList';
 import LineItemList from './LineItemList';
 import CategoryList from './CategoryList';
 import DetailsColumn from './DetailsColumn';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
-import { setProgramId, setProjectId, setCategoryId, setLineItems, setProvider } from '../../store/slices/selectionSlice';
+import { setProgramId, setProjectId, setCategoryId, setLineItems, setProvider, clearCategoryId } from '../../store/slices/selectionSlice';
 import { setSearch, setAddInputVisibility, setDetails } from '../../store/slices/uiSlice';
-import { updateLineItem } from '../../store/slices/programsSlice';
+import { fetchProgramByIdAsync } from '../../store/slices/programsSlice';
+import { selectCategoriesFromPrograms } from '../../store/slices/programsSlice';
 
 type OutlineProps = {
   data: Program[];
@@ -35,8 +35,17 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
     details,
   } = useAppSelector(state => state.ui);
 
+  const selectedProjectCategories = useAppSelector(state => selectCategoriesFromPrograms(selectedProgramId, selectedProjectId)(state));
+
+  console.log('Selected Project Categories:', selectedProjectCategories);
+  useEffect(() => {
+    if (selectedProgramId) {
+      dispatch(fetchProgramByIdAsync(selectedProgramId));
+    }
+  }, [dispatch, selectedProgramId]);
+
   // Handlers
-  const handleProgramToggle = useCallback((programId: number) => {
+  const handleProgramToggle = (programId: number) => {
     if (selectedProgramId === programId) {
       dispatch(setProgramId(null));
     } else {
@@ -52,96 +61,38 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
         }
       }
     }
-  }, [dispatch, selectedProgramId, data]);
+  };
 
-  const handleProjectToggle = useCallback((projectId: number) => {
+  const handleProjectToggle = (projectId: number) => {
     if (selectedProjectId === projectId) {
       dispatch(setProjectId(null));
     } else {
       dispatch(setProjectId(projectId));
     }
-  }, [dispatch, selectedProjectId]);
+  };
 
-  const handleCategoryToggle = useCallback((categoryId: number) => {
+  const handleCategoryToggle = (categoryId: number) => {
     if (selectedCategoryId === categoryId) {
       dispatch(setCategoryId(null));
     } else {
       dispatch(setCategoryId(categoryId));
+      dispatch(setDetails(null)); // Clear details when a category is selected
     }
-  }, [dispatch, selectedCategoryId]);
+  };
 
-  const handleLineItemToggle = useCallback((lineItem: Item) => {
+  const handleLineItemToggle = (lineItem: Item) => {
     const isSelected = selectedLineItems.some(item => item.id === lineItem.id);
     if (isSelected) {
       dispatch(setLineItems(selectedLineItems.filter(item => item.id !== lineItem.id)));
     } else {
       dispatch(setLineItems([...selectedLineItems, lineItem]));
     }
-  }, [dispatch, selectedLineItems]);
+  };
 
-  const handleLineItemUpdate = useCallback((newLineItems: Item[] | ((prev: Item[]) => Item[])) => {
-    if (typeof newLineItems === 'function') {
-      dispatch(setLineItems(newLineItems(selectedLineItems)));
-    } else {
-      dispatch(setLineItems(newLineItems));
-      
-      // Also update the store with each line item
-      newLineItems.forEach(lineItem => {
-        if (selectedProgramId && selectedProjectId && selectedCategoryId) {
-          dispatch(updateLineItem({
-            programId: selectedProgramId,
-            projectId: selectedProjectId,
-            categoryId: selectedCategoryId,
-            lineItem,
-          }));
-          
-          // Log for debugging
-          console.log('Updating line item in store:', {
-            programId: selectedProgramId,
-            projectId: selectedProjectId,
-            categoryId: selectedCategoryId,
-            lineItem,
-          });
-        }
-      });
-    }
-  }, [dispatch, selectedLineItems, selectedProgramId, selectedProjectId, selectedCategoryId]);
-
-  const handleDeselectAll = useCallback(() => {
-    dispatch(setLineItems([]));
-  }, [dispatch]);
-
-  const handleDetailsClick = useCallback((type: 'program' | 'project', id: number) => {
-    if (selectedProgramId !== null) {
-      const program = data.find(p => p.id === selectedProgramId);
-      const project = program?.projects.find(p => p.id === id);
-      dispatch(setDetails({ type, id, name: type === 'program' ? program?.name || '' : project?.name || '' }));
-    }
-  }, [dispatch, selectedProgramId, data]);
-
-  const handleAddProgram = useCallback((name: string) => {
-    console.log('Adding program:', name);
-    // Implement program addition logic
-  }, []);
-
-  const handleAddProject = useCallback((name: string) => {
-    console.log('Adding project:', name);
-    // Implement project addition logic
-  }, []);
-
-  const handleAddCategory = useCallback((name: string) => {
-    console.log('Adding category:', name);
-    // Implement category addition logic
-  }, []);
-
-  const handleAddLineItem = useCallback((name: string) => {
-    console.log('Adding line item:', name);
-    // Implement line item addition logic
-  }, []);
-
-  const handleLineItemAdd = useCallback((lineItem: Item) => {
-    dispatch(setLineItems([...selectedLineItems, lineItem]));
-  }, [dispatch, selectedLineItems]);
+  const handleDetailsClick = (type: 'program' | 'project', id: number) => {
+    dispatch(setDetails({ type, id, name: type === 'program' ? data.find(p => p.id === id)?.name || '' : data.find(p => p.id === selectedProgramId)?.projects.find(p => p.id === id)?.name || '' }));
+    dispatch(clearCategoryId()); // Clear selected category when viewing details
+  };
 
   // Derived data
   const filteredPrograms = data.filter(program => 
@@ -153,10 +104,10 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
     project.name.toLowerCase().includes(projectSearch.toLowerCase())
   );
 
-  const selectedProjectCategories = data
-    .find(p => p.id === selectedProgramId)
-    ?.projects?.find(p => p.id === selectedProjectId)
-    ?.categories || [];
+  // const selectedProjectCategories = data
+  //   .find(p => p.id === selectedProgramId)
+  //   ?.projects?.find(p => p.id === selectedProjectId)
+  //   ?.categories || [];
 
   const filteredCategories = selectedProjectCategories.filter(category =>
     category.name.toLowerCase().includes(categorySearch.toLowerCase())
@@ -170,32 +121,7 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
     lineItem.name.toLowerCase().includes(lineItemSearch.toLowerCase())
   );
 
-  const handleProviderChange = (provider: string) => {
-    dispatch(setProvider(provider));
-
-    // Find the first category and line item for the selected provider
-    const firstAvailableCategory = selectedProjectCategories.find(category => {
-      return category.items.some(item => {
-        const categoryInfo = directCosts.categories.find(cat => cat.name === category.name);
-        return !provider || categoryInfo?.cloudProvider.includes(provider);
-      });
-    });
-
-    if (firstAvailableCategory) {
-      dispatch(setCategoryId(firstAvailableCategory.id));
-    } else {
-      dispatch(setCategoryId(0)); // or however you want to handle no categories
-    }
-  };
-
-  const detailsData = details ? 
-    Object.fromEntries(
-      selectedProjectCategories.map(category => [
-        category.name,
-        category.items
-      ])
-    )
-    : {};
+  console.log('Selected Project Categories:', selectedProjectCategories);
 
   return (
     <div className="outline-view">
@@ -208,10 +134,9 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
         setProgramSearch={(value: string) => dispatch(setSearch({ type: 'program', value }))}
         showAddProgramInput={showAddProgramInput}
         setShowAddProgramInput={(value: boolean) => dispatch(setAddInputVisibility({ type: 'program', value }))}
-        onAddProgram={handleAddProgram}
+        onAddProgram={(name: string) => console.log('Adding program:', name)}
       />
       <ProjectList
-        projects={filteredProjects}
         selectedProjectId={selectedProjectId}
         onProjectToggle={handleProjectToggle}
         onDetailsClick={handleDetailsClick}
@@ -219,45 +144,53 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
         setProjectSearch={(value: string) => dispatch(setSearch({ type: 'project', value }))}
         showAddProjectInput={showAddProjectInput}
         setShowAddProjectInput={(value: boolean) => dispatch(setAddInputVisibility({ type: 'project', value }))}
-        onAddProject={handleAddProject}
+        onAddProject={(name: string) => console.log('Adding project:', name)}
       />
       <CategoryList
         selectedCategoryId={selectedCategoryId}
         onCategoryToggle={handleCategoryToggle}
         categorySearch={categorySearch}
-        setCategorySearch={(value) => dispatch(setSearch({ type: 'category', value }))}
         showAddCategoryInput={showAddCategoryInput}
-        setShowAddCategoryInput={(value) => dispatch(setAddInputVisibility({ type: 'category', value }))}
-        onAddCategory={handleAddCategory}
         categories={selectedProjectCategories}
-      />
-      <LineItemList
-        lineItems={lineItems}
-        selectedLineItems={selectedLineItems}
-        onLineItemToggle={handleLineItemToggle}
-        onAddLineItem={handleAddLineItem}
-        lineItemSearch={lineItemSearch}
-        // setLineItemSearch={setLineItemSearch}
-        showAddLineItemInput={showAddLineItemInput}
-        // setShowAddLineItemInput={setShowAddLineItemInput}
         selectedProgramId={selectedProgramId}
         selectedProjectId={selectedProjectId}
-        selectedCategoryId={selectedCategoryId}
       />
+      {selectedCategoryId && !details && (
+        <LineItemList
+          lineItems={lineItems}
+          selectedLineItems={selectedLineItems}
+          onLineItemToggle={handleLineItemToggle}
+          onAddLineItem={(name: string) => console.log('Adding line item:', name)}
+          lineItemSearch={lineItemSearch}
+          showAddLineItemInput={showAddLineItemInput}
+          selectedProgramId={selectedProgramId}
+          selectedProjectId={selectedProjectId}
+          selectedCategoryId={selectedCategoryId}
+        />
+      )}
       <DetailsColumn
         selectedCategoryId={selectedCategoryId}
         selectedLineItems={selectedLineItems}
         lineItems={lineItems}
-        handleLineItemUpdate={handleLineItemUpdate}
-        handleDeselectAll={handleDeselectAll}
+        handleLineItemUpdate={(newLineItems) => {
+          if (Array.isArray(newLineItems)) {
+            dispatch(setLineItems(newLineItems));
+          }
+        }}
+        handleDeselectAll={() => dispatch(setLineItems([]))}
         selectedProvider={selectedProvider}
-        handleProviderChange={handleProviderChange}
+        handleProviderChange={(provider: string) => dispatch(setProvider(provider))}
         details={details as { type: 'program' | 'project'; name: string; id: number; } | null}
         tableData={data}
         selectedProgramId={selectedProgramId}
-        detailsData={detailsData}
         selectedProjectId={selectedProjectId}
-        handleLineItemAdd={handleLineItemAdd}
+        detailsData={Object.fromEntries(
+          selectedProjectCategories.map((category: Category) => [
+            category.name,
+            category.items
+          ])
+        )}
+        handleLineItemAdd={(lineItem: Item) => dispatch(setLineItems([...selectedLineItems, lineItem]))}
       />
     </div>
   );

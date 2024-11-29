@@ -47,6 +47,9 @@ const selectionSlice = createSlice({
     resetSelection: (state) => {
       return initialState;
     },
+    clearCategoryId: (state) => {
+      state.selectedCategoryId = null;
+    },
   },
 });
 
@@ -57,6 +60,7 @@ export const {
   setLineItems,
   setProvider,
   resetSelection,
+  clearCategoryId,
 } = selectionSlice.actions;
 
 export default selectionSlice.reducer;

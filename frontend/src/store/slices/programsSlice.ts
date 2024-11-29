@@ -1,8 +1,13 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import { Program, Item, Cost, Category, Project } from '../../types/program';
 import { fetchPrograms } from '../../services/programService';
 import { updateItemCosts } from '../../services/itemService';
 import { createLineItem, deleteLineItem, updateItemName } from '../../services/itemService';
+import { fetchProgramById } from '../../services/programService';
+import { createCategory } from '../../services/categoryService';
+import { RootState } from '../index';
+import { createProject } from '../../services/projectService';
+import { createProgram } from '../../services/programService';
 
 interface ProgramsState {
   items: Program[];
@@ -115,6 +120,51 @@ export const updateItemNameAsync = createAsyncThunk(
   }
 );
 
+export const fetchProgramByIdAsync = createAsyncThunk(
+  'programs/fetchProgramById',
+  async (programId: number) => {
+    const program = await fetchProgramById(programId);
+    return program;
+  }
+);
+
+export const createCategoryAsync = createAsyncThunk(
+  'programs/createCategory',
+  async ({ category }: { category: Partial<Category> }) => {
+    const response = await createCategory(category);
+    return response;
+  }
+);
+
+export const createProjectAsync = createAsyncThunk(
+  'programs/createProject',
+  async ({ programId, project }: { programId: number; project: Partial<Project> }) => {
+    const response = await createProject(programId, project);
+    return {
+      programId,
+      project: response
+    };
+  }
+);
+
+export const createProgramAsync = createAsyncThunk(
+  'programs/createProgram',
+  async ({ program, costTypeId }: { program: Partial<Program>; costTypeId: number }) => {
+    const response = await createProgram(program, costTypeId);
+    return response;
+  }
+);
+
+export const selectCategoriesFromPrograms = (selectedProgramId: number | null, selectedProjectId: number | null) =>
+  createSelector(
+    (state: RootState) => state.programs.items,
+    (items) => {
+      const program = items.find(p => p.id === selectedProgramId);
+      const project = program?.projects.find(p => p.id === selectedProjectId);
+      return project?.categories || [];
+    }
+  );
+
 const programsSlice = createSlice({
   name: 'programs',
   initialState,
@@ -204,6 +254,18 @@ const programsSlice = createSlice({
         program.projects.push(project);
       } else {
         program.projects[projectIndex] = project;
+      }
+    },
+    setPrograms(state, action: PayloadAction<Program[]>) {
+      state.items = action.payload;
+    },
+    deleteProgram(state, action: PayloadAction<number>) {
+      state.items = state.items.filter(program => program.id !== action.payload);
+    },
+    deleteProject(state, action: PayloadAction<{ programId: number; projectId: number }>) {
+      const program = state.items.find(p => p.id === action.payload.programId);
+      if (program) {
+        program.projects = program.projects.filter(project => project.id !== action.payload.projectId);
       }
     },
   },
@@ -299,9 +361,41 @@ const programsSlice = createSlice({
         if (!category) return;
 
         category.items = category.items.filter(item => item.id !== itemId);
+      })
+      .addCase(fetchProgramByIdAsync.fulfilled, (state, action) => {
+        const programIndex = state.items.findIndex(p => p.id === action.payload.id);
+        if (programIndex !== -1) {
+          state.items[programIndex] = action.payload;
+        } else {
+          state.items.push(action.payload);
+        }
+      })
+      .addCase(createCategoryAsync.fulfilled, (state, action) => {
+        const { project } = action.payload;
+        const programIndex = state.items.findIndex(p => p.projects.some(pr => pr.id === project!.id));
+        if (programIndex !== -1) {
+          const projectIndex = state.items[programIndex].projects.findIndex(pr => pr.id === project!.id);
+          if (projectIndex !== -1) {
+            state.items[programIndex].projects[projectIndex] = {
+              ...state.items[programIndex].projects[projectIndex],
+              categories: [...state.items[programIndex].projects[projectIndex].categories, action.payload]
+            };
+            console.log('Updated categories:', state.items[programIndex].projects[projectIndex].categories);
+          }
+        }
+      })
+      .addCase(createProjectAsync.fulfilled, (state, action) => {
+        const { programId, project } = action.payload;
+        const program = state.items.find(p => p.id === programId);
+        if (program) {
+          program.projects.push(project);
+        }
+      })
+      .addCase(createProgramAsync.fulfilled, (state, action) => {
+        state.items.push(action.payload);
       });
   },
 });
 
-export const { updateLineItem, initializePrograms, updateCategory, updateProgram, updateProject } = programsSlice.actions;
+export const { updateLineItem, initializePrograms, updateCategory, updateProgram, updateProject, setPrograms, deleteProgram, deleteProject } = programsSlice.actions;
 export default programsSlice.reducer;

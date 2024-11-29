@@ -4,6 +4,7 @@ import SearchInput from '../common/SearchInput';
 import AddItemInput from '../AddItemInput';
 import { Item } from '../../types/program';
 import { setSearch, setAddInputVisibility } from '../../store/slices/uiSlice';
+import { createLineItemAsync } from '../../store/slices/programsSlice';
 
 type LineItemListProps = {
   lineItems: Item[];
@@ -37,6 +38,18 @@ const LineItemList: React.FC<LineItemListProps> = ({
 
   const handleAddInputVisibility = (value: boolean) => {
     dispatch(setAddInputVisibility({ type: 'lineItem', value }));
+  };
+
+  const handleAddLineItem = (itemName: string) => {
+    if (selectedProgramId && selectedProjectId && selectedCategoryId) {
+      const newItem: Partial<Item> = { name: itemName, costs: Array(13).fill({ value: 0 }) };
+      dispatch(createLineItemAsync({
+        programId: selectedProgramId,
+        projectId: selectedProjectId,
+        categoryId: selectedCategoryId,
+        item: newItem
+      }));
+    }
   };
 
   // Get the current category's items from Redux state
@@ -80,7 +93,7 @@ const LineItemList: React.FC<LineItemListProps> = ({
         value={lineItemSearch}
         onChange={handleSearchChange}
       />
-      {showAddLineItemInput && <AddItemInput onAdd={onAddLineItem} />}
+      {showAddLineItemInput && <AddItemInput onAdd={handleAddLineItem} />}
       {filteredItems.map(lineItem => (
         <div
           key={lineItem.id}

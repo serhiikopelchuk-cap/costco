@@ -26,11 +26,11 @@ export class Category {
   @ApiProperty({ example: ['AWS', 'Azure'], description: 'The cloud providers associated with the category' })
   cloudProvider: string[];
 
-  @OneToMany(() => Item, item => item.category, { cascade: true, nullable: true })
+  @OneToMany(() => Item, item => item.category, { cascade: true, nullable: true, onDelete: 'CASCADE' })
   @ApiProperty({ type: () => [Item], description: 'The items associated with the category' })
   items: Item[];
 
-  @ManyToOne(() => Project, project => project.categories)
+  @ManyToOne(() => Project, project => project.categories, { onDelete: 'CASCADE' })
   project: Project;
 
   // @ManyToMany(() => Period, period => period.categories)

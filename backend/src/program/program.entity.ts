@@ -13,7 +13,7 @@ export class Program {
   @Column({ nullable: true })
   description: string;
 
-  @OneToMany(() => Project, project => project.program, { cascade: true })
+  @OneToMany(() => Project, project => project.program, { cascade: true, onDelete: 'CASCADE' })
   projects: Project[];
 
   @ManyToOne(() => CostType, costType => costType.programs)
