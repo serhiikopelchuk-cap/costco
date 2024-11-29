@@ -12,8 +12,8 @@ import MonthlyReports from './pages/MonthlyReports';
 import EnterTeamSpend from './pages/EnterTeamSpend';
 // import DirectCostOld from './pages/DirectCostOld';
 // import Outline from './pages/Outline';
-import DirectCosts from './pages/DirectCosts';
 import IndirectCost from './pages/IndirectCost';
+import DirectCosts from './pages/DirectCosts';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);

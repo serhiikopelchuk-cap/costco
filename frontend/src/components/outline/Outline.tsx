@@ -11,6 +11,7 @@ import { setProgramId, setProjectId, setCategoryId, setLineItems, setProvider, c
 import { setSearch, setAddInputVisibility, setDetails } from '../../store/slices/uiSlice';
 import { fetchProgramByIdAsync } from '../../store/slices/programsSlice';
 import { selectCategoriesFromPrograms } from '../../store/slices/programsSlice';
+import { useLocation } from 'react-router-dom';
 
 type OutlineProps = {
   data: Program[];
@@ -18,6 +19,9 @@ type OutlineProps = {
 
 const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
   const dispatch = useAppDispatch();
+  const location = useLocation();
+  const isDirect = location.pathname === '/direct-costs';
+  const costTypeData = useAppSelector(state => isDirect ? state.costTypes.directCosts : state.costTypes.indirectCosts);
   
   // Selection state from Redux
   const {
@@ -37,7 +41,7 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
 
   const selectedProjectCategories = useAppSelector(state => selectCategoriesFromPrograms(selectedProgramId, selectedProjectId)(state));
 
-  console.log('Selected Project Categories:', selectedProjectCategories);
+  // console.log('Selected Project Categories:', selectedProjectCategories);
   useEffect(() => {
     if (selectedProgramId) {
       dispatch(fetchProgramByIdAsync(selectedProgramId));
@@ -121,12 +125,14 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
     lineItem.name.toLowerCase().includes(lineItemSearch.toLowerCase())
   );
 
-  console.log('Selected Project Categories:', selectedProjectCategories);
+  // console.log('Selected Project Categories:', selectedProjectCategories);
+
+  console.log('Outline data:', data);
 
   return (
     <div className="outline-view">
       <ProgramList
-        programs={filteredPrograms}
+        programs={data}
         selectedProgramId={selectedProgramId}
         onProgramToggle={handleProgramToggle}
         onDetailsClick={handleDetailsClick}

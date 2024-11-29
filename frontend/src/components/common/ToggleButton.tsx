@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './ToggleButton.css';
+import { useAppDispatch } from '../../hooks/reduxHooks';
+import { fetchCostTypeByAliasAsync } from '../../store/slices/costTypesSlice';
 
 const ToggleButton: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isDirect, setIsDirect] = useState(true);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     setIsDirect(location.pathname === '/direct-costs');
@@ -13,7 +16,9 @@ const ToggleButton: React.FC = () => {
 
   const handleClick = () => {
     setIsDirect(!isDirect);
-    navigate(isDirect ? '/indirect-costs' : '/direct-costs');
+    const newPath = isDirect ? '/indirect-costs' : '/direct-costs';
+    navigate(newPath);
+    dispatch(fetchCostTypeByAliasAsync(newPath === '/direct-costs' ? 'direct_costs' : 'indirect_costs'));
   };
 
   return (

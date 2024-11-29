@@ -1,30 +1,41 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import Outline from '../components/outline/Outline';
-import { fetchPrograms } from '../services/programService';
-import { Program } from '../types/program';
-
-// Define the Data type as a record of programs
-type Data = Record<string, Program>;
-
+import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
+import { fetchCostTypeByAliasAsync } from '../store/slices/costTypesSlice';
+import { setCurrentPage } from '../store/slices/uiSlice';
 
 const DirectCosts: React.FC = () => {
-  const [data, setData] = useState<Program[] | null>(null);
+  console.log('DirectCosts component rendered');
+
+  const dispatch = useAppDispatch();
+  const { directCosts: costType, status, error } = useAppSelector(state => state.costTypes);
+
+  console.log('Direct Costs:', costType);
+  useEffect(() => {
+    dispatch(fetchCostTypeByAliasAsync('direct_costs'));
+  }, [dispatch]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const programsArray = await fetchPrograms();
-        // console.log(`Programs:`, programsArray);
-        setData(programsArray); // Set the data as an array
-      } catch (error) {
-        console.error('Error fetching programs:', error);
-      }
-    };
+    dispatch(setCurrentPage('direct_costs'));
+  }, [dispatch]);
 
-    fetchData();
-  }, []);
+  useEffect(() => {
+    console.log('Direct Costs:', costType);
+  }, [costType]);
 
-  return data ? <Outline data={data} /> : <div>Loading...</div>;
+  if (status === 'loading') {
+    return <div>Loading...</div>;
+  }
+
+  if (status === 'failed') {
+    return <div>Error: {error}</div>;
+  }
+
+  if (!costType || !costType.programs || costType.programs.length === 0) {
+    return <div>No data available</div>;
+  }
+  
+  return <Outline data={costType.programs} />;
 };
 
 export default DirectCosts; 

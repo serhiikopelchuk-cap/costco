@@ -6,11 +6,12 @@ import { setProgramId, setProjectId, setCategoryId, setLineItems } from '../stor
 import { setCurrentPage } from '../store/slices/uiSlice';
 
 const DirectCosts: React.FC = () => {
+  console.log('DirectCosts component rendered');
+
   const dispatch = useAppDispatch();
-  const { item: costType, status, error } = useAppSelector(state => state.costTypes);
+  const { directCosts: costType, status, error } = useAppSelector(state => state.costTypes);
 
   useEffect(() => {
-    // Fetch CostType by alias
     dispatch(fetchCostTypeByAliasAsync('direct_costs'));
   }, [dispatch]);
 
@@ -31,6 +32,10 @@ const DirectCosts: React.FC = () => {
   useEffect(() => {
     dispatch(setCurrentPage('direct_costs'));
   }, [dispatch]);
+
+  useEffect(() => {
+    console.log('Direct Costs:', costType);
+  }, [costType]);
 
   if (status === 'loading') {
     return <div>Loading...</div>;

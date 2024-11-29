@@ -5,8 +5,6 @@ import { Program } from '../../types/program';
 import DetailsButton from '../buttons/DetailsButton';
 import { useAppDispatch } from '../../hooks/reduxHooks';
 import { createProgramAsync } from '../../store/slices/programsSlice';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
 
 type ProgramListProps = {
   programs: Program[];
@@ -21,7 +19,7 @@ type ProgramListProps = {
 };
 
 const ProgramList: React.FC<ProgramListProps> = ({
-  // programs,
+  programs,
   selectedProgramId,
   onProgramToggle,
   onAddProgram,
@@ -31,8 +29,9 @@ const ProgramList: React.FC<ProgramListProps> = ({
   showAddProgramInput,
   setShowAddProgramInput
 }) => {
+  console.log('ProgramList programs:', programs);
+
   const dispatch = useAppDispatch();
-  const programs = useSelector((state: RootState) => state.programs.items);
 
   const handleAddProgram = (programName: string) => {
     const costTypeId = 1; // Replace with actual logic to determine costTypeId

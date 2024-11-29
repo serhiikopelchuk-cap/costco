@@ -11,12 +11,16 @@ interface CostTypesState {
   item: CostType | null;
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
+  directCosts: CostType | null;
+  indirectCosts: CostType | null;
 }
 
 const initialState: CostTypesState = {
   item: null,
   status: 'idle',
   error: null,
+  directCosts: null,
+  indirectCosts: null,
 };
 
 export const fetchCostTypeByAliasAsync = createAsyncThunk(
@@ -210,7 +214,11 @@ const costTypesSlice = createSlice({
       })
       .addCase(fetchCostTypeByAliasAsync.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.item = action.payload;
+        if (action.meta.arg === 'direct_costs') {
+          state.directCosts = action.payload;
+        } else if (action.meta.arg === 'indirect_costs') {
+          state.indirectCosts = action.payload;
+        }
       })
       .addCase(fetchCostTypeByAliasAsync.rejected, (state, action) => {
         state.status = 'failed';
@@ -232,6 +240,14 @@ const costTypesSlice = createSlice({
         const itemIndex = category.items.findIndex(i => i.id === item.id);
         if (itemIndex !== -1) {
           category.items[itemIndex] = item;
+        }
+        
+        if (typeof action.meta.arg === 'string') {
+          if (action.meta.arg === 'direct_costs') {
+            state.directCosts = state.item;
+          } else if (action.meta.arg === 'indirect_costs') {
+            state.indirectCosts = state.item;
+          }
         }
       })
       .addCase(createLineItemAsync.fulfilled, (state, action) => {

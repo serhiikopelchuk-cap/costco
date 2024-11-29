@@ -44,7 +44,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
   };
 
   const filteredCategories = React.useMemo(() => {
-    console.log('Categories in component:', categories);
+    // console.log('Categories in component:', categories);
     return categories.filter(category => 
       category.name.toLowerCase().includes(categorySearch.toLowerCase())
     );

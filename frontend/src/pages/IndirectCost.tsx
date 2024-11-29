@@ -7,10 +7,9 @@ import { setCurrentPage } from '../store/slices/uiSlice';
 
 const IndirectCost: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { item: costType, status, error } = useAppSelector(state => state.costTypes);
+  const { indirectCosts: costType, status, error } = useAppSelector(state => state.costTypes);
 
   useEffect(() => {
-    // Fetch CostType by alias
     dispatch(fetchCostTypeByAliasAsync('indirect_costs'));
   }, [dispatch]);
 
