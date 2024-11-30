@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import SearchInput from '../common/SearchInput';
 import AddItemInput from '../AddItemInput';
 import { Category } from '../../types/program';
 import { setSearch, setAddInputVisibility } from '../../store/slices/uiSlice';
+import { setCategoryId } from '../../store/slices/selectionSlice';
 import { createCategoryAsync, fetchCostTypeByAliasAsync } from '../../store/slices/costTypesSlice';
 import { useLocation } from 'react-router-dom';
 
@@ -32,6 +33,10 @@ const CategoryList: React.FC<CategoryListProps> = ({
   const location = useLocation();
   const isDirect = location.pathname === '/direct-costs';
 
+  useEffect(() => {
+    console.log('CategoryList - Selected Category:', selectedCategoryId);
+  }, [selectedCategoryId]);
+
   const handleSearchChange = (value: string) => {
     dispatch(setSearch({ type: 'category', value }));
   };
@@ -42,14 +47,20 @@ const CategoryList: React.FC<CategoryListProps> = ({
 
   const handleAddCategory = async (categoryName: string) => {
     if (selectedProjectId && selectedProgramId) {
-      const newCategory: Partial<Category> = { name: categoryName, items: [], project: { id: selectedProjectId } };
+      const newCategory: Partial<Category> = { 
+        name: categoryName, 
+        items: [], 
+        project: { id: selectedProjectId } 
+      };
 
       try {
-        await dispatch(createCategoryAsync({ 
+        const response = await dispatch(createCategoryAsync({ 
           category: newCategory,
           programId: selectedProgramId,
           projectId: selectedProjectId
         })).unwrap();
+
+        dispatch(setCategoryId(response.category.id));
 
         await dispatch(fetchCostTypeByAliasAsync(
           isDirect ? 'direct_costs' : 'indirect_costs'
@@ -58,6 +69,11 @@ const CategoryList: React.FC<CategoryListProps> = ({
         console.error('Failed to create category:', error);
       }
     }
+  };
+
+  const handleCategoryClick = (categoryId: number) => {
+    console.log('CategoryList - Clicking category:', categoryId);
+    onCategoryToggle(categoryId);
   };
 
   const filteredCategories = React.useMemo(() => {
@@ -92,7 +108,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
         <div
           key={category.id}
           className={`category-item ${selectedCategoryId === category.id ? 'selected' : ''}`}
-          onClick={() => onCategoryToggle(category.id)}
+          onClick={() => handleCategoryClick(category.id)}
         >
           {category.name}
         </div>

@@ -7,7 +7,7 @@ import LineItemList from './LineItemList';
 import CategoryList from './CategoryList';
 import DetailsColumn from './DetailsColumn';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
-import { setProgramId, setProjectId, setCategoryId, setLineItems, setProvider, clearCategoryId } from '../../store/slices/selectionSlice';
+import { setProgramId, setProjectId, setCategoryId, setLineItems, setProvider, clearCategoryId, updateSelections } from '../../store/slices/selectionSlice';
 import { setSearch, setAddInputVisibility, setDetails } from '../../store/slices/uiSlice';
 import { fetchProgramByIdAsync } from '../../store/slices/programsSlice';
 import { selectCategoriesFromPrograms } from '../../store/slices/programsSlice';
@@ -48,21 +48,22 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
     }
   }, [dispatch, selectedProgramId]);
 
+  // Add a ref to track initial load
+  const isInitialLoad = React.useRef(true);
+
   // Handlers
   const handleProgramToggle = (programId: number) => {
     if (selectedProgramId === programId) {
-      dispatch(setProgramId(null));
+      dispatch(updateSelections({ programId: null }));
     } else {
-      dispatch(setProgramId(programId));
       const program = data.find(p => p.id === programId);
       if (program?.projects?.[0]?.id) {
-        dispatch(setProjectId(program.projects[0].id));
-        
-        const firstCategory = program.projects[0].categories?.[0];
-        if (firstCategory?.id) {
-          dispatch(setCategoryId(firstCategory.id));
-          dispatch(setLineItems(firstCategory.items?.length > 0 ? [firstCategory.items[0]] : []));
-        }
+        dispatch(updateSelections({
+          programId,
+          projectId: program.projects[0].id,
+          categoryId: null,
+          lineItems: []
+        }));
       }
     }
   };
@@ -76,11 +77,17 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
   };
 
   const handleCategoryToggle = (categoryId: number) => {
+    console.log('Outline - Category toggle:', categoryId);
+    console.log('Outline - Current selected category:', selectedCategoryId);
+
     if (selectedCategoryId === categoryId) {
+      console.log('Outline - Deselecting category');
       dispatch(setCategoryId(null));
     } else {
+      console.log('Outline - Selecting new category:', categoryId);
       dispatch(setCategoryId(categoryId));
       dispatch(setDetails(null)); // Clear details when a category is selected
+      dispatch(setLineItems([]));
     }
   };
 
@@ -96,6 +103,13 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
   const handleDetailsClick = (type: 'program' | 'project', id: number) => {
     dispatch(setDetails({ type, id, name: type === 'program' ? data.find(p => p.id === id)?.name || '' : data.find(p => p.id === selectedProgramId)?.projects.find(p => p.id === id)?.name || '' }));
     dispatch(clearCategoryId()); // Clear selected category when viewing details
+  };
+
+  const handleLineItemUpdate = (updatedItem: Item) => {
+    const newSelectedItems = selectedLineItems.map(item => 
+      item.id === updatedItem.id ? updatedItem : item
+    );
+    dispatch(setLineItems(newSelectedItems));
   };
 
   // Derived data
@@ -174,7 +188,8 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
         selectedCategoryId={selectedCategoryId}
         selectedLineItems={selectedLineItems}
         lineItems={lineItems}
-        handleLineItemUpdate={(newLineItems) => {
+        handleLineItemUpdate={handleLineItemUpdate}
+        setLineItems={(newLineItems) => {
           if (Array.isArray(newLineItems)) {
             dispatch(setLineItems(newLineItems));
           }

@@ -5,6 +5,7 @@ import AddItemInput from '../AddItemInput';
 import { Item } from '../../types/program';
 import { setSearch, setAddInputVisibility } from '../../store/slices/uiSlice';
 import { createLineItemAsync } from '../../store/slices/costTypesSlice';
+
 type LineItemListProps = {
   selectedLineItems: Item[];
   onLineItemToggle: (lineItem: Item) => void;
@@ -29,19 +30,24 @@ const LineItemList: React.FC<LineItemListProps> = ({
   const dispatch = useAppDispatch();
   const costTypes = useAppSelector(state => state.costTypes);
 
-  // Derive line items from costTypes state
+  // Derive line items from costTypes state and preserve selection
   const items = React.useMemo(() => {
     if (!selectedCategoryId || !costTypes.item) return [];
     const category = costTypes.item.programs
       .flatMap(program => program.projects)
       .flatMap(project => project.categories)
       .find(category => category.id === selectedCategoryId);
-    return category ? category.items : [];
-  }, [costTypes, selectedCategoryId]);
-
-  useEffect(() => {
     
-  }, [costTypes, selectedCategoryId, items]);
+    if (!category) return [];
+
+    return category.items.map(item => {
+      const isSelected = selectedLineItems.some(selected => selected.id === item.id);
+      return {
+        ...item,
+        isSelected
+      };
+    });
+  }, [costTypes, selectedCategoryId, selectedLineItems]);
 
   const handleSearchChange = (value: string) => {
     dispatch(setSearch({ type: 'lineItem', value }));

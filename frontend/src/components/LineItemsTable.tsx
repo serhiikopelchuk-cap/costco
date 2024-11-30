@@ -6,10 +6,10 @@ import { cloneCategory } from '../services/categoryService';
 import { periodService } from '../services/periodService';
 import { Program, Item, Cost } from '../types/program';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
-import { updateLineItemInCostType, updateItemNameAsync, updateCategory, deleteCategoryAsync, fetchCostTypeByAliasAsync } from '../store/slices/costTypesSlice';
+import { updateLineItemInCostType, updateItemNameAsync, updateCategory, deleteCategoryAsync, fetchCostTypeByAliasAsync, fetchCategoryAsync, createLineItemAsync, deleteLineItemAsync, updateItemCostsAsync } from '../store/slices/costTypesSlice';
 import CloneButton from './buttons/CloneButton';
 import DeleteButton from './buttons/DeleteButton';
-import { createLineItemAsync, deleteLineItemAsync, updateItemCostsAsync } from '../store/slices/costTypesSlice';
+import { updateLineItemCosts, setLineItems as setLineItemsAction, removeItemFromSelection, setCategoryId } from '../store/slices/selectionSlice';
 import { useLocation } from 'react-router-dom';
 
 
@@ -27,6 +27,7 @@ interface LineItemsTableProps {
   selectedProgramId: number | null;
   selectedProjectId: number | null;
   selectedCategoryId: number | null;
+  handleLineItemUpdate: (updatedItem: Item) => void;
 }
 
 const LineItemsTable: React.FC<LineItemsTableProps> = ({
@@ -43,6 +44,7 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
   selectedProgramId,
   selectedProjectId,
   selectedCategoryId,
+  handleLineItemUpdate,
 }) => {
   const dispatch = useAppDispatch();
   const location = useLocation();
@@ -81,6 +83,14 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
   const [cloningLineItems, setCloningLineItems] = useState<{ [key: number]: boolean }>({});
   const [cloneLineItemSuccess, setCloneLineItemSuccess] = useState<{ [key: number]: boolean }>({});
 
+  // Add local state for category
+  const [currentCategory, setCurrentCategory] = useState<number | null>(selectedCategoryId);
+
+  // Update local state when prop changes
+  useEffect(() => {
+    setCurrentCategory(selectedCategoryId);
+  }, [selectedCategoryId]);
+
   useEffect(() => {
     const loadFrozenPeriods = async () => {
       const periods = await periodService.getAllPeriods();
@@ -101,17 +111,40 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
     }
 
     try {
+      // Store current selections and category
+      const currentSelectedItems = [...selectedLineItems];
+      const currentCategoryId = selectedCategoryId;  // Store current category ID
+
+      // Create new item
       const newItem: Partial<Item> = {
         name: 'New Line Item',
         costs: Array(13).fill({ value: 0 })
       };
 
-      await dispatch(createLineItemAsync({
-        categoryId: selectedCategoryId,
+      // Add to backend
+      const response = await dispatch(createLineItemAsync({
+        categoryId: currentCategoryId,  // Use stored category ID
         item: newItem,
         programId: selectedProgramId,
         projectId: selectedProjectId
       })).unwrap();
+
+      // Update local state
+      setLineItems(prevItems => [...prevItems, response.item]);
+
+      // Fetch updated category data
+      await dispatch(fetchCategoryAsync({
+        categoryId: currentCategoryId,  // Use stored category ID
+        programId: selectedProgramId,
+        projectId: selectedProjectId
+      })).unwrap();
+
+      // Ensure category stays selected
+      dispatch(setCategoryId(currentCategoryId));
+
+      // Restore previous selections AND add the new item to selection
+      dispatch(setLineItemsAction([...currentSelectedItems, response.item]));
+
     } catch (error) {
       console.error('Failed to create line item:', error);
     }
@@ -130,12 +163,17 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
     const newName = editingName[itemId];
     if (newName !== undefined) {
       try {
+        // Store current category and selections
+        const currentCategoryId = selectedCategoryId;
+        const currentSelectedItems = [...selectedLineItems];
+
+        // Update name in backend
         const response = await dispatch(updateItemNameAsync({
           itemId,
           name: newName,
           programId: selectedProgramId,
           projectId: selectedProjectId,
-          categoryId: selectedCategoryId
+          categoryId: currentCategoryId
         })).unwrap();
 
         const updatedName = response.item.name;
@@ -145,21 +183,26 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
           prevItems.map(item => item.id === itemId ? { ...item, name: updatedName } : item)
         );
 
-        // Update Redux state
-        dispatch(updateLineItemInCostType({
-          programId: selectedProgramId,
-          projectId: selectedProjectId,
-          categoryId: selectedCategoryId,
-          lineItem: { ...response.item, name: updatedName }
-        }));
+        // Explicitly set category selection before any other updates
+        dispatch(setCategoryId(currentCategoryId));
 
+        // Update selected items while maintaining selection
+        const updatedSelectedItems = currentSelectedItems.map(item =>
+          item.id === itemId ? { ...item, name: updatedName } : item
+        );
+        dispatch(setLineItemsAction(updatedSelectedItems));
+
+        // Clear editing state
         setEditingName(prev => {
           const newState = { ...prev };
           delete newState[itemId];
           return newState;
         });
+
       } catch (error) {
         console.error('Failed to update item name:', error);
+        // Restore category selection in case of error
+        dispatch(setCategoryId(selectedCategoryId));
       }
     }
   };
@@ -183,6 +226,7 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
     };
 
     try {
+      // Update backend and local state
       await dispatch(updateItemCostsAsync({ 
         itemId, 
         updatedItem: { costs: updatedItemWithNewCost.costs },
@@ -191,11 +235,17 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
         categoryId: selectedCategoryId
       })).unwrap();
 
+      // Update local state
       setLineItems(prevItems =>
         prevItems.map(item =>
           item.id === itemId ? updatedItemWithNewCost : item
         )
       );
+
+      // Update selected items if needed
+      if (selectedLineItems.some(item => item.id === itemId)) {
+        handleLineItemUpdate(updatedItemWithNewCost);
+      }
     } catch (error) {
       console.error('Failed to update item costs:', error);
     }
@@ -225,6 +275,7 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
     console.log('Cloning line item:', item);
     setCloningLineItems(prev => ({ ...prev, [item.id!]: true }));
     setCloneLineItemSuccess(prev => ({ ...prev, [item.id!]: false }));
+    
     try {
       const response = await cloneItem(item.id!, selectedCategoryId || undefined);
       console.log('Response:', response);
@@ -234,20 +285,14 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
         costs: response.item.costs,
       };
 
-      // Update local state
       setLineItems(prevItems => [...prevItems, clonedItem]);
 
-      // Ensure IDs are not null before dispatching
+      handleLineItemUpdate(clonedItem);
+
       if (selectedProgramId !== null && selectedProjectId !== null && selectedCategoryId !== null) {
-        // Dispatch an action to update Redux
-        dispatch(updateLineItemInCostType({
-          programId: selectedProgramId,
-          projectId: selectedProjectId,
-          categoryId: selectedCategoryId,
-          lineItem: clonedItem
-        }));
-      } else {
-        console.error('Cannot update Redux: Missing required IDs');
+        await dispatch(fetchCostTypeByAliasAsync(
+          isDirect ? 'direct_costs' : 'indirect_costs'
+        )).unwrap();
       }
 
       setCloneLineItemSuccess(prev => ({ ...prev, [item.id!]: true }));
@@ -328,14 +373,39 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
     }
 
     try {
+      // Store current selections and category
+      const currentSelectedItems = [...selectedLineItems].filter(item => item.id !== itemId);
+      const currentCategoryId = selectedCategoryId;
+
+      // Delete from backend
       await dispatch(deleteLineItemAsync({
         itemId,
         programId: selectedProgramId,
         projectId: selectedProjectId,
-        categoryId: selectedCategoryId
+        categoryId: currentCategoryId
       })).unwrap();
+
+      // Update local state
+      setLineItems(prevItems => prevItems.filter(item => item.id !== itemId));
+
+      // Explicitly set category selection before fetching updated data
+      dispatch(setCategoryId(currentCategoryId));
+
+      // Fetch updated category data
+      await dispatch(fetchCategoryAsync({
+        categoryId: currentCategoryId,
+        programId: selectedProgramId,
+        projectId: selectedProjectId
+      })).unwrap();
+
+      // Ensure category stays selected and restore selections
+      dispatch(setCategoryId(currentCategoryId));
+      dispatch(setLineItemsAction(currentSelectedItems));
+
     } catch (error) {
       console.error('Failed to delete line item:', error);
+      // Restore category selection in case of error
+      dispatch(setCategoryId(selectedCategoryId));
     }
   };
 

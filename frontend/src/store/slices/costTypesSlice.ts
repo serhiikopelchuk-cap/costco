@@ -3,9 +3,10 @@ import { fetchCostTypeByAlias } from '../../services/costTypeService';
 import { CostType, Item, Cost, Category, Program, Project } from '../../types/program';
 import { updateItemCosts, createLineItem, deleteLineItem, updateItemName } from '../../services/itemService';
 import { fetchPrograms } from '../../services/programService';
-import { createCategory, deleteCategory } from '../../services/categoryService';
+import { createCategory, deleteCategory, fetchCategoryById } from '../../services/categoryService';
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '../index';
+import { setCategoryId } from './selectionSlice';
 
 interface CostTypesState {
   item: CostType | null;
@@ -25,7 +26,7 @@ const initialState: CostTypesState = {
 
 export const fetchCostTypeByAliasAsync = createAsyncThunk(
   'costTypes/fetchCostTypeByAlias',
-  async (alias: string) => {
+  async (alias: string, { getState }) => {
     const response = await fetchCostTypeByAlias(alias);
     return response;
   }
@@ -78,14 +79,36 @@ export const updateItemCostsAsync = createAsyncThunk(
     programId: number;
     projectId: number;
     categoryId: number;
-  }) => {
-    const response = await updateItemCosts(itemId, updatedItem);
-    return {
-      programId,
-      projectId,
-      categoryId,
-      item: response
-    };
+  }, { dispatch, getState }) => {
+    const state = getState() as RootState;
+    const currentCategoryId = state.selection.selectedCategoryId;
+
+    try {
+      // Update backend
+      const response = await updateItemCosts(itemId, updatedItem);
+
+      // Update local state first
+      dispatch(updateLineItemInCostType({
+        programId,
+        projectId,
+        categoryId: currentCategoryId || categoryId,
+        lineItem: {
+          ...response,
+          costs: updatedItem.costs as Cost[]
+        }
+      }));
+
+      // Return without fetching updated data
+      return {
+        programId,
+        projectId,
+        categoryId: currentCategoryId || categoryId,
+        item: response
+      };
+    } catch (error) {
+      console.error('Error in updateItemCostsAsync:', error);
+      throw error;
+    }
   }
 );
 
@@ -101,8 +124,12 @@ export const createLineItemAsync = createAsyncThunk(
     item: Partial<Item>;
     programId: number;
     projectId: number;
-  }) => {
+  }, { dispatch }) => {
     const response = await createLineItem(categoryId, item);
+    
+    // Ensure the category stays selected
+    dispatch(setCategoryId(categoryId));
+    
     return {
       programId,
       projectId,
@@ -155,6 +182,26 @@ export const createCategoryAsync = createAsyncThunk(
   }
 );
 
+export const fetchCategoryAsync = createAsyncThunk(
+  'costTypes/fetchCategory',
+  async ({ 
+    categoryId,
+    programId,
+    projectId 
+  }: { 
+    categoryId: number;
+    programId: number;
+    projectId: number;
+  }) => {
+    const response = await fetchCategoryById(categoryId);
+    return {
+      category: response,
+      programId,
+      projectId
+    };
+  }
+);
+
 const costTypesSlice = createSlice({
   name: 'costTypes',
   initialState,
@@ -167,53 +214,27 @@ const costTypesSlice = createSlice({
     }>) => {
       const { programId, projectId, categoryId, lineItem } = action.payload;
       
-      if (state.directCosts) {
-        const program = state.directCosts.programs.find(p => p.id === programId);
-        if (program) {
-          const project = program.projects.find(p => p.id === projectId);
-          if (project) {
-            const category = project.categories.find(c => c.id === categoryId);
-            if (category) {
-              const itemIndex = category.items.findIndex(item => item.id === lineItem.id);
-              if (itemIndex !== -1) {
-                category.items[itemIndex] = lineItem;
-              }
-            }
-          }
-        }
-      }
+      [state.directCosts, state.indirectCosts, state.item].forEach(costType => {
+        if (!costType) return;
+        
+        const program = costType.programs.find(p => p.id === programId);
+        if (!program) return;
 
-      if (state.indirectCosts) {
-        const program = state.indirectCosts.programs.find(p => p.id === programId);
-        if (program) {
-          const project = program.projects.find(p => p.id === projectId);
-          if (project) {
-            const category = project.categories.find(c => c.id === categoryId);
-            if (category) {
-              const itemIndex = category.items.findIndex(item => item.id === lineItem.id);
-              if (itemIndex !== -1) {
-                category.items[itemIndex] = lineItem;
-              }
-            }
-          }
-        }
-      }
+        const project = program.projects.find(p => p.id === projectId);
+        if (!project) return;
 
-      if (state.item) {
-        const program = state.item.programs.find(p => p.id === programId);
-        if (program) {
-          const project = program.projects.find(p => p.id === projectId);
-          if (project) {
-            const category = project.categories.find(c => c.id === categoryId);
-            if (category) {
-              const itemIndex = category.items.findIndex(item => item.id === lineItem.id);
-              if (itemIndex !== -1) {
-                category.items[itemIndex] = lineItem;
-              }
-            }
-          }
+        const category = project.categories.find(c => c.id === categoryId);
+        if (!category) return;
+
+        const itemIndex = category.items.findIndex(i => i.id === lineItem.id);
+        if (itemIndex !== -1) {
+          // Preserve existing item state while updating costs
+          category.items[itemIndex] = {
+            ...category.items[itemIndex],
+            costs: lineItem.costs
+          };
         }
-      }
+      });
     },
     updateCategory(state, action: PayloadAction<{ programId: number; projectId: number; category: Category }>) {
       const { programId, projectId, category } = action.payload;
@@ -264,13 +285,14 @@ const costTypesSlice = createSlice({
       })
       .addCase(fetchCostTypeByAliasAsync.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        console.log('Fetched CostType:', action.payload);
-        state.item = action.payload;
+        
+        // Update state
         if (action.meta.arg === 'direct_costs') {
           state.directCosts = action.payload;
         } else if (action.meta.arg === 'indirect_costs') {
           state.indirectCosts = action.payload;
         }
+        state.item = action.payload;
       })
       .addCase(fetchCostTypeByAliasAsync.rejected, (state, action) => {
         state.status = 'failed';
@@ -278,6 +300,7 @@ const costTypesSlice = createSlice({
       })
       .addCase(updateItemCostsAsync.fulfilled, (state, action) => {
         const { programId, projectId, categoryId, item } = action.payload;
+        console.log('In reducer - Category ID:', categoryId);
         
         [state.directCosts, state.indirectCosts, state.item].forEach(costType => {
           if (!costType) return;
@@ -293,7 +316,11 @@ const costTypesSlice = createSlice({
 
           const itemIndex = category.items.findIndex(i => i.id === item.id);
           if (itemIndex !== -1) {
-            category.items[itemIndex] = item;
+            // Preserve the existing item state while updating costs
+            category.items[itemIndex] = {
+              ...category.items[itemIndex],
+              costs: item.costs
+            };
           }
         });
       })
@@ -312,6 +339,7 @@ const costTypesSlice = createSlice({
           const category = project.categories.find(c => c.id === categoryId);
           if (!category) return;
 
+          // Preserve category selection when adding item
           category.items.push(item);
         });
       })
@@ -346,6 +374,56 @@ const costTypesSlice = createSlice({
           if (!project) return;
 
           project.categories.push(category);
+        });
+      })
+      .addCase(fetchCategoryAsync.fulfilled, (state, action) => {
+        const { category, programId, projectId } = action.payload;
+        
+        [state.directCosts, state.indirectCosts, state.item].forEach(costType => {
+          if (!costType) return;
+          
+          const program = costType.programs.find(p => p.id === programId);
+          if (!program) return;
+
+          const project = program.projects.find(p => p.id === projectId);
+          if (!project) return;
+
+          const categoryIndex = project.categories.findIndex(c => c.id === category.id);
+          if (categoryIndex !== -1) {
+            const existingCategory = project.categories[categoryIndex];
+            project.categories[categoryIndex] = {
+              ...category,
+              items: category.items.map(item => {
+                const existingItem = existingCategory.items.find(i => i.id === item.id);
+                return existingItem || item;
+              })
+            };
+          }
+        });
+      })
+      .addCase(updateItemNameAsync.fulfilled, (state, action) => {
+        const { programId, projectId, categoryId, item } = action.payload;
+        
+        [state.directCosts, state.indirectCosts, state.item].forEach(costType => {
+          if (!costType) return;
+          
+          const program = costType.programs.find(p => p.id === programId);
+          if (!program) return;
+
+          const project = program.projects.find(p => p.id === projectId);
+          if (!project) return;
+
+          const category = project.categories.find(c => c.id === categoryId);
+          if (!category) return;
+
+          const itemIndex = category.items.findIndex(i => i.id === item.id);
+          if (itemIndex !== -1) {
+            // Preserve existing item state while updating name
+            category.items[itemIndex] = {
+              ...category.items[itemIndex],
+              name: item.name
+            };
+          }
         });
       });
   },

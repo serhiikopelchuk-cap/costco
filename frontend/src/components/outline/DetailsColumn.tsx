@@ -7,7 +7,7 @@ type DetailsColumnProps = {
   selectedCategoryId: number | null;
   selectedLineItems: Item[];
   lineItems: Item[];
-  handleLineItemUpdate: (newLineItems: Item[] | ((prev: Item[]) => Item[])) => void;
+  handleLineItemUpdate: (updatedItem: Item) => void;
   handleLineItemAdd: (lineItem: Item) => void;
   handleDeselectAll: () => void;
   selectedProvider: string;
@@ -21,6 +21,7 @@ type DetailsColumnProps = {
   selectedProgramId: number | null;
   selectedProjectId: number | null;
   detailsData: Record<string, Item[]>;
+  setLineItems?: (newLineItems: Item[] | ((prev: Item[]) => Item[])) => void;
 };
 
 const DetailsColumn: React.FC<DetailsColumnProps> = ({
@@ -36,18 +37,27 @@ const DetailsColumn: React.FC<DetailsColumnProps> = ({
   tableData,
   selectedProgramId,
   selectedProjectId,
-  detailsData
+  detailsData,
+  setLineItems
 }) => (
   <div className="column details-column">
     {selectedCategoryId ? (
       <LineItemsTable 
-        lineItems={selectedLineItems.length > 0 ? selectedLineItems : lineItems} // Show all if none selected
-        setLineItems={handleLineItemUpdate}
+        lineItems={selectedLineItems.length > 0 ? selectedLineItems : lineItems}
+        setLineItems={(newLineItems) => {
+          if (typeof newLineItems === 'function') {
+            const updatedItems = newLineItems(selectedLineItems.length > 0 ? selectedLineItems : lineItems);
+            updatedItems.forEach(item => handleLineItemUpdate(item));
+          } else {
+            newLineItems.forEach(item => handleLineItemUpdate(item));
+          }
+        }}
+        handleLineItemUpdate={handleLineItemUpdate}
         onLineItemAdd={handleLineItemAdd}
         onDeselectAll={handleDeselectAll}
         selectedLineItems={selectedLineItems}
         categoryName={selectedCategoryId.toString()}
-        cloudProviders={['azure', 'gcp']} // Add available cloud providers
+        cloudProviders={['azure', 'gcp']}
         selectedProvider={selectedProvider}
         onProviderChange={handleProviderChange}
         tableData={tableData}
