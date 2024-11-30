@@ -125,10 +125,6 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
     lineItem.name.toLowerCase().includes(lineItemSearch.toLowerCase())
   );
 
-  // console.log('Selected Project Categories:', selectedProjectCategories);
-
-  console.log('Outline data:', data);
-
   return (
     <div className="outline-view">
       <ProgramList
@@ -160,18 +156,18 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
         categories={selectedProjectCategories}
         selectedProgramId={selectedProgramId}
         selectedProjectId={selectedProjectId}
+        selectedProvider={selectedProvider}
       />
       {selectedCategoryId && !details && (
         <LineItemList
-          lineItems={lineItems}
           selectedLineItems={selectedLineItems}
           onLineItemToggle={handleLineItemToggle}
           onAddLineItem={(name: string) => console.log('Adding line item:', name)}
           lineItemSearch={lineItemSearch}
           showAddLineItemInput={showAddLineItemInput}
+          selectedCategoryId={selectedCategoryId}
           selectedProgramId={selectedProgramId}
           selectedProjectId={selectedProjectId}
-          selectedCategoryId={selectedCategoryId}
         />
       )}
       <DetailsColumn

@@ -202,6 +202,7 @@
 }
 
 .program-item span, .project-item span {
+  text-align: left;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

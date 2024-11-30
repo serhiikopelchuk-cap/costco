@@ -29,7 +29,7 @@ const ProgramList: React.FC<ProgramListProps> = ({
   showAddProgramInput,
   setShowAddProgramInput
 }) => {
-  console.log('ProgramList programs:', programs);
+  // console.log('ProgramList programs:', programs);
 
   const dispatch = useAppDispatch();
 

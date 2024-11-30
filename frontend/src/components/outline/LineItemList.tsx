@@ -1,36 +1,47 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import SearchInput from '../common/SearchInput';
 import AddItemInput from '../AddItemInput';
 import { Item } from '../../types/program';
 import { setSearch, setAddInputVisibility } from '../../store/slices/uiSlice';
-import { createLineItemAsync } from '../../store/slices/programsSlice';
-
+import { createLineItemAsync } from '../../store/slices/costTypesSlice';
 type LineItemListProps = {
-  lineItems: Item[];
   selectedLineItems: Item[];
   onLineItemToggle: (lineItem: Item) => void;
   onAddLineItem: (itemName: string) => void;
   lineItemSearch: string;
   showAddLineItemInput: boolean;
+  selectedCategoryId: number | null;
   selectedProgramId: number | null;
   selectedProjectId: number | null;
-  selectedCategoryId: number | null;
 };
 
 const LineItemList: React.FC<LineItemListProps> = ({
-  lineItems,
   selectedLineItems,
   onLineItemToggle,
   onAddLineItem,
   lineItemSearch,
   showAddLineItemInput,
+  selectedCategoryId,
   selectedProgramId,
-  selectedProjectId,
-  selectedCategoryId
+  selectedProjectId
 }) => {
   const dispatch = useAppDispatch();
-  const programsState = useAppSelector(state => state.programs);
+  const costTypes = useAppSelector(state => state.costTypes);
+
+  // Derive line items from costTypes state
+  const items = React.useMemo(() => {
+    if (!selectedCategoryId || !costTypes.item) return [];
+    const category = costTypes.item.programs
+      .flatMap(program => program.projects)
+      .flatMap(project => project.categories)
+      .find(category => category.id === selectedCategoryId);
+    return category ? category.items : [];
+  }, [costTypes, selectedCategoryId]);
+
+  useEffect(() => {
+    
+  }, [costTypes, selectedCategoryId, items]);
 
   const handleSearchChange = (value: string) => {
     dispatch(setSearch({ type: 'lineItem', value }));
@@ -40,42 +51,25 @@ const LineItemList: React.FC<LineItemListProps> = ({
     dispatch(setAddInputVisibility({ type: 'lineItem', value }));
   };
 
-  const handleAddLineItem = (itemName: string) => {
-    if (selectedProgramId && selectedProjectId && selectedCategoryId) {
-      const newItem: Partial<Item> = { name: itemName, costs: Array(13).fill({ value: 0 }) };
+  const handleAddItem = (itemName: string) => {
+    if (selectedCategoryId && selectedProgramId && selectedProjectId) {
+      const newItem: Partial<Item> = { 
+        name: itemName, 
+        costs: Array(13).fill({ value: 0 }) 
+      };
+      
       dispatch(createLineItemAsync({
-        programId: selectedProgramId,
-        projectId: selectedProjectId,
         categoryId: selectedCategoryId,
-        item: newItem
+        item: newItem,
+        programId: selectedProgramId,
+        projectId: selectedProjectId
       }));
     }
   };
 
-  // Get the current category's items from Redux state
-  const currentItems = React.useMemo(() => {
-    if (!selectedProgramId || !selectedProjectId || !selectedCategoryId) {
-      return lineItems;
-    }
-
-    const program = programsState.items.find(p => p.id === selectedProgramId);
-    if (!program) return lineItems;
-
-    const project = program.projects.find(p => p.id === selectedProjectId);
-    if (!project) return lineItems;
-
-    const category = project.categories.find(c => c.id === selectedCategoryId);
-    if (!category) return lineItems;
-
-    return category.items;
-  }, [programsState.items, selectedProgramId, selectedProjectId, selectedCategoryId, lineItems]);
-
-  // Filter items based on search
-  const filteredItems = React.useMemo(() => {
-    return currentItems.filter(item => 
-      item.name.toLowerCase().includes(lineItemSearch.toLowerCase())
-    );
-  }, [currentItems, lineItemSearch]);
+  const filteredItems = items.filter(item => 
+    item.name.toLowerCase().includes(lineItemSearch.toLowerCase())
+  );
 
   return (
     <div className="column minified">
@@ -93,7 +87,7 @@ const LineItemList: React.FC<LineItemListProps> = ({
         value={lineItemSearch}
         onChange={handleSearchChange}
       />
-      {showAddLineItemInput && <AddItemInput onAdd={handleAddLineItem} />}
+      {showAddLineItemInput && <AddItemInput onAdd={handleAddItem} />}
       {filteredItems.map(lineItem => (
         <div
           key={lineItem.id}

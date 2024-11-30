@@ -6,7 +6,7 @@ import { setProgramId, setProjectId, setCategoryId, setLineItems } from '../stor
 import { setCurrentPage } from '../store/slices/uiSlice';
 
 const DirectCosts: React.FC = () => {
-  console.log('DirectCosts component rendered');
+  // console.log('DirectCosts component rendered');
 
   const dispatch = useAppDispatch();
   const { directCosts: costType, status, error } = useAppSelector(state => state.costTypes);
@@ -14,6 +14,10 @@ const DirectCosts: React.FC = () => {
   useEffect(() => {
     dispatch(fetchCostTypeByAliasAsync('direct_costs'));
   }, [dispatch]);
+
+  useEffect(() => {
+    console.log('Direct Costs:', costType);
+  }, [costType]);
 
   useEffect(() => {
     if (costType && costType.programs.length > 0) {
@@ -32,10 +36,6 @@ const DirectCosts: React.FC = () => {
   useEffect(() => {
     dispatch(setCurrentPage('direct_costs'));
   }, [dispatch]);
-
-  useEffect(() => {
-    console.log('Direct Costs:', costType);
-  }, [costType]);
 
   if (status === 'loading') {
     return <div>Loading...</div>;

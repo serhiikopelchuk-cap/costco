@@ -34,13 +34,9 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
   const dispatch = useAppDispatch();
 
   const handleRemoveLastLineItem = async () => {
-    if (!selectedProgramId || !selectedProjectId || !selectedCategoryId || lineItems.length === 0) {
-      console.error('Cannot remove item: missing required IDs or no items');
-      return;
-    }
+    if (lineItems.length === 0 || !selectedProgramId || !selectedProjectId || !selectedCategoryId) return;
 
     const lastItem = lineItems[lineItems.length - 1];
-    
     try {
       await dispatch(deleteLineItemAsync({
         itemId: lastItem.id!,

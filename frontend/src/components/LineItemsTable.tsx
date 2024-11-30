@@ -1,17 +1,16 @@
 import React, { SetStateAction, useState, useCallback, useEffect } from 'react';
 import './LineItemsTable.css';
-// import { validateCellValue } from '../utils/validationUtils';
-// import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-// import { faChevronDown, faClone, faSpinner, faCheck } from '@fortawesome/free-solid-svg-icons';
 import ActionButtons from './ActionButtons';
 import { cloneItem } from '../services/itemService';
 import { cloneCategory } from '../services/categoryService';
 import { periodService } from '../services/periodService';
 import { Program, Item, Cost } from '../types/program';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
-import { updateLineItemInCostType, updateItemCostsAsync, createLineItemAsync, deleteLineItemAsync, updateItemNameAsync, updateCategory, deleteCategoryAsync } from '../store/slices/costTypesSlice';
+import { updateLineItemInCostType, updateItemNameAsync, updateCategory, deleteCategoryAsync, fetchCostTypeByAliasAsync } from '../store/slices/costTypesSlice';
 import CloneButton from './buttons/CloneButton';
 import DeleteButton from './buttons/DeleteButton';
+import { createLineItemAsync, deleteLineItemAsync, updateItemCostsAsync } from '../store/slices/costTypesSlice';
+import { useLocation } from 'react-router-dom';
 
 
 interface LineItemsTableProps {
@@ -46,6 +45,8 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
   selectedCategoryId,
 }) => {
   const dispatch = useAppDispatch();
+  const location = useLocation();
+  const isDirect = location.pathname === '/direct-costs';
   const programsState = useAppSelector(state => state.programs);
   const categoryName = tableData
     .find(program => program.id === selectedProgramId)
@@ -94,7 +95,7 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
   }, []);
 
   const handleAddLineItem = async () => {
-    if (!selectedProgramId || !selectedProjectId || !selectedCategoryId) {
+    if (!selectedCategoryId || !selectedProgramId || !selectedProjectId) {
       console.error('Missing required IDs for adding line item');
       return;
     }
@@ -106,10 +107,10 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
       };
 
       await dispatch(createLineItemAsync({
-        programId: selectedProgramId,
-        projectId: selectedProjectId,
         categoryId: selectedCategoryId,
-        item: newItem
+        item: newItem,
+        programId: selectedProgramId,
+        projectId: selectedProjectId
       })).unwrap();
     } catch (error) {
       console.error('Failed to create line item:', error);
@@ -163,58 +164,45 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
     }
   };
 
-  const handleUpdateValue = async (itemId: number, field: string, value: string, costIndex?: number) => {
-    const currentItem = lineItems.find(item => item.id === itemId);
-    if (!currentItem) return;
+  const handleUpdateValue = async (itemId: number, costIndex: number, value: string) => {
+    const numericValue = parseFloat(value.replace(/\$/g, '')) || 0;
 
-    if (field === 'cost' && costIndex !== undefined) {
-        const numericValue = parseFloat(value.replace(/\$/g, '')) || 0;
-        const newCosts = [...currentItem.costs];
-        newCosts[costIndex] = {
-            ...newCosts[costIndex],
-            value: numericValue
-        };
+    if (!selectedProgramId || !selectedProjectId || !selectedCategoryId) {
+      console.error('Missing required IDs for update');
+      return;
+    }
 
-        const updatedItem = {
-            ...currentItem,
-            costs: newCosts
-        };
+    const updatedItem = lineItems.find(item => item.id === itemId);
+    if (!updatedItem) return;
 
-        setLineItems(prevItems => 
-            prevItems.map(item => item.id === itemId ? updatedItem : item)
-        );
+    const updatedItemWithNewCost = {
+      ...updatedItem,
+      costs: updatedItem.costs.map((cost, index) =>
+        index === costIndex ? { ...cost, value: numericValue } : cost
+      )
+    };
 
-        if (selectedProgramId && selectedProjectId && selectedCategoryId) {
-            try {
-                await dispatch(updateItemCostsAsync({
-                    itemId,
-                    updatedItem,
-                    programId: selectedProgramId,
-                    projectId: selectedProjectId,
-                    categoryId: selectedCategoryId
-                })).unwrap();
+    try {
+      await dispatch(updateItemCostsAsync({ 
+        itemId, 
+        updatedItem: { costs: updatedItemWithNewCost.costs },
+        programId: selectedProgramId,
+        projectId: selectedProjectId,
+        categoryId: selectedCategoryId
+      })).unwrap();
 
-                // Update Redux state in costTypesSlice
-                dispatch(updateLineItemInCostType({
-                    programId: selectedProgramId,
-                    projectId: selectedProjectId,
-                    categoryId: selectedCategoryId,
-                    lineItem: updatedItem
-                }));
-            } catch (error) {
-                console.error('Failed to update item costs:', error);
-            }
-        }
+      setLineItems(prevItems =>
+        prevItems.map(item =>
+          item.id === itemId ? updatedItemWithNewCost : item
+        )
+      );
+    } catch (error) {
+      console.error('Failed to update item costs:', error);
     }
   };
 
   const handleRemoveLastLineItem = async () => {
-    if (!selectedProgramId || !selectedProjectId || !selectedCategoryId) {
-      console.error('Missing required IDs for removing line item');
-      return;
-    }
-
-    if (lineItems.length === 0) return;
+    if (lineItems.length === 0 || !selectedProgramId || !selectedProjectId || !selectedCategoryId) return;
 
     const lastItem = lineItems[lineItems.length - 1];
     try {
@@ -318,6 +306,11 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
         projectId: selectedProjectId,
         category: { id: selectedCategoryId, name: '', items: [] } // Provide a valid empty category
       }));
+
+      // Update data through fetchCostTypeByAliasAsync
+      await dispatch(fetchCostTypeByAliasAsync(
+        isDirect ? 'direct_costs' : 'indirect_costs'
+      )).unwrap();
 
       setCloneCategorySuccess(true);
       setTimeout(() => setCloneCategorySuccess(false), 3000);
@@ -431,7 +424,7 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
                       <input
                         type="text"
                         value={`${cost.value}$`}
-                        onChange={(e) => handleUpdateValue(item.id!, 'cost', e.target.value, costIndex)}
+                        onChange={(e) => handleUpdateValue(item.id!, costIndex, e.target.value)}
                         className="cost-input"
                         disabled={frozenPeriods[costIndex + 1]}
                       />
