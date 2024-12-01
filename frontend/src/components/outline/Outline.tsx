@@ -41,15 +41,11 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
 
   const selectedProjectCategories = useAppSelector(state => selectCategoriesFromPrograms(selectedProgramId, selectedProjectId)(state));
 
-  // console.log('Selected Project Categories:', selectedProjectCategories);
   useEffect(() => {
     if (selectedProgramId) {
       dispatch(fetchProgramByIdAsync(selectedProgramId));
     }
   }, [dispatch, selectedProgramId]);
-
-  // Add a ref to track initial load
-  const isInitialLoad = React.useRef(true);
 
   // Handlers
   const handleProgramToggle = (programId: number) => {
@@ -57,10 +53,10 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
       dispatch(updateSelections({ programId: null }));
     } else {
       const program = data.find(p => p.id === programId);
-      if (program?.projects?.[0]?.id) {
+      if (program) {
         dispatch(updateSelections({
           programId,
-          projectId: program.projects[0].id,
+          projectId: program.projects.length > 0 ? program.projects[0].id : null,
           categoryId: null,
           lineItems: []
         }));
@@ -77,14 +73,9 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
   };
 
   const handleCategoryToggle = (categoryId: number) => {
-    console.log('Outline - Category toggle:', categoryId);
-    console.log('Outline - Current selected category:', selectedCategoryId);
-
     if (selectedCategoryId === categoryId) {
-      console.log('Outline - Deselecting category');
       dispatch(setCategoryId(null));
     } else {
-      console.log('Outline - Selecting new category:', categoryId);
       dispatch(setCategoryId(categoryId));
       dispatch(setDetails(null)); // Clear details when a category is selected
       dispatch(setLineItems([]));
@@ -112,45 +103,20 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
     dispatch(setLineItems(newSelectedItems));
   };
 
-  // Derived data
-  const filteredPrograms = data.filter(program => 
-    program.name.toLowerCase().includes(programSearch.toLowerCase())
-  );
-
-  const selectedProgramProjects = data.find(p => p.id === selectedProgramId)?.projects || [];
-  const filteredProjects = selectedProgramProjects.filter(project => 
-    project.name.toLowerCase().includes(projectSearch.toLowerCase())
-  );
-
-  // const selectedProjectCategories = data
-  //   .find(p => p.id === selectedProgramId)
-  //   ?.projects?.find(p => p.id === selectedProjectId)
-  //   ?.categories || [];
-
-  const filteredCategories = selectedProjectCategories.filter(category =>
-    category.name.toLowerCase().includes(categorySearch.toLowerCase())
-  );
-
   const lineItems = selectedProjectCategories
     .find(category => category.id === selectedCategoryId)
     ?.items || [];
 
-  const filteredLineItems = lineItems.filter(lineItem => 
-    lineItem.name.toLowerCase().includes(lineItemSearch.toLowerCase())
-  );
-
   return (
     <div className="outline-view">
       <ProgramList
-        programs={data}
         selectedProgramId={selectedProgramId}
         onProgramToggle={handleProgramToggle}
         onDetailsClick={handleDetailsClick}
         programSearch={programSearch}
-        setProgramSearch={(value: string) => dispatch(setSearch({ type: 'program', value }))}
+        setProgramSearch={(value: string) => dispatch(setSearch({ type: 'program', value }))} 
         showAddProgramInput={showAddProgramInput}
         setShowAddProgramInput={(value: boolean) => dispatch(setAddInputVisibility({ type: 'program', value }))}
-        onAddProgram={(name: string) => console.log('Adding program:', name)}
       />
       <ProjectList
         selectedProjectId={selectedProjectId}
@@ -167,14 +133,12 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
         onCategoryToggle={handleCategoryToggle}
         categorySearch={categorySearch}
         showAddCategoryInput={showAddCategoryInput}
-        categories={selectedProjectCategories}
         selectedProgramId={selectedProgramId}
         selectedProjectId={selectedProjectId}
         selectedProvider={selectedProvider}
       />
       {selectedCategoryId && !details && (
         <LineItemList
-          selectedLineItems={selectedLineItems}
           onLineItemToggle={handleLineItemToggle}
           onAddLineItem={(name: string) => console.log('Adding line item:', name)}
           lineItemSearch={lineItemSearch}
@@ -189,11 +153,7 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
         selectedLineItems={selectedLineItems}
         lineItems={lineItems}
         handleLineItemUpdate={handleLineItemUpdate}
-        setLineItems={(newLineItems) => {
-          if (Array.isArray(newLineItems)) {
-            dispatch(setLineItems(newLineItems));
-          }
-        }}
+        handleLineItemAdd={(lineItem: Item) => dispatch(setLineItems([...selectedLineItems, lineItem]))}
         handleDeselectAll={() => dispatch(setLineItems([]))}
         selectedProvider={selectedProvider}
         handleProviderChange={(provider: string) => dispatch(setProvider(provider))}
@@ -207,7 +167,7 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
             category.items
           ])
         )}
-        handleLineItemAdd={(lineItem: Item) => dispatch(setLineItems([...selectedLineItems, lineItem]))}
+        cloudProviders={['azure', 'gcp']}
       />
     </div>
   );

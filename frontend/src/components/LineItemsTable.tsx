@@ -1,4 +1,4 @@
-import React, { SetStateAction, useState, useCallback, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './LineItemsTable.css';
 import ActionButtons from './ActionButtons';
 import { cloneItem } from '../services/itemService';
@@ -9,17 +9,12 @@ import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
 import { updateLineItemInCostType, updateItemNameAsync, updateCategory, deleteCategoryAsync, fetchCostTypeByAliasAsync, fetchCategoryAsync, createLineItemAsync, deleteLineItemAsync, updateItemCostsAsync } from '../store/slices/costTypesSlice';
 import CloneButton from './buttons/CloneButton';
 import DeleteButton from './buttons/DeleteButton';
-import { updateLineItemCosts, setLineItems as setLineItemsAction, removeItemFromSelection, setCategoryId } from '../store/slices/selectionSlice';
+import { setLineItems as setLineItemsAction, removeItemFromSelection, setCategoryId } from '../store/slices/selectionSlice';
 import { useLocation } from 'react-router-dom';
 
-
 interface LineItemsTableProps {
-  lineItems: Item[];
-  setLineItems: (newLineItems: SetStateAction<Item[]>) => void;
   onLineItemAdd: (newLineItem: Item) => void;
   onDeselectAll: () => void;
-  selectedLineItems: Item[];
-  categoryName: string;
   cloudProviders: string[];
   selectedProvider: string;
   onProviderChange: (provider: string) => void;
@@ -31,12 +26,8 @@ interface LineItemsTableProps {
 }
 
 const LineItemsTable: React.FC<LineItemsTableProps> = ({
-  lineItems = [],
-  setLineItems,
   onLineItemAdd,
   onDeselectAll,
-  selectedLineItems,
-  // categoryName,
   cloudProviders,
   selectedProvider,
   onProviderChange,
@@ -62,7 +53,25 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
   const costTotals = Array(numberOfCosts).fill(0);
   let totalOfTotals = 0;
 
-  (lineItems || []).forEach(item => {
+  // Get lineItems from Redux state
+  const lineItems = useAppSelector(state => {
+    const selectedCategoryId = state.selection.selectedCategoryId;
+    const category = state.costTypes.item?.programs
+      .flatMap(program => program.projects)
+      .flatMap(project => project.categories)
+      .find(category => category.id === selectedCategoryId);
+    return category ? category.items : [];
+  });
+
+  // Get selectedLineItems from Redux state
+  const selectedLineItems = useAppSelector(state => state.selection.selectedLineItems);
+
+  // Use useMemo to determine which items to display
+  const itemsToDisplay = useMemo(() => {
+    return selectedLineItems.length > 0 ? selectedLineItems : lineItems;
+  }, [selectedLineItems, lineItems]);
+
+  (itemsToDisplay || []).forEach(item => {
     if (!item.costs || !Array.isArray(item.costs)) {
       console.warn(`LineItem with id ${item.id} has no costs array.`);
       item.costs = Array(numberOfCosts).fill({ value: 0 });
@@ -73,7 +82,7 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
     totalOfTotals += item.costs.reduce((sum: number, cost: Cost) => sum + (Number(cost.value) || 0), 0);
   });
 
-  const averageOfAverages = lineItems.length > 0 ? totalOfTotals / (lineItems.length * numberOfCosts) : 0;
+  const averageOfAverages = itemsToDisplay.length > 0 ? totalOfTotals / (itemsToDisplay.length * numberOfCosts) : 0;
 
   const [errorMessages, setErrorMessages] = useState<{ [key: number]: string }>({});
   const [frozenPeriods, setFrozenPeriods] = useState<{ [key: number]: boolean }>({});
@@ -82,11 +91,9 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
   const [cloneCategorySuccess, setCloneCategorySuccess] = useState(false);
   const [cloningLineItems, setCloningLineItems] = useState<{ [key: number]: boolean }>({});
   const [cloneLineItemSuccess, setCloneLineItemSuccess] = useState<{ [key: number]: boolean }>({});
-
-  // Add local state for category
   const [currentCategory, setCurrentCategory] = useState<number | null>(selectedCategoryId);
+  const [editingValues, setEditingValues] = useState<{ [key: string]: string }>({});
 
-  // Update local state when prop changes
   useEffect(() => {
     setCurrentCategory(selectedCategoryId);
   }, [selectedCategoryId]);
@@ -128,9 +135,6 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
         programId: selectedProgramId,
         projectId: selectedProjectId
       })).unwrap();
-
-      // Update local state
-      setLineItems(prevItems => [...prevItems, response.item]);
 
       // Fetch updated category data
       await dispatch(fetchCategoryAsync({
@@ -178,11 +182,6 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
 
         const updatedName = response.item.name;
 
-        // Update local state
-        setLineItems(prevItems => 
-          prevItems.map(item => item.id === itemId ? { ...item, name: updatedName } : item)
-        );
-
         // Explicitly set category selection before any other updates
         dispatch(setCategoryId(currentCategoryId));
 
@@ -207,6 +206,25 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
     }
   };
 
+  const handleInputChange = (itemId: number, costIndex: number, value: string) => {
+    setEditingValues(prev => ({
+      ...prev,
+      [`${itemId}-${costIndex}`]: value
+    }));
+  };
+
+  const handleInputBlur = (itemId: number, costIndex: number, value: string) => {
+    // Clear editing state
+    setEditingValues(prev => {
+      const newState = { ...prev };
+      delete newState[`${itemId}-${costIndex}`];
+      return newState;
+    });
+
+    // Update value
+    handleUpdateValue(itemId, costIndex, value);
+  };
+
   const handleUpdateValue = async (itemId: number, costIndex: number, value: string) => {
     const numericValue = parseFloat(value.replace(/\$/g, '')) || 0;
 
@@ -215,6 +233,7 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
       return;
     }
 
+    // Find the item from the full list of items
     const updatedItem = lineItems.find(item => item.id === itemId);
     if (!updatedItem) return;
 
@@ -226,26 +245,39 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
     };
 
     try {
-      // Update backend and local state
-      await dispatch(updateItemCostsAsync({ 
+      console.log('Updating item:', updatedItemWithNewCost);
+
+      // Store current category ID
+      const currentCategoryId = selectedCategoryId;
+
+      // Update in backend
+      const response = await dispatch(updateItemCostsAsync({ 
         itemId, 
         updatedItem: { costs: updatedItemWithNewCost.costs },
         programId: selectedProgramId,
         projectId: selectedProjectId,
-        categoryId: selectedCategoryId
+        categoryId: currentCategoryId
       })).unwrap();
 
-      // Update local state
-      setLineItems(prevItems =>
-        prevItems.map(item =>
-          item.id === itemId ? updatedItemWithNewCost : item
-        )
-      );
+      console.log('Update response:', response);
 
-      // Update selected items if needed
-      if (selectedLineItems.some(item => item.id === itemId)) {
-        handleLineItemUpdate(updatedItemWithNewCost);
-      }
+      // Update the cost type state directly
+      dispatch(updateLineItemInCostType({
+        programId: selectedProgramId,
+        projectId: selectedProjectId,
+        categoryId: currentCategoryId,
+        lineItem: updatedItemWithNewCost
+      }));
+
+      // Ensure category stays selected
+      dispatch(setCategoryId(currentCategoryId));
+
+      // Update selected items while maintaining selection
+      const updatedSelectedItems = selectedLineItems.map(item =>
+        item.id === itemId ? updatedItemWithNewCost : item
+      );
+      dispatch(setLineItemsAction(updatedSelectedItems));
+
     } catch (error) {
       console.error('Failed to update item costs:', error);
     }
@@ -268,7 +300,7 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
   };
 
   const handleDeselectAll = () => {
-    onDeselectAll();
+    dispatch(setLineItemsAction([]));
   };
 
   const handleCloneLineItem = async (item: Item) => {
@@ -284,8 +316,6 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
         name: response.item.name,
         costs: response.item.costs,
       };
-
-      setLineItems(prevItems => [...prevItems, clonedItem]);
 
       handleLineItemUpdate(clonedItem);
 
@@ -385,9 +415,6 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
         categoryId: currentCategoryId
       })).unwrap();
 
-      // Update local state
-      setLineItems(prevItems => prevItems.filter(item => item.id !== itemId));
-
       // Explicitly set category selection before fetching updated data
       dispatch(setCategoryId(currentCategoryId));
 
@@ -457,7 +484,7 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
             <td className="summary-cell">{Number(totalOfTotals).toFixed(2)}$</td>
             <td className="summary-cell">{Number(averageOfAverages).toFixed(2)}$</td>
           </tr>
-          {lineItems.map((item) => {
+          {itemsToDisplay.map((item) => {
             const itemTotal = item.costs.reduce((sum: number, cost: Cost) => {
               return sum + (Number(cost.value) || 0);
             }, 0);
@@ -493,8 +520,13 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
                     <td key={costIndex} className="line-item-cell">
                       <input
                         type="text"
-                        value={`${cost.value}$`}
-                        onChange={(e) => handleUpdateValue(item.id!, costIndex, e.target.value)}
+                        value={
+                          editingValues[`${item.id!}-${costIndex}`] !== undefined
+                            ? editingValues[`${item.id!}-${costIndex}`]
+                            : `${cost.value}$`
+                        }
+                        onChange={(e) => handleInputChange(item.id!, costIndex, e.target.value)}
+                        onBlur={(e) => handleInputBlur(item.id!, costIndex, e.target.value)}
                         className="cost-input"
                         disabled={frozenPeriods[costIndex + 1]}
                       />
@@ -510,6 +542,6 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
       </table>
     </div>
   );
-};
+}
 
 export default LineItemsTable;

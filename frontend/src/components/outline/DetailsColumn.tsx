@@ -21,13 +21,11 @@ type DetailsColumnProps = {
   selectedProgramId: number | null;
   selectedProjectId: number | null;
   detailsData: Record<string, Item[]>;
-  setLineItems?: (newLineItems: Item[] | ((prev: Item[]) => Item[])) => void;
+  cloudProviders: string[];
 };
 
 const DetailsColumn: React.FC<DetailsColumnProps> = ({
   selectedCategoryId,
-  selectedLineItems,
-  lineItems,
   handleLineItemUpdate,
   handleLineItemAdd,
   handleDeselectAll,
@@ -37,33 +35,21 @@ const DetailsColumn: React.FC<DetailsColumnProps> = ({
   tableData,
   selectedProgramId,
   selectedProjectId,
-  detailsData,
-  setLineItems
+  cloudProviders
 }) => (
   <div className="column details-column">
     {selectedCategoryId ? (
       <LineItemsTable 
-        lineItems={selectedLineItems.length > 0 ? selectedLineItems : lineItems}
-        setLineItems={(newLineItems) => {
-          if (typeof newLineItems === 'function') {
-            const updatedItems = newLineItems(selectedLineItems.length > 0 ? selectedLineItems : lineItems);
-            updatedItems.forEach(item => handleLineItemUpdate(item));
-          } else {
-            newLineItems.forEach(item => handleLineItemUpdate(item));
-          }
-        }}
-        handleLineItemUpdate={handleLineItemUpdate}
         onLineItemAdd={handleLineItemAdd}
         onDeselectAll={handleDeselectAll}
-        selectedLineItems={selectedLineItems}
-        categoryName={selectedCategoryId.toString()}
-        cloudProviders={['azure', 'gcp']}
+        cloudProviders={cloudProviders}
         selectedProvider={selectedProvider}
         onProviderChange={handleProviderChange}
         tableData={tableData}
         selectedProgramId={selectedProgramId}
         selectedProjectId={selectedProjectId}
         selectedCategoryId={selectedCategoryId}
+        handleLineItemUpdate={handleLineItemUpdate}
       />
     ) : (
       details && (

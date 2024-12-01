@@ -50,8 +50,8 @@ const CostTypePage: React.FC<CostTypePageProps> = ({ costTypeAlias: propAlias, c
   const state = useAppSelector(costTypeSelector);
   const { selectedProgramId, selectedProjectId, selectedCategoryId } = useAppSelector(state => state.selection);
   
-  console.log('Full state:', state);
-  console.log('State key:', stateKey);
+//   console.log('Full state:', state);
+//   console.log('State key:', stateKey);
   const { status, error, [stateKey]: costType } = state;
 
   // Fetch cost types on mount
@@ -84,7 +84,7 @@ const CostTypePage: React.FC<CostTypePageProps> = ({ costTypeAlias: propAlias, c
   }, [dispatch, pageAlias]);
 
   console.log('costType:', costType);
-  console.log('status:', status);
+//   console.log('status:', status);
 
   if (status === 'loading') {
     return (

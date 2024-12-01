@@ -3,14 +3,13 @@ import SearchInput from '../common/SearchInput';
 import AddItemInput from '../AddItemInput';
 import { Program } from '../../types/program';
 import DetailsButton from '../buttons/DetailsButton';
-import { useAppDispatch } from '../../hooks/reduxHooks';
-import { createProgramAsync } from '../../store/slices/programsSlice';
+import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
+import { createProgramAsync } from '../../store/slices/costTypesSlice';
+import { setProgramId } from '../../store/slices/selectionSlice';
 
 type ProgramListProps = {
-  programs: Program[];
   selectedProgramId: number | null;
   onProgramToggle: (programId: number) => void;
-  onAddProgram: (programName: string) => void;
   onDetailsClick: (type: 'program', id: number) => void;
   programSearch: string;
   setProgramSearch: (search: string) => void;
@@ -19,25 +18,36 @@ type ProgramListProps = {
 };
 
 const ProgramList: React.FC<ProgramListProps> = ({
-  programs,
   selectedProgramId,
   onProgramToggle,
-  onAddProgram,
   onDetailsClick,
   programSearch,
   setProgramSearch,
   showAddProgramInput,
   setShowAddProgramInput
 }) => {
-  // console.log('ProgramList programs:', programs);
-
   const dispatch = useAppDispatch();
+  const costTypes = useAppSelector(state => state.costTypes);
+  const programs = useAppSelector(state => costTypes.item?.programs || []);
 
   const handleAddProgram = (programName: string) => {
-    const costTypeId = 1; // Replace with actual logic to determine costTypeId
+    const costTypeId = costTypes.item?.id;
+    if (!costTypeId) return;
+
     const newProgram: Partial<Program> = { name: programName, projects: [] };
-    dispatch(createProgramAsync({ program: newProgram, costTypeId }));
+    dispatch(createProgramAsync({ program: newProgram, costTypeId }))
+      .unwrap()
+      .then((createdProgram: Program) => {
+        dispatch(setProgramId(createdProgram.id));
+      })
+      .catch((error: any) => {
+        console.error('Failed to create program:', error);
+      });
   };
+
+  const filteredPrograms = programs.filter(program =>
+    program.name.toLowerCase().includes(programSearch.toLowerCase())
+  );
 
   return (
     <div className="column minified">
@@ -56,7 +66,7 @@ const ProgramList: React.FC<ProgramListProps> = ({
         onChange={setProgramSearch}
       />
       {showAddProgramInput && <AddItemInput onAdd={handleAddProgram} />}
-      {programs.map(program => (
+      {filteredPrograms.map(program => (
         <div
           key={program.id}
           className={`program-item ${selectedProgramId === program.id ? 'selected' : ''}`}

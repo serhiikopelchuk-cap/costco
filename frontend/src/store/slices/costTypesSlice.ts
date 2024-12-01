@@ -7,6 +7,7 @@ import { createCategory, deleteCategory, fetchCategoryById } from '../../service
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '../index';
 import { setCategoryId } from './selectionSlice';
+import { createProgram } from '../../services/programService';
 
 interface CostTypesState {
   item: CostType | null;
@@ -199,6 +200,14 @@ export const fetchCategoryAsync = createAsyncThunk(
       programId,
       projectId
     };
+  }
+);
+
+export const createProgramAsync = createAsyncThunk(
+  'costTypes/createProgram',
+  async ({ program, costTypeId }: { program: Partial<Program>; costTypeId: number }) => {
+    const response = await createProgram(program, costTypeId);
+    return response;
   }
 );
 
@@ -425,6 +434,12 @@ const costTypesSlice = createSlice({
             };
           }
         });
+      })
+      .addCase(createProgramAsync.fulfilled, (state, action) => {
+        const costType = state.item;
+        if (costType) {
+          costType.programs.push(action.payload);
+        }
       });
   },
 });

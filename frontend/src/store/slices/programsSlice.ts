@@ -391,9 +391,9 @@ const programsSlice = createSlice({
           program.projects.push(project);
         }
       })
-      .addCase(createProgramAsync.fulfilled, (state, action) => {
-        state.items.push(action.payload);
-      });
+      // .addCase(createProgramAsync.fulfilled, (state, action) => {
+      //   state.items.push(action.payload);
+      // });
   },
 });
 

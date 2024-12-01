@@ -9,7 +9,6 @@ import { createCategoryAsync, fetchCostTypeByAliasAsync } from '../../store/slic
 import { useLocation } from 'react-router-dom';
 
 type CategoryListProps = {
-  categories: Category[];
   selectedCategoryId: number | null;
   onCategoryToggle: (categoryId: number) => void;
   categorySearch: string;
@@ -20,7 +19,6 @@ type CategoryListProps = {
 };
 
 const CategoryList: React.FC<CategoryListProps> = ({
-  categories,
   selectedCategoryId,
   onCategoryToggle,
   categorySearch,
@@ -33,9 +31,12 @@ const CategoryList: React.FC<CategoryListProps> = ({
   const location = useLocation();
   const isDirect = location.pathname === '/direct-costs';
 
-  useEffect(() => {
-    console.log('CategoryList - Selected Category:', selectedCategoryId);
-  }, [selectedCategoryId]);
+  const categories = useAppSelector(state => {
+    const project = state.costTypes.item?.programs
+      .flatMap(program => program.projects)
+      .find(p => p.id === selectedProjectId);
+    return project ? project.categories : [];
+  });
 
   const handleSearchChange = (value: string) => {
     dispatch(setSearch({ type: 'category', value }));
@@ -72,7 +73,6 @@ const CategoryList: React.FC<CategoryListProps> = ({
   };
 
   const handleCategoryClick = (categoryId: number) => {
-    console.log('CategoryList - Clicking category:', categoryId);
     onCategoryToggle(categoryId);
   };
 
