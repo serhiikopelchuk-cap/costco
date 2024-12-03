@@ -247,10 +247,18 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
   };
 
   const handleInputChange = (itemId: number, costId: number, value: string) => {
+    // Remove all non-numeric characters except for the dollar sign
+    const sanitizedValue = value.replace(/[^0-9.$]/g, '');
+    const numericValue = parseFloat(sanitizedValue.replace(/\$/g, ''));
+    
+    if (numericValue < 0) {
+      return; // Prevent setting negative values
+    }
+    
     const key = `${itemId}-${costId}`;
     setEditingValues(prev => ({
       ...prev,
-      [key]: value
+      [key]: sanitizedValue
     }));
   };
 

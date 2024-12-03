@@ -24,12 +24,13 @@ export class PeriodSeeder implements Seeder {
       { name: 'Period 12', number: 12, month: 'August', isFrozen: false },
       { name: 'Period 13', number: 13, month: null, isFrozen: false },
     ];
-    console.log("Periods: ", periods);
+    // console.log("Periods: ", periods);
     for (const periodData of periods) {
     
       const period = periodRepository.create(periodData);
-      await periodRepository.save(period);
+      // await periodRepository.save(period);
       console.log(`Saved Period: ${period.name} (${period.month || 'Special Period'})`);
     }
+    console.log(`Seeding Periods: Done`);
   }
 } 

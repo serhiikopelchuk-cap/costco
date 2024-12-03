@@ -1,6 +1,6 @@
 import React from 'react';
 import { Bar } from 'react-chartjs-2';
-import directCostData from '../../data/direct-cost.json';
+// import directCostData from '../../data/direct-cost.json';
 import './DirectCostsTable.css';
 
 interface DirectCostsTableProps {
@@ -12,15 +12,15 @@ const DirectCostsTable: React.FC<DirectCostsTableProps> = ({ directCostsData }) 
   const calculateAverage = (periods: number[]) => (calculateTotal(periods) / periods.length).toFixed(2);
 
   // Apply updated styles to the chart data
-  const updatedDirectCostsData = {
-    ...directCostsData,
-    datasets: directCostsData.datasets.map((dataset: any) => ({
-      ...dataset,
-      backgroundColor: 'rgba(220, 53, 69, 0.2)', // Light red fill color
-      borderColor: '#dc3545', // Red border color
-      borderWidth: 1, // Ensure border is visible
-    })),
-  };
+  // const updatedDirectCostsData = {
+  //   ...directCostsData,
+  //   datasets: directCostsData.datasets.map((dataset: any) => ({
+  //     ...dataset,
+  //     backgroundColor: 'rgba(220, 53, 69, 0.2)', // Light red fill color
+  //     borderColor: '#dc3545', // Red border color
+  //     borderWidth: 1, // Ensure border is visible
+  //   })),
+  // };
 
   return (
     <div className="direct-costs-section">
@@ -48,7 +48,7 @@ const DirectCostsTable: React.FC<DirectCostsTableProps> = ({ directCostsData }) 
             </tr>
           </thead>
           <tbody>
-            {directCostData.categories.map((category) => (
+            {/* {directCostData.categories.map((category) => (
               <tr key={category.name}>
                 <td>{category.name}</td>
                 {category.lineItems[0].costs.map((_, index) => (
@@ -59,13 +59,13 @@ const DirectCostsTable: React.FC<DirectCostsTableProps> = ({ directCostsData }) 
                 <td>{calculateTotal(category.lineItems.flatMap(item => item.costs))}</td>
                 <td>{calculateAverage(category.lineItems.flatMap(item => item.costs))}</td>
               </tr>
-            ))}
+            ))} */}
           </tbody>
         </table>
       </div>
       <div className="chart">
         <h3>Average $ Spend Direct Costs (Year 1)</h3>
-        <Bar data={updatedDirectCostsData} />
+        {/* <Bar data={updatedDirectCostsData} /> */}
       </div>
     </div>
   );

@@ -67,7 +67,7 @@ export class CategorySeeder implements Seeder {
 
   private async seedCategories(categoryRepository, itemRepository, costRepository, data, project) {
     for (const categoryData of data.categories) {
-      console.log(`Adding category:`, categoryData.name);
+      // console.log(`Adding category:`, categoryData.name);
       const category = categoryRepository.create({
         name: categoryData.name,
         description: categoryData.description,
@@ -86,14 +86,14 @@ export class CategorySeeder implements Seeder {
           });
           const savedItem = await itemRepository.save(item);
 
-          console.log(`Adding item:`, savedItem);
+          // console.log(`Adding item:`, savedItem);
           const costs = await Promise.all(itemData.costs.map(async period => {
-            console.log(`Create cost:`, period);
+            // console.log(`Create cost:`, period);
             const cost = costRepository.create({
               value: period,
               item: savedItem,
             });
-            console.log(`Adding cost:`, cost);
+            // console.log(`Adding cost:`, cost);
             return costRepository.save(cost);
           }));
 
@@ -107,18 +107,19 @@ export class CategorySeeder implements Seeder {
       }
 
       await categoryRepository.save(savedCategory);
-      console.log(`Saved Category: Done`);
     }
+    
+    console.log(`Seeding Categories: Done`);
   }
 
   private readIndirectCostJson() {
-    const filePath = path.join(__dirname, '../../../frontend/src/data/indirect-costs.json');
+    const filePath = path.join(__dirname, '../data/indirect-costs.json');
     const jsonData = fs.readFileSync(filePath, 'utf8');
     return JSON.parse(jsonData);
   }
 
   private readDirectCostJson() {
-    const filePath = path.join(__dirname, '../../../frontend/src/data/direct-cost.json');
+    const filePath = path.join(__dirname, '../data/direct-cost.json');
     const jsonData = fs.readFileSync(filePath, 'utf8');
     return JSON.parse(jsonData);
   }

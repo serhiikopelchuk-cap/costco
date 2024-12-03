@@ -1,5 +1,5 @@
 import React from 'react';
-import indirectCostData from '../../data/indirect-costs.json';
+// import indirectCostData from '../../data/indirect-costs.json';
 
 const IndirectCostsTable: React.FC = () => {
   const periodsCount = 13; // Number of periods (P1 to P13)

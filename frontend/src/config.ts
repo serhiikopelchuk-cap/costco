@@ -1,13 +1,13 @@
 // Environment-specific configuration
 const configs = {
   development: {
-    API_BASE_URL: 'http://localhost:3000',
+    API_BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:3000',
   },
   production: {
     API_BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:3000',
   },
   test: {
-    API_BASE_URL: 'http://localhost:3000',
+    API_BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:3000',
   },
 };
 
