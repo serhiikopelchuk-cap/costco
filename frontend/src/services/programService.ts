@@ -37,3 +37,10 @@ export const createProgram = async (program: Partial<Program>, costTypeId: numbe
   });
   return response.data;
 };
+
+// Update an existing program
+export const updateProgram = async (id: number, program: Partial<Program>): Promise<Program> => {
+  console.log(`Program`, program);
+  const response = await axios.put<Program>(`${PROGRAMS_URL}/${id}`, program);
+  return response.data;
+};

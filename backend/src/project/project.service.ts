@@ -27,7 +27,7 @@ export class ProjectService {
     return this.projectRepository.save(project);
   }
 
-  async update(id: number, project: Project): Promise<Project> {
+  async update(id: number, project: Partial<Project>): Promise<Project> {
     await this.projectRepository.update(id, project);
     return this.findOne(id);
   }

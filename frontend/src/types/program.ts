@@ -14,7 +14,7 @@ export interface Cost {
 export type Item = {
   id?: number;
   name: string;
-  costs: { value: number }[];
+  costs: Cost[];
 };
 
 export type Category = {

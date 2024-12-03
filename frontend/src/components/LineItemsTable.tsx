@@ -6,11 +6,10 @@ import { cloneCategory } from '../services/categoryService';
 import { periodService } from '../services/periodService';
 import { Program, Item, Cost } from '../types/program';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
-import { updateLineItemInCostType, updateItemNameAsync, updateCategory, deleteCategoryAsync, fetchCostTypeByAliasAsync, fetchCategoryAsync, createLineItemAsync, deleteLineItemAsync, updateItemCostsAsync } from '../store/slices/costTypesSlice';
+import { updateLineItemInCostType, updateItemNameAsync, updateCategory, deleteCategoryAsync, fetchCategoryAsync, createLineItemAsync, deleteLineItemAsync, updateItemCostsAsync, fetchProjectAsync, updateCategoryNameAsync } from '../store/slices/costTypesSlice';
 import CloneButton from './buttons/CloneButton';
 import DeleteButton from './buttons/DeleteButton';
-import { setLineItems as setLineItemsAction, removeItemFromSelection, setCategoryId } from '../store/slices/selectionSlice';
-import { useLocation } from 'react-router-dom';
+import { setLineItems as setLineItemsAction, setCategoryId } from '../store/slices/selectionSlice';
 
 interface LineItemsTableProps {
   onLineItemAdd: (newLineItem: Item) => void;
@@ -26,26 +25,61 @@ interface LineItemsTableProps {
 }
 
 const LineItemsTable: React.FC<LineItemsTableProps> = ({
-  onLineItemAdd,
-  onDeselectAll,
   cloudProviders,
   selectedProvider,
   onProviderChange,
-  tableData,
   selectedProgramId,
   selectedProjectId,
   selectedCategoryId,
   handleLineItemUpdate,
 }) => {
   const dispatch = useAppDispatch();
-  const location = useLocation();
-  const isDirect = location.pathname === '/direct-costs';
-  const programsState = useAppSelector(state => state.programs);
-  const categoryName = tableData
-    .find(program => program.id === selectedProgramId)
-    ?.projects.find(project => project.id === selectedProjectId)
-    ?.categories.find(category => category.id === selectedCategoryId)
-    ?.name ?? '';
+
+  // Get category name from Redux state
+  const categoryName = useAppSelector(state => {
+    const category = state.costTypes.item?.programs
+      .flatMap(program => program.projects)
+      .flatMap(project => project.categories)
+      .find(category => category.id === selectedCategoryId);
+    return category ? category.name : '';
+  });
+
+  const [editingCategoryName, setEditingCategoryName] = useState<string>(categoryName);
+
+  useEffect(() => {
+    setEditingCategoryName(categoryName);
+  }, [categoryName]);
+
+  const handleCategoryNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditingCategoryName(e.target.value);
+  };
+
+  const handleCategoryNameBlur = async () => {
+    if (!selectedProgramId || !selectedProjectId || !selectedCategoryId) {
+      console.error('Missing required IDs for update');
+      return;
+    }
+
+    try {
+      // Update category name in backend
+      await dispatch(updateCategoryNameAsync({
+        categoryId: selectedCategoryId,
+        name: editingCategoryName,
+        programId: selectedProgramId,
+        projectId: selectedProjectId
+      })).unwrap();
+
+      // Optionally, refetch the category or update the local state
+      await dispatch(fetchCategoryAsync({
+        categoryId: selectedCategoryId,
+        programId: selectedProgramId,
+        projectId: selectedProjectId
+      })).unwrap();
+    } catch (error) {
+      console.error('Failed to update category name:', error);
+    }
+  };
+
   const columns = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9', 'P10', 'P11', 'P12', 'P13', 'Total', 'Average'];
   const numberOfCosts = 13;
 
@@ -71,15 +105,20 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
     return selectedLineItems.length > 0 ? selectedLineItems : lineItems;
   }, [selectedLineItems, lineItems]);
 
-  (itemsToDisplay || []).forEach(item => {
+  // Calculate totals and averages
+  itemsToDisplay.forEach(item => {
     if (!item.costs || !Array.isArray(item.costs)) {
       console.warn(`LineItem with id ${item.id} has no costs array.`);
       item.costs = Array(numberOfCosts).fill({ value: 0 });
     }
-    item.costs.forEach((cost: Cost, index: number) => {
+    
+    // Sort costs once
+    const sortedCosts = item.costs.slice().sort((a, b) => (a.id || 0) - (b.id || 0));
+    
+    sortedCosts.forEach((cost: Cost, index: number) => {
       costTotals[index] += Number(cost.value) || 0;
     });
-    totalOfTotals += item.costs.reduce((sum: number, cost: Cost) => sum + (Number(cost.value) || 0), 0);
+    totalOfTotals += sortedCosts.reduce((sum: number, cost: Cost) => sum + (Number(cost.value) || 0), 0);
   });
 
   const averageOfAverages = itemsToDisplay.length > 0 ? totalOfTotals / (itemsToDisplay.length * numberOfCosts) : 0;
@@ -93,6 +132,7 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
   const [cloneLineItemSuccess, setCloneLineItemSuccess] = useState<{ [key: number]: boolean }>({});
   const [currentCategory, setCurrentCategory] = useState<number | null>(selectedCategoryId);
   const [editingValues, setEditingValues] = useState<{ [key: string]: string }>({});
+  const [loadingItems, setLoadingItems] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
     setCurrentCategory(selectedCategoryId);
@@ -206,26 +246,28 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
     }
   };
 
-  const handleInputChange = (itemId: number, costIndex: number, value: string) => {
+  const handleInputChange = (itemId: number, costId: number, value: string) => {
+    const key = `${itemId}-${costId}`;
     setEditingValues(prev => ({
       ...prev,
-      [`${itemId}-${costIndex}`]: value
+      [key]: value
     }));
   };
 
-  const handleInputBlur = (itemId: number, costIndex: number, value: string) => {
+  const handleInputBlur = (itemId: number, costId: number, value: string) => {
+    const key = `${itemId}-${costId}`;
     // Clear editing state
     setEditingValues(prev => {
       const newState = { ...prev };
-      delete newState[`${itemId}-${costIndex}`];
+      delete newState[key];
       return newState;
     });
 
     // Update value
-    handleUpdateValue(itemId, costIndex, value);
+    handleUpdateValue(itemId, costId, value);
   };
 
-  const handleUpdateValue = async (itemId: number, costIndex: number, value: string) => {
+  const handleUpdateValue = async (itemId: number, costId: number, value: string) => {
     const numericValue = parseFloat(value.replace(/\$/g, '')) || 0;
 
     if (!selectedProgramId || !selectedProjectId || !selectedCategoryId) {
@@ -239,13 +281,15 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
 
     const updatedItemWithNewCost = {
       ...updatedItem,
-      costs: updatedItem.costs.map((cost, index) =>
-        index === costIndex ? { ...cost, value: numericValue } : cost
+      costs: updatedItem.costs.map((cost) =>
+        cost.id === costId ? { ...cost, value: numericValue } : cost
       )
     };
 
     try {
-      console.log('Updating item:', updatedItemWithNewCost);
+      // Set loading state for the specific cost item
+      const loadingKey = `${itemId}-${costId}`;
+      setLoadingItems(prev => ({ ...prev, [loadingKey]: true }));
 
       // Store current category ID
       const currentCategoryId = selectedCategoryId;
@@ -280,6 +324,10 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
 
     } catch (error) {
       console.error('Failed to update item costs:', error);
+    } finally {
+      // Clear loading state for the specific cost item
+      const loadingKey = `${itemId}-${costId}`;
+      setLoadingItems(prev => ({ ...prev, [loadingKey]: false }));
     }
   };
 
@@ -320,9 +368,11 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
       handleLineItemUpdate(clonedItem);
 
       if (selectedProgramId !== null && selectedProjectId !== null && selectedCategoryId !== null) {
-        await dispatch(fetchCostTypeByAliasAsync(
-          isDirect ? 'direct_costs' : 'indirect_costs'
-        )).unwrap();
+        await dispatch(fetchCategoryAsync({
+          categoryId: selectedCategoryId,
+          programId: selectedProgramId,
+          projectId: selectedProjectId
+        })).unwrap();
       }
 
       setCloneLineItemSuccess(prev => ({ ...prev, [item.id!]: true }));
@@ -350,6 +400,12 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
           projectId: selectedProjectId,
           category: clonedCategory
         }));
+
+        // Refetch only the current project
+        await dispatch(fetchProjectAsync({
+          projectId: selectedProjectId,
+          programId: selectedProgramId
+        })).unwrap();
       } else {
         console.error('Cannot update Redux: Missing required IDs');
       }
@@ -382,10 +438,11 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
         category: { id: selectedCategoryId, name: '', items: [] } // Provide a valid empty category
       }));
 
-      // Update data through fetchCostTypeByAliasAsync
-      await dispatch(fetchCostTypeByAliasAsync(
-        isDirect ? 'direct_costs' : 'indirect_costs'
-      )).unwrap();
+      // Refetch only the current project
+      await dispatch(fetchProjectAsync({
+        projectId: selectedProjectId,
+        programId: selectedProgramId
+      })).unwrap();
 
       setCloneCategorySuccess(true);
       setTimeout(() => setCloneCategorySuccess(false), 3000);
@@ -440,7 +497,13 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
     <div className="line-items-table">
       <div className="table-header">
         <h3 className="category-name">
-          {categoryName}
+          <input
+            type="text"
+            value={editingCategoryName}
+            onChange={handleCategoryNameChange}
+            onBlur={handleCategoryNameBlur}
+            className="category-name-input"
+          />
           <CloneButton
             isCloning={isCloningCategory}
             cloneSuccess={cloneCategorySuccess}
@@ -491,6 +554,9 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
             
             const itemAverage = itemTotal / numberOfCosts;
 
+            // Use sorted costs for rendering
+            const sortedCosts = item.costs.slice().sort((a, b) => (a.id || 0) - (b.id || 0));
+
             return (
               <React.Fragment key={item.id}>
                 <tr className="line-item-row">
@@ -516,22 +582,28 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
                   </td>
                 </tr>
                 <tr>
-                  {item.costs.map((cost, costIndex) => (
-                    <td key={costIndex} className="line-item-cell">
-                      <input
-                        type="text"
-                        value={
-                          editingValues[`${item.id!}-${costIndex}`] !== undefined
-                            ? editingValues[`${item.id!}-${costIndex}`]
-                            : `${cost.value}$`
-                        }
-                        onChange={(e) => handleInputChange(item.id!, costIndex, e.target.value)}
-                        onBlur={(e) => handleInputBlur(item.id!, costIndex, e.target.value)}
-                        className="cost-input"
-                        disabled={frozenPeriods[costIndex + 1]}
-                      />
-                    </td>
-                  ))}
+                  {sortedCosts.map((cost, index) => {
+                    const loadingKey = `${item.id!}-${cost.id}`;
+                    return (
+                      <td key={cost.id} className="line-item-cell">
+                        <div className="input-container">
+                          <input
+                            type="text"
+                            value={
+                              editingValues[loadingKey] !== undefined
+                                ? editingValues[loadingKey]
+                                : `${cost.value}$`
+                            }
+                            onChange={(e) => handleInputChange(item.id!, cost.id!, e.target.value)}
+                            onBlur={(e) => handleInputBlur(item.id!, cost.id!, e.target.value)}
+                            className="cost-input"
+                            disabled={frozenPeriods[index + 1] || loadingItems[loadingKey]}
+                          />
+                          {loadingItems[loadingKey] && <span className="spinner"></span>}
+                        </div>
+                      </td>
+                    );
+                  })}
                   <td className="line-item-cell">{Number(itemTotal).toFixed(2)}$</td>
                   <td className="line-item-cell">{Number(itemAverage).toFixed(2)}$</td>
                 </tr>

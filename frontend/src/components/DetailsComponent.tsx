@@ -4,27 +4,26 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClone, faSpinner, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { cloneProgram, deleteProgram } from '../services/programService';
 import { cloneProject, deleteProject } from '../services/projectService';
-import { Item } from '../types/program';
-import { useAppDispatch } from '../hooks/reduxHooks';
+import { Category, Project } from '../types/program';
+import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
 import { updateProgram, updateProject, deleteProgram as deleteProgramAction, deleteProject as deleteProjectAction } from '../store/slices/programsSlice';
 import DeleteButton from './buttons/DeleteButton';
-import { fetchCostTypeByAliasAsync } from '../store/slices/costTypesSlice';
+import { fetchCostTypeByAliasAsync, fetchProgramAsync, updateProgramNameAsync, updateProjectNameAsync } from '../store/slices/costTypesSlice';
 import { RootState } from '../store';
 import { useSelector } from 'react-redux';
+import { setProgramId, setProjectId } from '../store/slices/selectionSlice';
 
 interface DetailsComponentProps {
   type: 'program' | 'project';
-  name: string;
   id: number;
   programId?: number;
-  categories: Record<string, Item[]>;
 }
 
-const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, name, id, programId, categories }) => {
+const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, id, programId }) => {
   const columns = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9', 'P10', 'P11', 'P12', 'P13', 'Total', 'Average'];
   const numberOfPeriods = 13;
 
-  const [sums, setSums] = useState<Record<string, { periodSums: number[], totalSum: number, averageSum: number }>>({});
+  const [sums, setSums] = useState<Record<number, { periodSums: number[], totalSum: number, averageSum: number }>>({});
   const [overallSums, setOverallSums] = useState<number[]>(Array(numberOfPeriods).fill(0));
   const [overallTotalSum, setOverallTotalSum] = useState<number>(0);
   const [overallAverageSum, setOverallAverageSum] = useState<number>(0);
@@ -34,17 +33,85 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, name, id, pro
   const dispatch = useAppDispatch();
   const currentPage = useSelector((state: RootState) => state.ui.currentPage);
 
+  // Get programs and projects from Redux state
+  const programs = useAppSelector(state => state.costTypes.item?.programs || []);
+
   useEffect(() => {
-    const calculateSums = (items: Record<string, Item[]>) => {
-      const sums: Record<string, { periodSums: number[], totalSum: number, averageSum: number }> = {};
+    if (!programId && programs.length > 0) {
+      // Select the first available program if none is selected
+      const firstProgram = programs[0];
+      dispatch(setProgramId(firstProgram.id));
+
+      if (type === 'project' && firstProgram.projects.length > 0) {
+        // Select the first available project if none is selected
+        const firstProject = firstProgram.projects[0];
+        dispatch(setProjectId(firstProject.id));
+      }
+    }
+  }, [programId, programs, dispatch, type]);
+
+  // Get program/project name from Redux state
+  const name = useAppSelector(state => {
+    if (type === 'program') {
+      const program = state.costTypes.item?.programs.find(p => p.id === id);
+      return program ? program.name : '';
+    } else {
+      const program = state.costTypes.item?.programs.find(p => p.id === programId);
+      const project = program?.projects.find(p => p.id === id);
+      return project ? project.name : '';
+    }
+  });
+
+  // Get projects or categories from Redux state
+  const data = useAppSelector(state => {
+    if (type === 'program') {
+      const program = state.costTypes.item?.programs.find(p => p.id === id);
+      return program ? program.projects : [];
+    } else {
+      const program = state.costTypes.item?.programs.find(p => p.id === programId);
+      const project = program?.projects.find(p => p.id === id);
+      return project ? project.categories : [];
+    }
+  });
+
+  const [editingName, setEditingName] = useState<string>(name);
+
+  useEffect(() => {
+    setEditingName(name);
+  }, [name]);
+
+  useEffect(() => {
+    console.log(`Debug:`, type, data);
+    if (type === 'program' && data.length === 0) {
+      // No projects in the program
+      setSums({});
+      setOverallSums(Array(numberOfPeriods).fill(0));
+      setOverallTotalSum(0);
+      setOverallAverageSum(0);
+      return;
+    }
+
+    if (type === 'project' && (data as Category[]).every((category) => category.items.length === 0)) {
+      // No categories in the project
+      setSums({});
+      setOverallSums(Array(numberOfPeriods).fill(0));
+      setOverallTotalSum(0);
+      setOverallAverageSum(0);
+      return;
+    }
+
+    const calculateSums = (data: (Project | Category)[]) => {
+      const sums: Record<number, { periodSums: number[], totalSum: number, averageSum: number }> = {};
       const overallSums = Array(numberOfPeriods).fill(0);
       let overallTotalSum = 0;
 
-      Object.entries(items).forEach(([itemName, lineItems]) => {
+      data.forEach(item => {
         const periodSums = Array(numberOfPeriods).fill(0);
         let totalSum = 0;
 
-        lineItems.forEach(item => {
+        const items = type === 'program' ? (item as Project).categories.flatMap(category => category.items) : (item as Category).items;
+
+        items.forEach(item => {
           item.costs.forEach(({ value }, index) => {
             const numericValue = Number(value);
             if (!isNaN(numericValue)) {
@@ -58,22 +125,23 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, name, id, pro
           }, 0);
         });
 
-        const averageSum = lineItems.length > 0 ? totalSum / (lineItems.length * numberOfPeriods) : 0;
-        sums[itemName] = { periodSums, totalSum, averageSum };
+        const averageSum = items.length > 0 ? totalSum / (items.length * numberOfPeriods) : 0;
+        const itemId = type === 'program' ? (item as Project).id : (item as Category).id;
+        sums[itemId] = { periodSums, totalSum, averageSum };
         overallTotalSum += totalSum;
       });
 
-      const overallAverageSum = overallTotalSum / (Object.values(items).flat().length * numberOfPeriods);
+      const overallAverageSum = overallTotalSum / (data.flatMap(item => type === 'program' ? (item as Project).categories.flatMap(category => category.items) : (item as Category).items).length * numberOfPeriods);
 
       return { sums, overallSums, overallTotalSum, overallAverageSum };
     };
 
-    const { sums, overallSums, overallTotalSum, overallAverageSum } = calculateSums(categories);
+    const { sums, overallSums, overallTotalSum, overallAverageSum } = calculateSums(data);
     setSums(sums);
     setOverallSums(overallSums);
     setOverallTotalSum(overallTotalSum);
     setOverallAverageSum(overallAverageSum);
-  }, [categories]);
+  }, [data, type]);
 
   const handleClone = async () => {
     setIsCloning(true);
@@ -83,6 +151,8 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, name, id, pro
         const clonedProgram = await cloneProgram(id);
         console.log('Program cloned successfully:', clonedProgram);
         dispatch(updateProgram(clonedProgram));
+
+        dispatch(fetchCostTypeByAliasAsync(currentPage === 'direct_costs' ? 'direct_costs' : 'indirect_costs'));
       } else {
         if (programId === undefined) {
           console.error('Program ID is required to clone a project');
@@ -91,11 +161,12 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, name, id, pro
         const clonedProject = await cloneProject(id, programId);
         console.log('Project cloned successfully:', clonedProject);
         dispatch(updateProject({ programId, project: clonedProject }));
+
+        await dispatch(fetchProgramAsync(programId)).unwrap();
       }
 
       setCloneSuccess(true);
       setTimeout(() => setCloneSuccess(false), 3000);
-      dispatch(fetchCostTypeByAliasAsync(currentPage === 'direct_costs' ? 'direct_costs' : 'indirect_costs'));
     } catch (error) {
       console.error(`Error cloning ${type}:`, error);
     } finally {
@@ -109,18 +180,44 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, name, id, pro
         await deleteProgram(id);
         console.log('Program deleted successfully');
         dispatch(deleteProgramAction(id));
+
+        dispatch(fetchCostTypeByAliasAsync(currentPage === 'direct_costs' ? 'direct_costs' : 'indirect_costs'));
       } else {
         await deleteProject(id);
         console.log('Project deleted successfully');
         if (programId !== undefined) {
           dispatch(deleteProjectAction({ programId, projectId: id }));
+
+          await dispatch(fetchProgramAsync(programId)).unwrap();
         }
       }
-      dispatch(fetchCostTypeByAliasAsync(currentPage === 'direct_costs' ? 'direct_costs' : 'indirect_costs'));
     } catch (error) {
       console.error(`Error deleting ${type}:`, error);
     }
   };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditingName(e.target.value);
+  };
+
+  const handleNameBlur = async () => {
+    if (type === 'program') {
+      try {
+        // Update program name in backend
+        await dispatch(updateProgramNameAsync({ programId: id, name: editingName })).unwrap();
+      } catch (error) {
+        console.error('Failed to update program name:', error);
+      }
+    } else if (type === 'project' && programId !== undefined) {
+      try {
+        // Update project name in backend
+        await dispatch(updateProjectNameAsync({ projectId: id, programId, name: editingName })).unwrap();
+      } catch (error) {
+        console.error('Failed to update project name:', error);
+      }
+    }
+  };
+
 
   return (
     <div className="container details-container">
@@ -149,7 +246,14 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, name, id, pro
           />
         </div>
       </div>
-      <p>Details for {type === 'program' ? 'Program' : 'Project'}: {name}</p>
+      <p>Details for {type === 'program' ? 'Program' : 'Project'}:</p>
+      <input
+        type="text"
+        value={editingName}
+        onChange={handleNameChange}
+        onBlur={handleNameBlur}
+        className="details-name-input"
+      />
       <table>
         <thead>
           <tr>
@@ -168,16 +272,20 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, name, id, pro
             <td><strong>{Number(overallTotalSum).toFixed(2)}$</strong></td>
             <td><strong>{Number(overallAverageSum).toFixed(2)}$</strong></td>
           </tr>
-          {Object.entries(sums).map(([itemName, { periodSums, totalSum, averageSum }]) => (
-            <tr key={itemName}>
-              <td>{itemName}</td>
-              {periodSums.map((sum, index) => (
-                <td key={index}>{Number(sum).toFixed(0)}$</td>
-              ))}
-              <td>{Number(totalSum).toFixed(2)}$</td>
-              <td>{Number(averageSum).toFixed(2)}$</td>
-            </tr>
-          ))}
+          {data.map((item) => {
+            const itemId = type === 'program' ? (item as Project).id : (item as Category).id;
+            const { periodSums, totalSum, averageSum } = sums[itemId] || { periodSums: [], totalSum: 0, averageSum: 0 };
+            return (
+              <tr key={itemId}>
+                <td>{item.name}</td>
+                {periodSums.map((sum, index) => (
+                  <td key={`${itemId}-${index}`}>{Number(sum).toFixed(0)}$</td>
+                ))}
+                <td>{Number(totalSum).toFixed(2)}$</td>
+                <td>{Number(averageSum).toFixed(2)}$</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

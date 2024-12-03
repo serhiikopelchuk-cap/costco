@@ -2,12 +2,15 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { fetchCostTypeByAlias } from '../../services/costTypeService';
 import { CostType, Item, Cost, Category, Program, Project } from '../../types/program';
 import { updateItemCosts, createLineItem, deleteLineItem, updateItemName } from '../../services/itemService';
-import { fetchPrograms } from '../../services/programService';
-import { createCategory, deleteCategory, fetchCategoryById } from '../../services/categoryService';
+import { createCategory, deleteCategory, fetchCategoryById, updateCategory as updateCategoryService } from '../../services/categoryService';
+import { updateProgram as updateProgramService } from '../../services/programService';
+import { updateProject as updateProjectService } from '../../services/projectService';
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '../index';
 import { setCategoryId } from './selectionSlice';
 import { createProgram } from '../../services/programService';
+import { fetchProjectById } from '../../services/projectService';
+import { fetchProgramById } from '../../services/programService';
 
 interface CostTypesState {
   item: CostType | null;
@@ -208,6 +211,46 @@ export const createProgramAsync = createAsyncThunk(
   async ({ program, costTypeId }: { program: Partial<Program>; costTypeId: number }) => {
     const response = await createProgram(program, costTypeId);
     return response;
+  }
+);
+
+export const fetchProjectAsync = createAsyncThunk(
+  'costTypes/fetchProject',
+  async ({ projectId, programId }: { projectId: number; programId: number }) => {
+    const response = await fetchProjectById(projectId);
+    return { project: response, programId };
+  }
+);
+
+export const fetchProgramAsync = createAsyncThunk(
+  'costTypes/fetchProgram',
+  async (programId: number) => {
+    const response = await fetchProgramById(programId);
+    return response;
+  }
+);
+
+export const updateCategoryNameAsync = createAsyncThunk(
+  'costTypes/updateCategoryName',
+  async ({ categoryId, name, programId, projectId }: { categoryId: number; name: string; programId: number; projectId: number }) => {
+    const response = await updateCategoryService(categoryId, { name });
+    return { categoryId, name, programId, projectId };
+  }
+);
+
+export const updateProgramNameAsync = createAsyncThunk(
+  'costTypes/updateProgramName',
+  async ({ programId, name }: { programId: number; name: string }) => {
+    const response = await updateProgramService(programId, { name });
+    return { programId, name };
+  }
+);
+
+export const updateProjectNameAsync = createAsyncThunk(
+  'costTypes/updateProjectName',
+  async ({ projectId, programId, name }: { projectId: number; programId: number; name: string }) => {
+    const response = await updateProjectService(projectId, { name });
+    return { projectId, programId, name };
   }
 );
 
@@ -439,6 +482,64 @@ const costTypesSlice = createSlice({
         const costType = state.item;
         if (costType) {
           costType.programs.push(action.payload);
+        }
+      })
+      .addCase(fetchProjectAsync.fulfilled, (state, action) => {
+        const { project, programId } = action.payload;
+        
+        [state.directCosts, state.indirectCosts, state.item].forEach(costType => {
+          if (!costType) return;
+          
+          const program = costType.programs.find(p => p.id === programId);
+          if (!program) return;
+
+          const projectIndex = program.projects.findIndex(p => p.id === project.id);
+          if (projectIndex !== -1) {
+            program.projects[projectIndex] = project;
+          } else {
+            program.projects.push(project);
+          }
+        });
+      })
+      .addCase(fetchProgramAsync.fulfilled, (state, action) => {
+        const programIndex = state.item?.programs.findIndex(p => p.id === action.payload.id);
+        if (programIndex !== undefined && programIndex !== -1) {
+          state.item!.programs[programIndex] = action.payload;
+        } else {
+          state.item?.programs.push(action.payload);
+        }
+      })
+      .addCase(updateCategoryNameAsync.fulfilled, (state, action) => {
+        const { categoryId, name, programId, projectId } = action.payload;
+        
+        [state.directCosts, state.indirectCosts, state.item].forEach(costType => {
+          if (!costType) return;
+          
+          const program = costType.programs.find(p => p.id === programId);
+          if (!program) return;
+
+          const project = program.projects.find(p => p.id === projectId);
+          if (!project) return;
+
+          const category = project.categories.find(c => c.id === categoryId);
+          if (category) {
+            category.name = name;
+          }
+        });
+      })
+      .addCase(updateProgramNameAsync.fulfilled, (state, action) => {
+        const { programId, name } = action.payload;
+        const program = state.item?.programs.find(p => p.id === programId);
+        if (program) {
+          program.name = name;
+        }
+      })
+      .addCase(updateProjectNameAsync.fulfilled, (state, action) => {
+        const { projectId, programId, name } = action.payload;
+        const program = state.item?.programs.find(p => p.id === programId);
+        const project = program?.projects.find(p => p.id === projectId);
+        if (project) {
+          project.name = name;
         }
       });
   },

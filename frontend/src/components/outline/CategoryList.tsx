@@ -5,7 +5,7 @@ import AddItemInput from '../AddItemInput';
 import { Category } from '../../types/program';
 import { setSearch, setAddInputVisibility } from '../../store/slices/uiSlice';
 import { setCategoryId } from '../../store/slices/selectionSlice';
-import { createCategoryAsync, fetchCostTypeByAliasAsync } from '../../store/slices/costTypesSlice';
+import { createCategoryAsync, fetchProjectAsync } from '../../store/slices/costTypesSlice';
 import { useLocation } from 'react-router-dom';
 
 type CategoryListProps = {
@@ -63,9 +63,10 @@ const CategoryList: React.FC<CategoryListProps> = ({
 
         dispatch(setCategoryId(response.category.id));
 
-        await dispatch(fetchCostTypeByAliasAsync(
-          isDirect ? 'direct_costs' : 'indirect_costs'
-        )).unwrap();
+        await dispatch(fetchProjectAsync({
+          projectId: selectedProjectId,
+          programId: selectedProgramId
+        })).unwrap();
       } catch (error) {
         console.error('Failed to create category:', error);
       }

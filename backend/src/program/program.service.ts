@@ -31,7 +31,7 @@ export class ProgramService {
     return this.programRepository.save(program);
   }
 
-  async update(id: number, program: Program): Promise<Program> {
+  async update(id: number, program: Partial<Program>): Promise<Program> {
     await this.programRepository.update(id, program);
     return this.findOne(id);
   }

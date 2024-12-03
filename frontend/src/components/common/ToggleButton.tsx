@@ -24,19 +24,27 @@ const ToggleButton: React.FC = () => {
     const alias = newPath === '/direct-costs' ? 'direct_costs' : 'indirect_costs';
     await dispatch(fetchCostTypeByAliasAsync(alias));
 
+    // Reset selections
+    dispatch(setProgramId(null));
+    dispatch(setProjectId(null));
+    dispatch(setCategoryId(null));
+    dispatch(setLineItems([]));
+
     // Select the first available Program, Project, Category, and Item
     const costType = alias === 'direct_costs' ? costTypes.directCosts : costTypes.indirectCosts;
     if (costType && costType.programs.length > 0) {
       const firstProgram = costType.programs[0];
+      dispatch(setProgramId(firstProgram.id));
+
       if (firstProgram.projects.length > 0) {
         const firstProject = firstProgram.projects[0];
+        dispatch(setProjectId(firstProject.id));
+
         if (firstProject.categories.length > 0) {
           const firstCategory = firstProject.categories[0];
-          const firstItem = firstCategory.items.length > 0 ? firstCategory.items[0] : null;
-
-          dispatch(setProgramId(firstProgram.id));
-          dispatch(setProjectId(firstProject.id));
           dispatch(setCategoryId(firstCategory.id));
+
+          const firstItem = firstCategory.items.length > 0 ? firstCategory.items[0] : null;
           dispatch(setLineItems(firstItem ? [firstItem] : []));
         }
       }

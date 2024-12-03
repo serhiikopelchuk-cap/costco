@@ -2,12 +2,12 @@ import React from 'react';
 import SearchInput from '../common/SearchInput';
 import AddItemInput from '../AddItemInput';
 import { RootState } from '../../store';
-import { deleteProject } from '../../store/slices/programsSlice';
+import { deleteProject, createProjectAsync } from '../../store/slices/programsSlice';
 import DetailsButton from '../buttons/DetailsButton';
 import { clearCategoryId } from '../../store/slices/selectionSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { useAppDispatch } from '../../hooks/reduxHooks';
-import { createProjectAsync } from '../../store/slices/programsSlice';
+import { fetchProgramAsync } from '../../store/slices/costTypesSlice';
 import { Project } from '../../types/program';
 
 type ProjectListProps = {
@@ -33,16 +33,17 @@ const ProjectList: React.FC<ProjectListProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const projects = useSelector((state: RootState) => {
-    const selectedProgram = state.programs.items.find(p => p.id === state.selection.selectedProgramId);
+    const selectedProgram = state.costTypes.item?.programs.find(p => p.id === state.selection.selectedProgramId);
     return selectedProgram ? selectedProgram.projects : [];
   });
 
   const programId = useSelector((state: RootState) => state.selection.selectedProgramId);
 
-  const handleAddProject = (projectName: string) => {
+  const handleAddProject = async (projectName: string) => {
     if (programId !== null) {
       const newProject: Partial<Project> = { name: projectName, categories: [] };
-      dispatch(createProjectAsync({ programId, project: newProject }));
+      await dispatch(createProjectAsync({ programId, project: newProject })).unwrap();
+      await dispatch(fetchProgramAsync(programId)).unwrap();
     }
   };
 
