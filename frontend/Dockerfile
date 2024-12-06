@@ -13,6 +13,13 @@ RUN npm install
 # Copy the rest of the application code
 COPY . .
 
+# Set build-time environment variables
+ARG REACT_APP_API_URL
+ENV REACT_APP_API_URL=${REACT_APP_API_URL}
+
+# Debugging: Print the environment variable
+RUN echo "REACT_APP_API_URL is set to: $REACT_APP_API_URL"
+
 # Build the application
 RUN npm run build
 

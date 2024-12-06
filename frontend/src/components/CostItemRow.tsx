@@ -14,7 +14,8 @@ const CostItemRow: React.FC<CostItemRowProps> = ({ item, onSave, onDelete }) => 
   const [isEditing, setIsEditing] = useState(false);
   const [editedItem, setEditedItem] = useState({ ...item });
 
-  const calculateTotal = (costs: Cost[]) => costs.reduce((acc, cost) => acc + cost.value, 0);
+  const calculateTotal = (costs: Cost[]) => 
+    costs.reduce((acc, cost) => acc + (typeof cost.value === 'number' ? cost.value : parseFloat(cost.value)), 0);
   const calculateAverage = (costs: Cost[]) => (costs.length ? (calculateTotal(costs) / costs.length).toFixed(2) : '0.00');
 
   const handleEditClick = () => {

@@ -10,7 +10,7 @@ const configs = {
     API_BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:3000',
   },
 };
-
+console.log(configs, process.env.REACT_APP_API_URL);
 // Determine current environment
 const environment = process.env.NODE_ENV || 'development';
 

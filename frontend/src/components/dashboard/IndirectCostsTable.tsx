@@ -1,11 +1,31 @@
-import React from 'react';
-// import indirectCostData from '../../data/indirect-costs.json';
+import React, { useState } from 'react';
+import { CostType } from '../../types/program'; // Import CostType
 
-const IndirectCostsTable: React.FC = () => {
+interface IndirectCostsTableProps {
+  indirectCostsData: CostType;
+}
+
+const IndirectCostsTable: React.FC<IndirectCostsTableProps> = ({ indirectCostsData }) => {
   const periodsCount = 13; // Number of periods (P1 to P13)
+  const [visibleCategories, setVisibleCategories] = useState(10); // State to track visible categories
 
-  const calculateTotal = (periods: number[]) => periods.reduce((acc, val) => acc + (isNaN(val) ? 0 : val), 0);
-  const calculateAverage = (periods: number[]) => (calculateTotal(periods) / periods.length).toFixed(2);
+  const calculateTotal = (costs: number[]) => costs.reduce((acc, val) => acc + (isNaN(val) ? 0 : val), 0);
+  const calculateAverage = (costs: number[]) => costs.length > 0 ? (calculateTotal(costs) / costs.length) : 0;
+
+  // Helper function to format numbers
+  const formatNumber = (num: number) => {
+    if (typeof num !== 'number' || isNaN(num)) return '0.00$';
+    return num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '$';
+  };
+
+  // Collect all categories from all programs and projects
+  const allCategories = indirectCostsData.programs.flatMap((program) =>
+    program.projects.flatMap((project) => project.categories)
+  );
+
+  const handleLoadMore = () => {
+    setVisibleCategories((prev) => prev + 10); // Load 20 more categories
+  };
 
   return (
     <div className="indirect-costs-table">
@@ -13,7 +33,7 @@ const IndirectCostsTable: React.FC = () => {
       <table>
         <thead>
           <tr>
-            <th>Cost Type</th>
+            <th>Category</th>
             {Array.from({ length: periodsCount }, (_, i) => (
               <th key={i}>P{i + 1}</th>
             ))}
@@ -22,24 +42,40 @@ const IndirectCostsTable: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {/* {indirectCostData.categories.map((category) => {
-            const periods = category.lineItems.length
-              ? category.lineItems.reduce((acc, item) => {
-                  return acc.map((sum, i) => sum + (isNaN(item.periods[i]) ? 0 : item.periods[i]));
-                }, Array(periodsCount).fill(0))
-              : Array(periodsCount).fill(0);
+          {allCategories.slice(0, visibleCategories).map((category) => {
+            const periods = Array(periodsCount).fill(0);
 
+            category.items.forEach((item) => {
+              item.costs.forEach((cost, index) => {
+                if (index < periodsCount) {
+                  const value = typeof cost.value === 'string' ? parseFloat(cost.value) : cost.value;
+                  if (!isNaN(value)) {
+                    periods[index] += value;
+                  } else {
+                    console.warn(`Invalid cost value detected: ${cost.value}`);
+                  }
+                }
+              });
+            });
+
+            const total = calculateTotal(periods);
+            const average = calculateAverage(periods);
             return (
-              <tr key={category.name}>
+              <tr key={category.id}>
                 <td>{category.name}</td>
                 {periods.map((value, index) => (
-                  <td key={index}>{value}</td>
+                  <td key={index}>{Number(value).toFixed(0)}$</td>
                 ))}
-                <td>{calculateTotal(periods)}</td>
-                <td>{calculateAverage(periods)}</td>
+                <td>{formatNumber(total)}</td>
+                <td>{formatNumber(average)}</td>
               </tr>
             );
-          })} */}
+          })}
+          {allCategories.length > visibleCategories && (
+            <tr key="more" onClick={handleLoadMore} style={{ cursor: 'pointer' }}>
+              <td colSpan={periodsCount + 3} style={{ textAlign: 'center' }}>Load more...</td>
+            </tr>
+          )}
         </tbody>
       </table>
     </div>

@@ -36,16 +36,16 @@ export class CostTypeService {
   }
 
   async findByAlias(alias: string): Promise<CostType> {
-    const costType = await this.costTypeRepository.findOne({
-      where: { alias },
-      relations: [
-        'programs',
-        'programs.projects',
-        'programs.projects.categories',
-        'programs.projects.categories.items',
-        'programs.projects.categories.items.costs'
-      ]
-    });
+    const costType = await this.costTypeRepository
+      .createQueryBuilder('costType')
+      .leftJoinAndSelect('costType.programs', 'programs')
+      .leftJoinAndSelect('programs.projects', 'projects')
+      .leftJoinAndSelect('projects.categories', 'categories')
+      .leftJoinAndSelect('categories.items', 'items')
+      .leftJoinAndSelect('items.costs', 'costs')
+      .where('costType.alias = :alias', { alias })
+      .orderBy('costs.id', 'ASC')
+      .getOne();
 
     if (!costType) {
       throw new NotFoundException(`CostType with alias ${alias} not found`);
