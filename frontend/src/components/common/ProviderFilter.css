@@ -1,0 +1,14 @@
+.filter-container {
+  display: flex;
+  align-items: center;
+}
+
+.filter-icon {
+  margin-right: 8px;
+}
+
+.provider-select {
+  padding: 4px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}

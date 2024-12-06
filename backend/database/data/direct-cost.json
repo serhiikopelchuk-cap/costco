@@ -4,7 +4,7 @@
         "name": "Compute Costs",
         "description": "Costs associated with virtual machines, virtual machine scale sets, and container instances",
         "note": "Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period",
-        "cloudProvider": ["azure"],
+        "cloudProvider": "azure",
         "lineItems": [
           {
             "name": "Azure Container Instances",
@@ -48,7 +48,7 @@
         "name": "Storage Costs",
         "description": "Costs associated with block storage, file storage, and object storage",
         "note": "Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period",
-        "cloudProvider": ["azure"],
+        "cloudProvider": "azure",
         "lineItems": [
           {
             "name": "Azure Blob Storage",
@@ -80,7 +80,7 @@
         "name": "Network Costs",
         "description": "Costs associated with virtual networks, VPN gateways, and ExpressRoute",
         "note": "Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period",
-        "cloudProvider": ["azure"],
+        "cloudProvider": "azure",
         "lineItems": [
           {
             "name": "Virtual Networks",
@@ -116,7 +116,7 @@
         "name": "Database Costs",
         "description": "Costs associated with SQL Database, Cosmos DB, and Data Warehouse",
         "note": "Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period",
-        "cloudProvider": ["azure"],
+        "cloudProvider": "azure",
         "lineItems": [
           {
             "name": "Azure SQL Database",
@@ -148,7 +148,7 @@
         "name": "Analytics Costs",
         "description": "Costs associated with Data Factory, Databricks, and Synapse Analytics",
         "note": "Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period",
-        "cloudProvider": ["azure"],
+        "cloudProvider": "azure",
         "lineItems": [
           {
             "name": "Azure Data Factory",
@@ -168,7 +168,7 @@
         "name": "Integration Costs",
         "description": "Costs associated with Logic Apps, Integration Services, and API Management",
         "note": "Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period",
-        "cloudProvider": ["azure"],
+        "cloudProvider": "azure",
         "lineItems": [
             {"name": "Azure Logic Apps", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
             {"name": "Azure Integration Services (SSIS)", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
@@ -181,7 +181,7 @@
         "name": "Security Costs",
         "description": "Costs associated with Azure Security Center, Azure Firewall, and Azure Key Vault",
         "note": "Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period",
-        "cloudProvider": ["azure"],
+        "cloudProvider": "azure",
         "lineItems": [
             {"name": "Azure Key Vault", "costs": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]},
             {"name": "Web Application Firewalls (WAF)", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
@@ -193,7 +193,7 @@
         "name": "Monitoring and Management Costs",
         "description": "Costs associated with Azure Monitor, Azure Log Analytics, and Azure Automation",
         "note": "Azure Cost Management + Billing > Cost Analysis. Filter by resource type and time period",
-        "cloudProvider": ["azure"],
+        "cloudProvider": "azure",
         "lineItems": [
             {"name": "Azure Monitor", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
             {"name": "Azure Log Analytics", "costs": [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]},
@@ -205,7 +205,7 @@
         "name": "Application Development Costs",
         "description": "Costs associated with developing and deploying applications on Azure",
         "note": "Azure Cost Management + Billing > Cost Analysis. Filter resource type (App Service, Functions) & period",
-        "cloudProvider": ["azure"],
+        "cloudProvider": "azure",
         "lineItems": [
             {"name": "Azure App Service", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
             {"name": "Azure Functions", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
@@ -220,7 +220,7 @@
         "name": "Third-Party Service Costs",
         "description": "Costs associated with third-party services integrated with Azure",
         "note": "Third-party provider invoices and billing portal",
-        "cloudProvider": ["azure"],
+        "cloudProvider": "azure",
         "lineItems": [
             {"name": "Third-party cloud storage", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
             {"name": "Third-party security solutions", "costs": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
@@ -234,7 +234,7 @@
         "name": "Test GCP Category 1",
         "description": "This is a test category for GCP services",
         "note": "Test note for GCP services",
-        "cloudProvider": ["gcp"],
+        "cloudProvider": "gcp",
         "lineItems": [
           {
             "name": "GCP Compute Engine",
@@ -250,7 +250,7 @@
         "name": "Test GCP Category 2",
         "description": "Another test category for GCP services",
         "note": "Additional test note for GCP services",
-        "cloudProvider": ["gcp"],
+        "cloudProvider": "gcp",
         "lineItems": [
           {
             "name": "GCP BigQuery",

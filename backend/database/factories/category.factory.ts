@@ -7,7 +7,7 @@ export default setSeederFactory(Category, (faker) => {
   category.name = faker.commerce.department();
   category.description = faker.lorem.sentence();
   category.note = faker.lorem.paragraph();
-  category.cloudProvider = [faker.company.name()];
+  category.cloudProvider = faker.company.name();
 
   return category;
 }); 

@@ -84,7 +84,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
       )
       .filter(category => {
         if (!selectedProvider) return true;
-        return category.cloudProvider?.includes(selectedProvider);
+        return category.cloudProvider === selectedProvider;
       });
   }, [categories, categorySearch, selectedProvider]);
 

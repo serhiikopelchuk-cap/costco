@@ -4,6 +4,19 @@
   margin: 0 auto;
 }
 
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.dashboard-header h2 {
+  flex-grow: 1;
+  text-align: center;
+  margin-left: 150px;
+}
+
 .top-section {
   display: flex;
   align-items: stretch;

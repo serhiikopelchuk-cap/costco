@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faFilter } from '@fortawesome/free-solid-svg-icons';
 import './ActionButtons.css';
 import { Item } from '../types/program';
+import ProviderFilter from './common/ProviderFilter';
 
 interface ActionButtonsProps {
   handleDeselectAll: () => void;
@@ -51,21 +52,11 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
 
   return (
     <div className="action-buttons-container">
-      <div className="filter-container">
-        <FontAwesomeIcon icon={faFilter} className="filter-icon" />
-        <select
-          value={selectedProvider}
-          onChange={(e) => onProviderChange(e.target.value)}
-          className="provider-select"
-        >
-          <option value="">All Providers</option>
-          {cloudProviders.map((provider) => (
-            <option key={provider} value={provider}>
-              {provider}
-            </option>
-          ))}
-        </select>
-      </div>
+      <ProviderFilter
+        selectedProvider={selectedProvider}
+        onProviderChange={onProviderChange}
+        cloudProviders={cloudProviders}
+      />
       <button 
         className="remove-item-button"
         onClick={handleRemoveLastLineItem}

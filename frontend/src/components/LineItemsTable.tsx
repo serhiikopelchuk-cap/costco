@@ -124,7 +124,10 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
   const averageOfAverages = itemsToDisplay.length > 0 ? totalOfTotals / (itemsToDisplay.length * numberOfCosts) : 0;
 
   const [errorMessages, setErrorMessages] = useState<{ [key: number]: string }>({});
-  const [frozenPeriods, setFrozenPeriods] = useState<{ [key: number]: boolean }>({});
+  const [frozenPeriods, setFrozenPeriods] = useState<{ [key: number]: boolean }>({
+    1: true, // Default to frozen
+    2: true, // Default to frozen
+  });
   const [editingName, setEditingName] = useState<{ [key: number]: string }>({});
   const [isCloningCategory, setIsCloningCategory] = useState(false);
   const [cloneCategorySuccess, setCloneCategorySuccess] = useState(false);
@@ -141,11 +144,13 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
   useEffect(() => {
     const loadFrozenPeriods = async () => {
       const periods = await periodService.getAllPeriods();
-      const frozenStatus = periods.reduce((acc, period) => ({
-        ...acc,
-        [period.number]: period.isFrozen
-      }), {});
-      setFrozenPeriods(frozenStatus);
+      if (periods.length > 0) {
+        const frozenStatus = periods.reduce((acc, period) => ({
+          ...acc,
+          [period.number]: period.isFrozen
+        }), {});
+        setFrozenPeriods(frozenStatus);
+      }
     };
 
     loadFrozenPeriods();

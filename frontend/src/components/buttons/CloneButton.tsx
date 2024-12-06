@@ -12,7 +12,7 @@ interface CloneButtonProps {
 const CloneButton: React.FC<CloneButtonProps> = ({ isCloning, cloneSuccess, onClick, title }) => {
   return (
     <button
-      className={`clone-button category-clone ${isCloning ? 'cloning' : ''} ${cloneSuccess ? 'success' : ''}`}
+      className={`clone-button ${isCloning ? 'cloning' : ''} ${cloneSuccess ? 'success' : ''}`}
       onClick={onClick}
       title={title}
       disabled={isCloning}

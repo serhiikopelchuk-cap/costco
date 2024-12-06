@@ -22,7 +22,7 @@ export type Category = {
   name: string;
   description?: string;
   note?: string;
-  cloudProvider?: string[];
+  cloudProvider?: string;
   items: Item[];
   project?: { id: number };
 };

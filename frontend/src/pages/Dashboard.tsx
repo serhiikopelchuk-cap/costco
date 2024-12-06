@@ -9,6 +9,7 @@ import TopCharts from '../components/dashboard/TopCharts';
 import BottomCharts from '../components/dashboard/BottomCharts';
 import { fetchCostTypeByAlias } from '../services/costTypeService';
 import { CostType } from '../types/program';
+import ProviderFilter from '../components/common/ProviderFilter';
 
 // Register the necessary components
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement);
@@ -16,6 +17,8 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointEleme
 function Dashboard() {
   const [directCostsData, setDirectCostsData] = useState<CostType | null>(null);
   const [indirectCostsData, setIndirectCostsData] = useState<CostType | null>(null);
+  const [selectedProvider, setSelectedProvider] = useState('');
+  const cloudProviders = ['azure', 'gcp'];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -32,34 +35,61 @@ function Dashboard() {
     fetchData();
   }, []);
 
-  // Ensure data is available before rendering components
-  if (!directCostsData || !indirectCostsData) {
+  const filterCategoriesByProvider = (costsData: CostType | null) => {
+    if (!costsData) return null;
+    if (!selectedProvider) return costsData;
+
+    return {
+      ...costsData,
+      programs: costsData.programs.map(program => ({
+        ...program,
+        projects: program.projects.map(project => ({
+          ...project,
+          categories: project.categories.filter(category =>
+            category.cloudProvider?.includes(selectedProvider)
+          ),
+        })),
+      })),
+    };
+  };
+
+  const filteredDirectCostsData = filterCategoriesByProvider(directCostsData);
+  const filteredIndirectCostsData = filterCategoriesByProvider(indirectCostsData);
+
+  if (!filteredDirectCostsData || !filteredIndirectCostsData) {
     return <div>Loading...</div>;
   }
 
   return (
     <div className="dashboard">
-      <h2>Dashboard</h2>
+      <div className="dashboard-header">
+        <h2>Dashboard</h2>
+        <ProviderFilter
+          selectedProvider={selectedProvider}
+          onProviderChange={setSelectedProvider}
+          cloudProviders={cloudProviders}
+        />
+      </div>
       <div className="top-section">
         <div className="forecast-table">
-          <ForecastTable directCostsData={directCostsData} indirectCostsData={indirectCostsData} />
+          <ForecastTable directCostsData={filteredDirectCostsData} indirectCostsData={filteredIndirectCostsData} />
         </div>
         <div className="top-charts-section">
-          <TopCharts directCostsData={directCostsData} indirectCostsData={indirectCostsData} />
+          <TopCharts directCostsData={filteredDirectCostsData} indirectCostsData={filteredIndirectCostsData} />
         </div>
       </div>
       <div className="tables">
         <div className="dashboard-section">
-          <TotalCostsTable directCostsData={directCostsData} indirectCostsData={indirectCostsData} />
+          <TotalCostsTable directCostsData={filteredDirectCostsData} indirectCostsData={filteredIndirectCostsData} />
         </div>
         <div className="dashboard-section">
-          <DirectCostsTable directCostsData={directCostsData} />
+          <DirectCostsTable directCostsData={filteredDirectCostsData} />
         </div>
         <div className="dashboard-section">
-          <BottomCharts indirectCostsData={indirectCostsData} />
+          <BottomCharts indirectCostsData={filteredIndirectCostsData} />
         </div>
         <div className="dashboard-section">
-          <IndirectCostsTable indirectCostsData={indirectCostsData} />
+          <IndirectCostsTable indirectCostsData={filteredIndirectCostsData} />
         </div>
       </div>
     </div>

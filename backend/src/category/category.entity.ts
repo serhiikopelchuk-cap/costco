@@ -22,9 +22,9 @@ export class Category {
   @ApiProperty({ example: 'Note1', description: 'The note associated with the category' })
   note: string;
 
-  @Column('simple-array', { nullable: true })
-  @ApiProperty({ example: ['AWS', 'Azure'], description: 'The cloud providers associated with the category' })
-  cloudProvider: string[];
+  @Column({ nullable: true })
+  @ApiProperty({ example: ['azure', 'gcp'], description: 'The cloud providers associated with the category' })
+  cloudProvider: string;
 
   @OneToMany(() => Item, item => item.category, { cascade: true, nullable: true, onDelete: 'CASCADE' })
   @ApiProperty({ type: () => [Item], description: 'The items associated with the category' })
