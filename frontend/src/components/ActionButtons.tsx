@@ -52,11 +52,11 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
 
   return (
     <div className="action-buttons-container">
-      <ProviderFilter
+      {/* <ProviderFilter
         selectedProvider={selectedProvider}
         onProviderChange={onProviderChange}
         cloudProviders={cloudProviders}
-      />
+      /> */}
       <button 
         className="remove-item-button"
         onClick={handleRemoveLastLineItem}

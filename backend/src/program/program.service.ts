@@ -17,6 +17,7 @@ export class ProgramService {
       relations: [
         'projects',
         'projects.categories',
+        'projects.categories.cloudProviders',
         'projects.categories.items',
         'projects.categories.items.costs'
       ]
@@ -24,7 +25,12 @@ export class ProgramService {
   }
 
   async findOne(id: number): Promise<Program> {
-    return await this.programRepository.findOne({ where: { id }, relations: ['projects', 'projects.categories', 'projects.categories.items', 'projects.categories.items.costs'] });
+    return await this.programRepository.findOne({ where: { id }, relations: [
+      'projects', 
+      'projects.categories',
+      'projects.categories.cloudProviders',
+      'projects.categories.items', 
+      'projects.categories.items.costs'] });
   }
 
   create(program: Program): Promise<Program> {
@@ -43,7 +49,7 @@ export class ProgramService {
   async clone(id: number): Promise<Program> {
     const program = await this.programRepository.findOne({
       where: { id },
-      relations: ['projects', 'projects.categories', 'projects.categories.items', 'projects.categories.items.costs', 'costType']
+      relations: ['projects', 'projects.categories', 'projects.categories.cloudProviders', 'projects.categories.items', 'projects.categories.items.costs', 'costType']
     });
 
     if (!program) {
@@ -71,7 +77,7 @@ export class ProgramService {
 
     return await this.programRepository.findOne({
       where: { id: savedProgram.id },
-      relations: ['projects', 'projects.categories', 'projects.categories.items', 'projects.categories.items.costs', 'costType']
+      relations: ['projects', 'projects.categories', 'projects.categories.cloudProviders', 'projects.categories.items', 'projects.categories.items.costs', 'costType']
     });
   }
 } 

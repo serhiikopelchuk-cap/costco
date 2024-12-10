@@ -42,6 +42,7 @@ export class CostTypeService {
       .leftJoinAndSelect('programs.projects', 'projects')
       .leftJoinAndSelect('projects.categories', 'categories')
       .leftJoinAndSelect('categories.items', 'items')
+      .leftJoinAndSelect('categories.cloudProviders', 'cloudProviders')
       .leftJoinAndSelect('items.costs', 'costs')
       .where('costType.alias = :alias', { alias })
       .orderBy('costs.id', 'ASC')

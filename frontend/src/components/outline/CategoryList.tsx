@@ -1,49 +1,56 @@
 import React, { useEffect } from 'react';
-import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
-import SearchInput from '../common/SearchInput';
-import AddItemInput from '../AddItemInput';
-import { Category } from '../../types/program';
-import { setSearch, setAddInputVisibility } from '../../store/slices/uiSlice';
+import { useSelector, useDispatch } from 'react-redux';
+import GenericList from '../common/GenericList';
+import { selectCategories } from '../../store/selectors';
+import { RootState, AppDispatch } from '../../store';
 import { setCategoryId } from '../../store/slices/selectionSlice';
+import { setSearch, setAddInputVisibility } from '../../store/slices/uiSlice';
 import { createCategoryAsync, fetchProjectAsync } from '../../store/slices/costTypesSlice';
-import { useLocation } from 'react-router-dom';
+import { Category } from '../../types/program';
 
-type CategoryListProps = {
-  selectedCategoryId: number | null;
-  onCategoryToggle: (categoryId: number) => void;
-  categorySearch: string;
-  showAddCategoryInput: boolean;
-  selectedProgramId: number | null;
-  selectedProjectId: number | null;
-  selectedProvider: string;
-};
+const CategoryList: React.FC = () => {
+  const dispatch: AppDispatch = useDispatch();
+  const categories = useSelector(selectCategories);
+  const selectedCloudProviders = useSelector((state: RootState) => state.selection.selectedCloudProviders);
+  const selectedCategoryId = useSelector((state: RootState) => state.selection.selectedCategoryId);
+  const selectedProjectId = useSelector((state: RootState) => state.selection.selectedProjectId);
+  const selectedProgramId = useSelector((state: RootState) => state.selection.selectedProgramId);
 
-const CategoryList: React.FC<CategoryListProps> = ({
-  selectedCategoryId,
-  onCategoryToggle,
-  categorySearch,
-  showAddCategoryInput,
-  selectedProgramId,
-  selectedProjectId,
-  selectedProvider
-}) => {
-  const dispatch = useAppDispatch();
-  const location = useLocation();
-  const isDirect = location.pathname === '/direct-costs';
+  // UI state from Redux
+  const showAddCategoryInput = useSelector((state: RootState) => state.ui.addInputVisibility.category);
+  const categorySearch = useSelector((state: RootState) => state.ui.search.category);
 
-  const categories = useAppSelector(state => {
-    const project = state.costTypes.item?.programs
-      .flatMap(program => program.projects)
-      .find(p => p.id === selectedProjectId);
-    return project ? project.categories : [];
-  });
+  useEffect(() => {
+    if (selectedProjectId && selectedProgramId) {
+      dispatch(fetchProjectAsync({
+        projectId: selectedProjectId,
+        programId: selectedProgramId
+      })).unwrap().then(() => {
+        // console.log('Project fetched successfully');
+      }).catch(error => {
+        console.error('Error fetching project:', error);
+      });
+    }
+  }, [dispatch, selectedProjectId, selectedProgramId]);
 
-  const handleSearchChange = (value: string) => {
-    dispatch(setSearch({ type: 'category', value }));
-  };
+  useEffect(() => {
+    // console.log('Categories updated:', categories);
+  }, [categories]);
 
-  const handleAddInputVisibility = (value: boolean) => {
-    dispatch(setAddInputVisibility({ type: 'category', value }));
+  const filteredCategories = selectedCloudProviders.length > 0
+    ? categories.filter(category =>
+        category.cloudProviders?.some(provider => selectedCloudProviders.includes(provider.name))
+      )
+    : categories;
+
+  // console.log('Filtered Categories:', filteredCategories);
+
+  const handleCategoryToggle = (categoryId: number) => {
+    if (selectedCategoryId === categoryId) {
+      dispatch(setCategoryId(null));
+    } else {
+      dispatch(setCategoryId(categoryId));
+    }
   };
 
   const handleAddCategory = async (categoryName: string) => {
@@ -61,8 +68,11 @@ const CategoryList: React.FC<CategoryListProps> = ({
           projectId: selectedProjectId
         })).unwrap();
 
+        // console.log('Category created:', response);
+
         dispatch(setCategoryId(response.category.id));
 
+        // Fetch the updated project to ensure categories are refreshed
         await dispatch(fetchProjectAsync({
           projectId: selectedProjectId,
           programId: selectedProgramId
@@ -73,48 +83,24 @@ const CategoryList: React.FC<CategoryListProps> = ({
     }
   };
 
-  const handleCategoryClick = (categoryId: number) => {
-    onCategoryToggle(categoryId);
-  };
-
-  const filteredCategories = React.useMemo(() => {
-    return categories
-      .filter(category => 
-        category.name.toLowerCase().includes(categorySearch.toLowerCase())
-      )
-      .filter(category => {
-        if (!selectedProvider) return true;
-        return category.cloudProvider === selectedProvider;
-      });
-  }, [categories, categorySearch, selectedProvider]);
-
   return (
-    <div className="column minified">
-      <div className="header-with-button">
-        <h3>Categories</h3>
-        <button
-          className={`add-toggle-button ${showAddCategoryInput ? 'active' : ''}`}
-          onClick={() => handleAddInputVisibility(!showAddCategoryInput)}
-        >
-          {showAddCategoryInput ? '×' : '+'}
-        </button>
-      </div>
-      <SearchInput
-        placeholder="Search Categories"
-        value={categorySearch}
-        onChange={handleSearchChange}
-      />
-      {showAddCategoryInput && <AddItemInput onAdd={handleAddCategory} />}
-      {filteredCategories.map(category => (
-        <div
-          key={category.id}
-          className={`category-item ${selectedCategoryId === category.id ? 'selected' : ''}`}
-          onClick={() => handleCategoryClick(category.id)}
-        >
-          {category.name}
-        </div>
-      ))}
-    </div>
+    <GenericList
+      title="Categories"
+      type="category"
+      items={filteredCategories.map((category) => ({
+        id: category.id,
+        name: category.name,
+      }))}
+      selectedItemIds={selectedCategoryId ? [selectedCategoryId] : []}
+      onItemToggle={handleCategoryToggle}
+      onAddItem={handleAddCategory}
+      itemSearch={categorySearch}
+      setItemSearch={(value: string) => dispatch(setSearch({ type: 'category', value }))}
+      showAddItemInput={showAddCategoryInput}
+      setShowAddItemInput={(show) => dispatch(setAddInputVisibility({ type: 'category', value: show }))}
+      renderItem={(category) => <span>{category.name}</span>}
+      showDetailsButton={false}
+    />
   );
 };
 

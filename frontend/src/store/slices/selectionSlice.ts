@@ -10,6 +10,7 @@ interface SelectionState {
   selectedCategoryId: number | null;
   selectedLineItems: Item[];
   selectedProvider: string;
+  selectedCloudProviders: string[];
   _tempCategoryId: number | null;
 }
 
@@ -19,6 +20,7 @@ const initialState: SelectionState = {
   selectedCategoryId: null,
   selectedLineItems: [],
   selectedProvider: '',
+  selectedCloudProviders: [],
   _tempCategoryId: null,
 };
 
@@ -28,14 +30,12 @@ const selectionSlice = createSlice({
   reducers: {
     setProgramId: (state, action: PayloadAction<number | null>) => {
       state.selectedProgramId = action.payload;
-      // Reset child selections when program changes
       state.selectedProjectId = null;
       state.selectedCategoryId = null;
       state.selectedLineItems = [];
     },
     setProjectId: (state, action: PayloadAction<number | null>) => {
       state.selectedProjectId = action.payload;
-      // Reset child selections when project changes
       state.selectedCategoryId = null;
       state.selectedLineItems = [];
     },
@@ -80,6 +80,9 @@ const selectionSlice = createSlice({
       if (action.payload.lineItems) {
         state.selectedLineItems = action.payload.lineItems;
       }
+    },
+    setSelectedCloudProviders: (state, action: PayloadAction<string[]>) => {
+      state.selectedCloudProviders = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -131,6 +134,10 @@ export const {
   clearCategoryId,
   updateLineItemCosts,
   updateSelections,
+  setSelectedCloudProviders,
 } = selectionSlice.actions;
+
+export const selectSelectedProgramId = (state: RootState) => state.selection.selectedProgramId;
+export const selectSelectedProjectId = (state: RootState) => state.selection.selectedProjectId;
 
 export default selectionSlice.reducer;

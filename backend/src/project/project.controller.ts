@@ -33,6 +33,7 @@ export class ProjectController {
         value: {
           name: 'New Project',
           program: { id: 1 }, // Assuming you have a program with ID 1
+          settings: { key: 'value' } // Example settings
         },
       },
     },
@@ -53,6 +54,7 @@ export class ProjectController {
         value: {
           name: 'Updated Project Name',
           program: { id: 1 }, // Assuming you have a program with ID 1
+          settings: { key: 'new value' } // Example settings update
         },
       },
     },

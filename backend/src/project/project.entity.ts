@@ -12,10 +12,15 @@ export class Project {
 
   @Column({ nullable: true })
   description?: string;
-  
+
+  @Column('json', { nullable: true })
+  settings?: Record<string, any>;
+
   @ManyToOne(() => Program, program => program.projects, { onDelete: 'CASCADE', nullable: true })
   program?: Program;
-  
+
   @OneToMany(() => Category, category => category.project, { cascade: true, onDelete: 'CASCADE', nullable: true })
   categories?: Category[];
+
+  
 } 

@@ -1,0 +1,90 @@
+.settings-container {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.settings-container:hover {
+    background-color: #f9f9f9 !important;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.instruction {
+    display: block;
+    font-size: 0.9em;
+    color: #333;
+    background-color: #ffebcc; /* Light orange background */
+    padding: 5px;
+    border-radius: 4px;
+    margin-top: 5px;
+}
+
+h4 {
+    margin-bottom: 10px;
+}
+
+h5 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+input[type="number"],
+input[type="text"] {
+    /* width: calc(100% - 20px); */
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    transition: border-color 0.3s;
+}
+
+input[type="number"]:focus,
+input[type="text"]:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+.tab-button {
+    margin-right: 10px;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.tab-button.active {
+    background-color: #007bff;
+    color: white;
+}
+
+.tab-button:hover {
+    background-color: #0056b3;
+    color: white;
+}

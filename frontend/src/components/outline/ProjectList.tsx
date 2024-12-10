@@ -1,86 +1,62 @@
 import React from 'react';
-import SearchInput from '../common/SearchInput';
-import AddItemInput from '../AddItemInput';
-import { RootState } from '../../store';
-import { deleteProject, createProjectAsync } from '../../store/slices/programsSlice';
-import DetailsButton from '../buttons/DetailsButton';
-import { clearCategoryId } from '../../store/slices/selectionSlice';
-import { useDispatch, useSelector } from 'react-redux';
-import { useAppDispatch } from '../../hooks/reduxHooks';
-import { fetchProgramAsync } from '../../store/slices/costTypesSlice';
+import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
+import { createProjectAsync } from '../../store/slices/programsSlice';
+import { setProjectId, clearCategoryId } from '../../store/slices/selectionSlice';
+import { setSearch, setAddInputVisibility, setDetails } from '../../store/slices/uiSlice';
+import GenericList from '../common/GenericList';
 import { Project } from '../../types/program';
 
-type ProjectListProps = {
-  selectedProjectId: number | null;
-  onProjectToggle: (projectId: number) => void;
-  onAddProject: (projectName: string) => void;
-  onDetailsClick: (type: 'project', id: number) => void;
-  projectSearch: string;
-  setProjectSearch: (search: string) => void;
-  showAddProjectInput: boolean;
-  setShowAddProjectInput: (show: boolean) => void;
-};
-
-const ProjectList: React.FC<ProjectListProps> = ({
-  selectedProjectId,
-  onProjectToggle,
-  onAddProject,
-  onDetailsClick,
-  projectSearch,
-  setProjectSearch,
-  showAddProjectInput,
-  setShowAddProjectInput
-}) => {
+const ProjectList: React.FC = () => {
   const dispatch = useAppDispatch();
-  const projects = useSelector((state: RootState) => {
-    const selectedProgram = state.costTypes.item?.programs.find(p => p.id === state.selection.selectedProgramId);
+  const selectedProjectId = useAppSelector(state => state.selection.selectedProjectId);
+  const selectedProgramId = useAppSelector(state => state.selection.selectedProgramId);
+  const projects = useAppSelector(state => {
+    const selectedProgram = state.costTypes.item?.programs.find(p => p.id === selectedProgramId);
     return selectedProgram ? selectedProgram.projects : [];
   });
 
-  const programId = useSelector((state: RootState) => state.selection.selectedProgramId);
+  // UI state from Redux
+  const showAddProjectInput = useAppSelector(state => state.ui.addInputVisibility.project);
+  const projectSearch = useAppSelector(state => state.ui.search.project);
 
-  const handleAddProject = async (projectName: string) => {
-    if (programId !== null) {
+  const handleProjectToggle = (projectId: number) => {
+    if (selectedProjectId === projectId) {
+      dispatch(setProjectId(null));
+    } else {
+      dispatch(setProjectId(projectId));
+    }
+  };
+
+  const handleDetailsClick = (type: string, id: number) => {
+    dispatch(setDetails({ type, id, name: projects.find(p => p.id === id)?.name || '' }));
+    dispatch(clearCategoryId());
+  };
+
+  const handleAddProject = (projectName: string) => {
+    if (selectedProgramId !== null) {
       const newProject: Partial<Project> = { name: projectName, categories: [] };
-      await dispatch(createProjectAsync({ programId, project: newProject })).unwrap();
-      await dispatch(fetchProgramAsync(programId)).unwrap();
+      dispatch(createProjectAsync({ programId: selectedProgramId, project: newProject })).unwrap();
     }
   };
 
   return (
-    <div className="column minified">
-      <div className="header-with-button">
-        <h3>Projects</h3>
-        <button
-          className={`add-toggle-button ${showAddProjectInput ? 'active' : ''}`}
-          onClick={() => setShowAddProjectInput(!showAddProjectInput)}
-        >
-          {showAddProjectInput ? '×' : '+'}
-        </button>
-      </div>
-      <SearchInput
-        placeholder="Search Projects"
-        value={projectSearch}
-        onChange={setProjectSearch}
-      />
-      {showAddProjectInput && <AddItemInput onAdd={handleAddProject} />}
-      {projects.map(project => (
-        <div
-          key={project.id}
-          className={`project-item ${selectedProjectId === project.id ? 'selected' : ''}`}
-          onClick={() => project.id && onProjectToggle(project.id)}
-        >
-          <span>{project.name}</span>
-          <DetailsButton
-            onClick={(e) => {
-              e.stopPropagation();
-              dispatch(clearCategoryId());
-              onDetailsClick('project', project.id);
-            }}
-          />
-        </div>
-      ))}
-    </div>
+    <GenericList
+      title="Projects"
+      type="project"
+      items={projects.map((project) => ({
+        id: project.id,
+        name: project.name,
+      }))}
+      selectedItemIds={selectedProjectId ? [selectedProjectId] : []}
+      onItemToggle={handleProjectToggle}
+      onAddItem={handleAddProject}
+      onDetailsClick={handleDetailsClick}
+      itemSearch={projectSearch}
+      setItemSearch={(value: string) => dispatch(setSearch({ type: 'project', value }))}
+      showAddItemInput={showAddProjectInput}
+      setShowAddItemInput={(show) => dispatch(setAddInputVisibility({ type: 'project', value: show }))}
+      renderItem={(project) => <span>{project.name}</span>}
+    />
   );
 };
 

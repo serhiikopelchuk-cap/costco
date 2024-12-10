@@ -14,7 +14,7 @@ interface UiState {
     lineItem: boolean;
   };
   details: {
-    type: 'program' | 'project' | null;
+    type: string | null;
     name: string;
     id: number;
   } | null;

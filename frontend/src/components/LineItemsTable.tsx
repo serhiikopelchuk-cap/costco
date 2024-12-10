@@ -4,12 +4,14 @@ import ActionButtons from './ActionButtons';
 import { cloneItem } from '../services/itemService';
 import { cloneCategory } from '../services/categoryService';
 import { periodService } from '../services/periodService';
-import { Program, Item, Cost } from '../types/program';
+import { Program, Item, Cost, Category } from '../types/program';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
 import { updateLineItemInCostType, updateItemNameAsync, updateCategory, deleteCategoryAsync, fetchCategoryAsync, createLineItemAsync, deleteLineItemAsync, updateItemCostsAsync, fetchProjectAsync, updateCategoryNameAsync } from '../store/slices/costTypesSlice';
 import CloneButton from './buttons/CloneButton';
 import DeleteButton from './buttons/DeleteButton';
 import { setLineItems as setLineItemsAction, setCategoryId } from '../store/slices/selectionSlice';
+import CloudProviderChips from './common/CloudProviderChips';
+import { RootState } from '../store';
 
 interface LineItemsTableProps {
   onLineItemAdd: (newLineItem: Item) => void;
@@ -34,6 +36,13 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
   handleLineItemUpdate,
 }) => {
   const dispatch = useAppDispatch();
+  const programs = useAppSelector((state: RootState) => state.costTypes.item?.programs || []);
+  
+  // Find the selected category by traversing programs and projects
+  const selectedCategory = programs
+    .flatMap(program => program.projects)
+    .flatMap(project => project.categories)
+    .find((category: Category) => category.id === selectedCategoryId);
 
   // Get category name from Redux state
   const categoryName = useAppSelector(state => {
@@ -344,22 +353,6 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
     }
   };
 
-  const handleRemoveLastLineItem = async () => {
-    if (lineItems.length === 0 || !selectedProgramId || !selectedProjectId || !selectedCategoryId) return;
-
-    const lastItem = lineItems[lineItems.length - 1];
-    try {
-      await dispatch(deleteLineItemAsync({
-        itemId: lastItem.id!,
-        programId: selectedProgramId,
-        projectId: selectedProjectId,
-        categoryId: selectedCategoryId
-      })).unwrap();
-    } catch (error) {
-      console.error('Failed to delete line item:', error);
-    }
-  };
-
   const handleDeselectAll = () => {
     dispatch(setLineItemsAction([]));
   };
@@ -509,6 +502,7 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
   return (
     <div className="line-items-table">
       <div className="table-header">
+        {selectedCategory && <CloudProviderChips providers={selectedCategory.cloudProviders || []} />}
         <h3 className="category-name">
           <input
             type="text"

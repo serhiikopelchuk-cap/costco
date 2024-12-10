@@ -8,8 +8,9 @@ import { Cost } from 'src/cost/cost.entity';
 import { Program } from 'src/program/program.entity';
 import { Project } from 'src/project/project.entity';
 import { CostType } from 'src/cost-type/cost-type.entity';
+import { CloudProvider } from 'src/cloud-provider/cloud-provider.entity';
 
-export class CategorySeeder implements Seeder {
+export class BasicDataSeeder implements Seeder {
   async run(
     dataSource: DataSource, 
     factoryManager: SeederFactoryManager
@@ -20,6 +21,13 @@ export class CategorySeeder implements Seeder {
     const programRepository = dataSource.getRepository(Program);
     const projectRepository = dataSource.getRepository(Project);
     const costTypeRepository = dataSource.getRepository(CostType);
+    const cloudProviderRepository = dataSource.getRepository(CloudProvider);
+
+    // Create Cloud Providers
+    const cloudProviders = await cloudProviderRepository.save([
+      { name: 'Azure' },
+      { name: 'GCP' },
+    ]);
 
     // Create CostTypes
     const directCostType = await this.createCostType(costTypeRepository, 'direct_costs');
@@ -31,11 +39,11 @@ export class CategorySeeder implements Seeder {
 
     // Seed categories for direct costs
     const directData = this.readDirectCostJson();
-    await this.seedCategories(categoryRepository, itemRepository, costRepository, directData, directProgram.project);
+    await this.seedCategories(categoryRepository, itemRepository, costRepository, directData, directProgram.project, cloudProviders, costTypeRepository, 'direct_costs');
 
     // Seed categories for indirect costs
     const indirectData = this.readIndirectCostJson();
-    await this.seedCategories(categoryRepository, itemRepository, costRepository, indirectData, indirectProgram.project);
+    await this.seedCategories(categoryRepository, itemRepository, costRepository, indirectData, indirectProgram.project, cloudProviders, costTypeRepository, 'indirect_costs');
   }
 
   private async createCostType(costTypeRepository, alias) {
@@ -65,15 +73,21 @@ export class CategorySeeder implements Seeder {
     return { program: savedProgram, project: savedProject };
   }
 
-  private async seedCategories(categoryRepository, itemRepository, costRepository, data, project) {
+  private async seedCategories(categoryRepository, itemRepository, costRepository, data, project, cloudProviders, costTypeRepository, costTypeAlias) {
     for (const categoryData of data.categories) {
-      // console.log(`Adding category:`, categoryData.name);
+      const associatedProviders = cloudProviders.filter(provider => categoryData.cloudProvider.includes(provider.name.toLowerCase()));
+
+      categoryData.costTypeAlias = costTypeAlias;
+
+      const costType = await costTypeRepository.findOne({ where: { alias: categoryData.costTypeAlias } });
+
       const category = categoryRepository.create({
         name: categoryData.name,
         description: categoryData.description,
         note: categoryData.note,
-        cloudProvider: categoryData.cloudProvider,
         project, // Associate with the project
+        cloudProviders: associatedProviders, // Associate relevant cloud providers
+        costType, // Associate the found costType
       });
 
       const savedCategory = await categoryRepository.save(category);
@@ -86,14 +100,11 @@ export class CategorySeeder implements Seeder {
           });
           const savedItem = await itemRepository.save(item);
 
-          // console.log(`Adding item:`, savedItem);
           const costs = await Promise.all(itemData.costs.map(async period => {
-            // console.log(`Create cost:`, period);
             const cost = costRepository.create({
               value: period,
               item: savedItem,
             });
-            // console.log(`Adding cost:`, cost);
             return costRepository.save(cost);
           }));
 
@@ -109,7 +120,7 @@ export class CategorySeeder implements Seeder {
       await categoryRepository.save(savedCategory);
     }
     
-    console.log(`Seeding Categories: Done`);
+    console.log(`Seeding Categories ${costTypeAlias}: Done`);
   }
 
   private readIndirectCostJson() {
@@ -123,4 +134,4 @@ export class CategorySeeder implements Seeder {
     const jsonData = fs.readFileSync(filePath, 'utf8');
     return JSON.parse(jsonData);
   }
-}
+} 

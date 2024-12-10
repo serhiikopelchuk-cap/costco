@@ -83,7 +83,7 @@ const CostTypePage: React.FC<CostTypePageProps> = ({ costTypeAlias: propAlias, c
     dispatch(setCurrentPage(pageAlias));
   }, [dispatch, pageAlias]);
 
-  console.log('costType:', costType);
+  // console.log('costType:', costType);
 //   console.log('status:', status);
 
   if (status === 'loading') {

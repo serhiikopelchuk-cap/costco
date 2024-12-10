@@ -20,7 +20,7 @@ export class ProjectService {
   }
 
   async findOne(id: number): Promise<Project> {
-    return await this.projectRepository.findOne({ where: { id }, relations: ['categories', 'categories.items', 'categories.items.costs'] });
+    return await this.projectRepository.findOne({ where: { id }, relations: ['categories', 'categories.cloudProviders', 'categories.items', 'categories.items.costs'] });
   }
 
   create(project: Project): Promise<Project> {
@@ -39,7 +39,7 @@ export class ProjectService {
   async clone(id: number, programId?: number): Promise<Project> {
     const project = await this.projectRepository.findOne({
       where: { id },
-      relations: ['categories', 'categories.items', 'categories.items.costs', 'program'],
+      relations: ['categories', 'categories.cloudProviders', 'categories.items', 'categories.items.costs', 'program'],
     });
 
     if (!project) {
@@ -75,7 +75,7 @@ export class ProjectService {
 
     return await this.projectRepository.findOne({
       where: { id: savedProject.id },
-      relations: ['categories', 'categories.items', 'categories.items.costs']
+      relations: ['categories', 'categories.cloudProviders', 'categories.items', 'categories.items.costs']
     });
   }
 } 

@@ -3,6 +3,8 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Item } from '../item/item.entity';
 import { Project } from '../project/project.entity';
 import { Period } from '../period/period.entity';
+import { CloudProvider } from '../cloud-provider/cloud-provider.entity';
+import { CostType } from '../cost-type/cost-type.entity';
 
 @Entity()
 export class Category {
@@ -22,9 +24,10 @@ export class Category {
   @ApiProperty({ example: 'Note1', description: 'The note associated with the category' })
   note: string;
 
-  @Column({ nullable: true })
-  @ApiProperty({ example: ['azure', 'gcp'], description: 'The cloud providers associated with the category' })
-  cloudProvider: string;
+  @ManyToMany(() => CloudProvider, { cascade: true })
+  @JoinTable()
+  @ApiProperty({ type: () => [CloudProvider], description: 'The cloud providers associated with the category' })
+  cloudProviders: CloudProvider[];
 
   @OneToMany(() => Item, item => item.category, { cascade: true, nullable: true, onDelete: 'CASCADE' })
   @ApiProperty({ type: () => [Item], description: 'The items associated with the category' })
@@ -32,6 +35,9 @@ export class Category {
 
   @ManyToOne(() => Project, project => project.categories, { onDelete: 'CASCADE' })
   project: Project;
+
+  @ManyToOne(() => CostType, costType => costType.categories, { onDelete: 'SET NULL', nullable: true })
+  costType?: CostType;
 
   // @ManyToMany(() => Period, period => period.categories)
   // @JoinTable()

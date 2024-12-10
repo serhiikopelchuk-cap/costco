@@ -8,6 +8,7 @@ import { ProjectModule } from './project/project.module';
 import { ProgramModule } from './program/program.module';
 import { PeriodModule } from './period/period.module';
 import { CostTypeModule } from './cost-type/cost-type.module';
+import { CloudProviderModule } from './cloud-provider/cloud-provider.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { CostTypeModule } from './cost-type/cost-type.module';
     ProgramModule,
     PeriodModule,
     CostTypeModule,
+    CloudProviderModule,
   ],
 })
 export class AppModule {}

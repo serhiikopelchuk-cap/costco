@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './DetailsComponent.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClone, faSpinner, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faClone, faSpinner, faCheck, faTable, faCog } from '@fortawesome/free-solid-svg-icons';
 import { cloneProgram, deleteProgram } from '../services/programService';
 import { cloneProject, deleteProject } from '../services/projectService';
 import { Category, Project } from '../types/program';
@@ -12,6 +12,7 @@ import { fetchCostTypeByAliasAsync, fetchProgramAsync, updateProgramNameAsync, u
 import { RootState } from '../store';
 import { useSelector } from 'react-redux';
 import { setProgramId, setProjectId } from '../store/slices/selectionSlice';
+import { SummaryTab, SettingsTab } from './details-component';
 
 interface DetailsComponentProps {
   type: 'program' | 'project';
@@ -29,6 +30,7 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, id, programId
   const [overallAverageSum, setOverallAverageSum] = useState<number>(0);
   const [isCloning, setIsCloning] = useState(false);
   const [cloneSuccess, setCloneSuccess] = useState(false);
+  const [activeTab, setActiveTab] = useState<'summary' | 'settings'>('summary');
 
   const dispatch = useAppDispatch();
   const currentPage = useSelector((state: RootState) => state.ui.currentPage);
@@ -81,7 +83,6 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, id, programId
   }, [name]);
 
   useEffect(() => {
-    console.log(`Debug:`, type, data);
     if (type === 'program' && data.length === 0) {
       // No projects in the program
       setSums({});
@@ -218,9 +219,22 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, id, programId
     }
   };
 
-
   return (
     <div className="container details-container">
+      <div className="tab-buttons">
+        <button
+          className={`tab-button ${activeTab === 'summary' ? 'active' : ''}`}
+          onClick={() => setActiveTab('summary')}
+        >
+          <FontAwesomeIcon icon={faTable} /> Summary
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'settings' ? 'active' : ''}`}
+          onClick={() => setActiveTab('settings')}
+        >
+          <FontAwesomeIcon icon={faCog} /> Settings
+        </button>
+      </div>
       <div className="header-with-clone">
         <h4>{type === 'program' ? 'Program Details' : 'Project Details'}</h4>
         <div className="clone-status-wrapper">
@@ -246,48 +260,22 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, id, programId
           />
         </div>
       </div>
-      <p>Details for {type === 'program' ? 'Program' : 'Project'}:</p>
-      <input
-        type="text"
-        value={editingName}
-        onChange={handleNameChange}
-        onBlur={handleNameBlur}
-        className="details-name-input"
-      />
-      <table>
-        <thead>
-          <tr>
-            <th>{type === 'program' ? 'Project' : 'Category'}</th>
-            {columns.map((col, index) => (
-              <th key={index}>{col}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>Overall</strong></td>
-            {overallSums.map((sum, index) => (
-              <td key={index}><strong>{Number(sum).toFixed(0)}$</strong></td>
-            ))}
-            <td><strong>{Number(overallTotalSum).toFixed(2)}$</strong></td>
-            <td><strong>{Number(overallAverageSum).toFixed(2)}$</strong></td>
-          </tr>
-          {data.map((item) => {
-            const itemId = type === 'program' ? (item as Project).id : (item as Category).id;
-            const { periodSums, totalSum, averageSum } = sums[itemId] || { periodSums: [], totalSum: 0, averageSum: 0 };
-            return (
-              <tr key={itemId}>
-                <td>{item.name}</td>
-                {periodSums.map((sum, index) => (
-                  <td key={`${itemId}-${index}`}>{Number(sum).toFixed(0)}$</td>
-                ))}
-                <td>{Number(totalSum).toFixed(2)}$</td>
-                <td>{Number(averageSum).toFixed(2)}$</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      {activeTab === 'summary' ? (
+        <SummaryTab
+          type={type}
+          editingName={editingName}
+          handleNameChange={handleNameChange}
+          handleNameBlur={handleNameBlur}
+          data={data}
+          columns={columns}
+          overallSums={overallSums}
+          overallTotalSum={overallTotalSum}
+          overallAverageSum={overallAverageSum}
+          sums={sums}
+        />
+      ) : (
+        <SettingsTab type={type} />
+      )}
     </div>
   );
 };

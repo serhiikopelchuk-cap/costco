@@ -5,6 +5,8 @@ import { Category } from './category.entity';
 import { Item } from '../item/item.entity';
 import { Cost } from '../cost/cost.entity';
 import { ItemService } from '../item/item.service';
+import { CloudProvider } from '../cloud-provider/cloud-provider.entity';
+import { CostType } from '../cost-type/cost-type.entity';
 
 @Injectable()
 export class CategoryService {
@@ -19,11 +21,11 @@ export class CategoryService {
   ) {}
 
   async findAll(): Promise<Category[]> {
-    return await this.categoryRepository.find({ relations: ['items', 'items.costs'] });
+    return await this.categoryRepository.find({ relations: ['items', 'items.costs', 'cloudProviders', 'costType'] });
   }
 
   async findOne(id: number): Promise<Category> {
-    return await this.categoryRepository.findOne({ where: { id }, relations: ['items', 'items.costs'] });
+    return await this.categoryRepository.findOne({ where: { id }, relations: ['items', 'items.costs', 'cloudProviders', 'costType'] });
   }
 
   async create(categoryData: Partial<Category>): Promise<Category> {
@@ -36,6 +38,16 @@ export class CategoryService {
     // Assign the category to a project if project.id exists
     if (categoryData.project && categoryData.project.id) {
       category.project = { id: categoryData.project.id };
+    }
+
+    // Assign cloudProviders if provided
+    if (categoryData.cloudProviders) {
+      category.cloudProviders = categoryData.cloudProviders.map(provider => ({ id: provider.id } as CloudProvider));
+    }
+
+    // Assign costType if provided
+    if (categoryData.costType && categoryData.costType.id) {
+      category.costType = { id: categoryData.costType.id } as CostType;
     }
 
     const savedCategory = await this.categoryRepository.save(category);
@@ -77,16 +89,26 @@ export class CategoryService {
       savedCategory.items = items;
     }
 
-    return await this.categoryRepository.findOne({ where: { id: savedCategory.id }, relations: ['items', 'items.costs', 'project'] });
+    return await this.categoryRepository.findOne({ where: { id: savedCategory.id }, relations: ['items', 'items.costs', 'project', 'cloudProviders', 'costType'] });
   }
 
   async update(id: number, categoryData: Partial<Category>): Promise<Category> {
-    const category = await this.categoryRepository.findOne({ where: { id }, relations: ['items', 'items.costs'] });
+    const category = await this.categoryRepository.findOne({ where: { id }, relations: ['items', 'items.costs', 'cloudProviders', 'costType'] });
     if (!category) throw new Error('Category not found');
 
     category.name = categoryData.name || category.name;
     category.description = categoryData.description || category.description;
     category.note = categoryData.note || category.note;
+
+    // Update cloudProviders if provided
+    if (categoryData.cloudProviders) {
+      category.cloudProviders = categoryData.cloudProviders.map(provider => ({ id: provider.id } as CloudProvider));
+    }
+
+    // Update costType if provided
+    if (categoryData.costType && categoryData.costType.id) {
+      category.costType = { id: categoryData.costType.id } as CostType;
+    }
 
     if (categoryData.items) {
       for (const itemData of categoryData.items) {
@@ -116,30 +138,27 @@ export class CategoryService {
   }
 
   async clone(id: number, projectId?: number): Promise<Category> {
-    // Include project in relations when fetching the category
     const category = await this.categoryRepository.findOne({
       where: { id },
-      relations: ['items', 'items.costs', 'project']
+      relations: ['items', 'items.costs', 'project', 'cloudProviders', 'costType'],
     });
     
     if (!category) {
       throw new NotFoundException(`Category with ID ${id} not found`);
     }
 
-    // console.log('Category:', category);
-    // Create a new category with the specified project or original project
     const clonedCategory = this.categoryRepository.create({
       name: `${category.name} (Copy)`,
       description: category.description,
       note: category.note,
       project: projectId ? { id: projectId } : category.project,
-      items: []
+      items: [],
+      cloudProviders: category.cloudProviders,
+      costType: category.costType,
     });
 
-    // Save the cloned category first to get its ID
     const savedCategory = await this.categoryRepository.save(clonedCategory);
 
-    // Clone each item using the ItemService's clone method
     const clonedItems = await Promise.all(
       category.items.map(async (item) => {
         const clonedItemResponse = await this.itemService.clone(item.id, savedCategory.id);
@@ -147,13 +166,27 @@ export class CategoryService {
       })
     );
 
-    // Assign the cloned items to the cloned category
     savedCategory.items = clonedItems;
 
-    // Return the complete cloned category with items and costs
     return await this.categoryRepository.findOne({
       where: { id: savedCategory.id },
-      relations: ['items', 'items.costs', 'project']
+      relations: ['items', 'items.costs', 'project', 'cloudProviders', 'costType'],
     });
+  }
+
+  async addCloudProviders(categoryId: number, providerIds: number[]): Promise<Category> {
+    const category = await this.categoryRepository.findOne({
+      where: { id: categoryId },
+      relations: ['cloudProviders'],
+    });
+
+    if (!category) {
+      throw new Error('Category not found');
+    }
+
+    const providers = providerIds.map(id => ({ id } as CloudProvider));
+    category.cloudProviders = [...category.cloudProviders, ...providers];
+
+    return this.categoryRepository.save(category);
   }
 } 

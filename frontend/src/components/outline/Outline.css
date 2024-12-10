@@ -152,20 +152,6 @@
     position: relative;
 }
 
-.icon-button {
-    background: transparent;
-    border: none;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    opacity: 0; /* Initially hidden */
-}
-
 .program-item:hover .icon-button,
 .project-item:hover .icon-button {
     opacity: 1; /* Visible on hover */
@@ -210,25 +196,11 @@
   margin-right: 10px; /* Space between text and button */
 }
 
-.icon-button {
-  background: transparent;
+.column.minified .category-item,
+.column.minified .line-item {
+  text-align: left; /* Align text to the left */
+  padding: 8px;
+  font-weight: normal;
   border: none;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  opacity: 0; /* Initially hidden */
-}
-
-.program-item:hover .icon-button,
-.project-item:hover .icon-button {
-  opacity: 1; /* Visible on hover */
-}
-
-.icon-button:hover {
-  background-color: rgba(0, 0, 0, 0.1);
+  color: inherit;
 }

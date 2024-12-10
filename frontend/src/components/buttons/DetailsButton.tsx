@@ -1,6 +1,7 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEllipsisV } from '@fortawesome/free-solid-svg-icons';
+import './DetailsButton.css';
 
 interface DetailsButtonProps {
   onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;

@@ -254,6 +254,19 @@ export const updateProjectNameAsync = createAsyncThunk(
   }
 );
 
+export const updateProjectSettingsAsync = createAsyncThunk(
+  'costTypes/updateProjectSettings',
+  async ({ projectId, programId, settings }: { projectId: number; programId: number; settings: any }) => {
+    const response = await updateProjectService(projectId, { settings });
+    return { projectId, programId, settings };
+  }
+);
+
+export const selectProjectById = (state: RootState, projectId: number) => {
+  const project = state.costTypes.item?.programs.flatMap(program => program.projects).find(project => project.id === projectId);
+  return project || null;
+};
+
 const costTypesSlice = createSlice({
   name: 'costTypes',
   initialState,
@@ -541,6 +554,9 @@ const costTypesSlice = createSlice({
         if (project) {
           project.name = name;
         }
+      })
+      .addCase(updateProjectSettingsAsync.fulfilled, (state, action) => {
+        // Handle the update in the state if necessary
       });
   },
 });
