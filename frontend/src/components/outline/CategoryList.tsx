@@ -3,8 +3,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import GenericList from '../common/GenericList';
 import { selectCategories } from '../../store/selectors';
 import { RootState, AppDispatch } from '../../store';
-import { setCategoryId } from '../../store/slices/selectionSlice';
-import { setSearch, setAddInputVisibility } from '../../store/slices/uiSlice';
+import { setCategoryId, setLineItems } from '../../store/slices/selectionSlice';
+import { setSearch, setAddInputVisibility, setDetails } from '../../store/slices/uiSlice';
 import { createCategoryAsync, fetchProjectAsync } from '../../store/slices/costTypesSlice';
 import { Category } from '../../types/program';
 
@@ -15,6 +15,7 @@ const CategoryList: React.FC = () => {
   const selectedCategoryId = useSelector((state: RootState) => state.selection.selectedCategoryId);
   const selectedProjectId = useSelector((state: RootState) => state.selection.selectedProjectId);
   const selectedProgramId = useSelector((state: RootState) => state.selection.selectedProgramId);
+  const costType = useSelector((state: RootState) => state.selection.selectedCostType);
 
   // UI state from Redux
   const showAddCategoryInput = useSelector((state: RootState) => state.ui.addInputVisibility.category);
@@ -43,6 +44,12 @@ const CategoryList: React.FC = () => {
       )
     : categories;
 
+  // console.log('costType:', costType, filteredCategories);
+  // Filter categories based on the current cost type
+  const costTypeFilteredCategories = filteredCategories.filter(category => {
+    return category.costType?.alias === costType;
+  });
+
   // console.log('Filtered Categories:', filteredCategories);
 
   const handleCategoryToggle = (categoryId: number) => {
@@ -50,6 +57,8 @@ const CategoryList: React.FC = () => {
       dispatch(setCategoryId(null));
     } else {
       dispatch(setCategoryId(categoryId));
+      dispatch(setDetails(null));
+      dispatch(setLineItems([]));
     }
   };
 
@@ -87,7 +96,7 @@ const CategoryList: React.FC = () => {
     <GenericList
       title="Categories"
       type="category"
-      items={filteredCategories.map((category) => ({
+      items={costTypeFilteredCategories.map((category) => ({
         id: category.id,
         name: category.name,
       }))}

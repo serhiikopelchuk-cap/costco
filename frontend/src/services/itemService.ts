@@ -80,4 +80,12 @@ export const updateItemName = async (
 ): Promise<Item> => {
   const response = await axios.put<Item>(`${API_BASE_URL}/items/${itemId}`, { name });
   return response.data;
+};
+
+export const bulkUpdateItems = async (items: Array<{ 
+  id: number; 
+  costs: Array<{ id: number; value: number }> 
+}>): Promise<Item[]> => {
+  const response = await axios.put<Item[]>(`${ITEMS_URL}/bulk`, { items });
+  return response.data;
 }; 

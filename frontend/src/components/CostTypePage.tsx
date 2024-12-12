@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import Outline from './outline/Outline';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
 import { fetchCostTypeByAliasAsync } from '../store/slices/costTypesSlice';
-import { setProgramId, setProjectId, setCategoryId, setLineItems } from '../store/slices/selectionSlice';
+import { setProgramId, setProjectId, setCategoryId, setLineItems, setCostType } from '../store/slices/selectionSlice';
 import { setCurrentPage } from '../store/slices/uiSlice';
 import { CostType } from '../types/program';
 
@@ -18,9 +18,9 @@ interface CostTypePageProps {
   };
 }
 
-const formatDisplayName = (alias: string) => {
-  return alias.replace('_', '-');
-};
+// const formatDisplayName = (alias: string) => {
+//   return alias.replace('_', '-');
+// };
 
 const formatUrlToStateKey = (url: string) => {
   // Get the last part of the URL path
@@ -50,14 +50,14 @@ const CostTypePage: React.FC<CostTypePageProps> = ({ costTypeAlias: propAlias, c
   const state = useAppSelector(costTypeSelector);
   const { selectedProgramId, selectedProjectId, selectedCategoryId } = useAppSelector(state => state.selection);
   
-//   console.log('Full state:', state);
-//   console.log('State key:', stateKey);
   const { status, error, [stateKey]: costType } = state;
 
   // Fetch cost types on mount
   useEffect(() => {
     dispatch(fetchCostTypeByAliasAsync(pageAlias));
-  }, [dispatch, pageAlias]);
+    const alias = location.pathname === '/direct-costs' ? 'direct_costs' : 'indirect_costs';
+    dispatch(setCostType(alias));
+  }, [dispatch, location.pathname]);
 
   // Set initial selections only if no selections exist
   useEffect(() => {

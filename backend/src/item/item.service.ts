@@ -11,6 +11,16 @@ export interface ClonedItemResponse {
   costIds: number[];
 }
 
+interface BulkUpdateItemsDto {
+  items: Array<{
+    id: number;
+    costs: Array<{
+      id: number;
+      value: number;
+    }>;
+  }>;
+}
+
 @Injectable()
 export class ItemService {
   constructor(
@@ -115,6 +125,38 @@ export class ItemService {
       categoryId: completeItem.category.id,
       costIds: costIds
     };
+  }
+
+  async bulkUpdate(data: BulkUpdateItemsDto): Promise<Item[]> {
+    const updatedItems: Item[] = [];
+
+    // Use transaction to ensure all updates succeed or none do
+    await this.itemRepository.manager.transaction(async transactionalEntityManager => {
+      for (const itemData of data.items) {
+        const item = await transactionalEntityManager.findOne(Item, {
+          where: { id: itemData.id },
+          relations: ['costs']
+        });
+
+        if (!item) {
+          throw new NotFoundException(`Item with ID ${itemData.id} not found`);
+        }
+
+        // Update costs
+        item.costs = item.costs.map(cost => {
+          const updatedCost = itemData.costs.find(c => c.id === cost.id);
+          if (updatedCost) {
+            cost.value = updatedCost.value;
+          }
+          return cost;
+        });
+
+        const savedItem = await transactionalEntityManager.save(Item, item);
+        updatedItems.push(savedItem);
+      }
+    });
+
+    return updatedItems;
   }
 
   private validateCosts(costs: Cost[]) {

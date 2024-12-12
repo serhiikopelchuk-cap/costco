@@ -6,6 +6,7 @@ const DirectCosts: React.FC = () => {
   return (
     <CostTypePage 
       costTypeSelector={(state: RootState) => state.costTypes}
+      // showAllPrograms={false}
     />
   );
 };

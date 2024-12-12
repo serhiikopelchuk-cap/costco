@@ -1,6 +1,5 @@
 import React from 'react';
-import { CostType } from '../../types/program'; // Import CostType
-// import './ForecastTable.css';
+import { CostType, Program } from '../../types/program';
 
 interface ForecastTableProps {
   directCostsData: CostType;
@@ -8,38 +7,79 @@ interface ForecastTableProps {
 }
 
 const ForecastTable: React.FC<ForecastTableProps> = ({ directCostsData, indirectCostsData }) => {
-  const periodsCount = 6; // Number of periods (Initial Investment + Year 1 to Year 5)
-  const growthRates = [0, 0.06, 0.06, 0.06, 0.10]; // Growth rates for Year 2-5
+  const periodsCount = 6; // Initial Investment + Year 1 to Year 5
 
-  const calculateTotalCosts = (costsData: CostType) => {
+  const calculateProgramCosts = (program: Program, isDirectCost: boolean) => {
+    const settings = program.settings as {
+      directInvestment: number;
+      indirectInvestment: number;
+      directGrowthRates: number[];
+      indirectGrowthRates: number[];
+    };
+
+    const investment = isDirectCost ? settings.directInvestment : settings.indirectInvestment;
+    const growthRates = isDirectCost ? settings.directGrowthRates : settings.indirectGrowthRates;
+    
+    // Initialize with investment value
+    const costs = [investment];
+    
+    // Calculate costs for each year using growth rates
+    let currentValue = investment;
+    for (let i = 0; i < periodsCount - 1; i++) {
+      const growthRate = (growthRates[i] || 0) / 100; // Convert percentage to decimal
+      currentValue = currentValue * (1 + growthRate);
+      costs.push(currentValue);
+    }
+    
+    return costs;
+  };
+
+  const calculateTotalCosts = (costsData: CostType, isDirectCost: boolean) => {
     const totalCosts = Array(periodsCount).fill(0);
-    costsData.programs.forEach((program) => {
-      program.projects.forEach((project) => {
-        project.categories.forEach((category) => {
-          category.items.forEach((item) => {
-            item.costs.forEach((cost, index) => {
-              if (index < periodsCount) {
-                const value = typeof cost.value === 'string' ? parseFloat(cost.value) : cost.value;
-                if (!isNaN(value)) {
-                  totalCosts[index] += value;
-                }
-              }
-            });
-          });
-        });
+    
+    costsData.programs.forEach(program => {
+      const programCosts = calculateProgramCosts(program, isDirectCost);
+      programCosts.forEach((cost, index) => {
+        totalCosts[index] += cost;
       });
     });
+
     return totalCosts;
   };
 
-  const directTotal = calculateTotalCosts(directCostsData);
-  const indirectTotal = calculateTotalCosts(indirectCostsData);
+  const directTotal = calculateTotalCosts(directCostsData, true);
+  const indirectTotal = calculateTotalCosts(indirectCostsData, false);
   const totalCosts = directTotal.map((value, index) => value + indirectTotal[index]);
 
   const cumulativeCosts = totalCosts.reduce((acc, value, index) => {
     acc.push((acc[index - 1] || 0) + value);
     return acc;
   }, [] as number[]);
+
+  const calculateAverageGrowthRates = (costsData: CostType, isDirectCost: boolean) => {
+    const growthRates = Array(periodsCount - 1).fill(0);
+    let programCount = 0;
+
+    costsData.programs.forEach(program => {
+      const settings = program.settings as {
+        directGrowthRates: number[];
+        indirectGrowthRates: number[];
+      };
+      const rates = isDirectCost ? settings.directGrowthRates : settings.indirectGrowthRates;
+      
+      if (rates) {
+        rates.forEach((rate, index) => {
+          growthRates[index] += rate; // rates are already in percentage
+        });
+        programCount++;
+      }
+    });
+
+    return growthRates.map(total => programCount ? total / programCount : 0);
+  };
+
+  const directGrowthRates = calculateAverageGrowthRates(directCostsData, true);
+  const indirectGrowthRates = calculateAverageGrowthRates(indirectCostsData, false);
 
   return (
     <div className="forecast-table">
@@ -63,7 +103,7 @@ const ForecastTable: React.FC<ForecastTableProps> = ({ directCostsData, indirect
               <td key={index}>{value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}$</td>
             ))}
             <td>{directTotal.reduce((acc, val) => acc + val, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}$</td>
-            <td>{(directTotal.reduce((acc, val) => acc + val, 0) / (periodsCount - 1)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}$</td>
+            <td>{(directTotal.reduce((acc, val) => acc + val, 0) / periodsCount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}$</td>
           </tr>
           <tr>
             <td>Indirect Costs</td>
@@ -71,7 +111,7 @@ const ForecastTable: React.FC<ForecastTableProps> = ({ directCostsData, indirect
               <td key={index}>{value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}$</td>
             ))}
             <td>{indirectTotal.reduce((acc, val) => acc + val, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}$</td>
-            <td>{(indirectTotal.reduce((acc, val) => acc + val, 0) / (periodsCount - 1)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}$</td>
+            <td>{(indirectTotal.reduce((acc, val) => acc + val, 0) / periodsCount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}$</td>
           </tr>
           <tr>
             <td>Total Costs</td>
@@ -79,7 +119,7 @@ const ForecastTable: React.FC<ForecastTableProps> = ({ directCostsData, indirect
               <td key={index}>{value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}$</td>
             ))}
             <td>{totalCosts.reduce((acc, val) => acc + val, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}$</td>
-            <td>{(totalCosts.reduce((acc, val) => acc + val, 0) / (periodsCount - 1)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}$</td>
+            <td>{(totalCosts.reduce((acc, val) => acc + val, 0) / periodsCount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}$</td>
           </tr>
           <tr>
             <td>Cumulative Costs</td>
@@ -89,10 +129,18 @@ const ForecastTable: React.FC<ForecastTableProps> = ({ directCostsData, indirect
             <td colSpan={2}></td>
           </tr>
           <tr>
-            <td>Avg Cost Growth Rate</td>
+            <td>Direct Growth Rate</td>
             <td>base year</td>
-            {growthRates.map((rate, index) => (
-              <td key={index}>+ {rate * 100}%</td>
+            {directGrowthRates.map((rate, index) => (
+              <td key={index}>+ {rate.toFixed(1)}%</td>
+            ))}
+            <td colSpan={2}></td>
+          </tr>
+          <tr>
+            <td>Indirect Growth Rate</td>
+            <td>base year</td>
+            {indirectGrowthRates.map((rate, index) => (
+              <td key={index}>+ {rate.toFixed(1)}%</td>
             ))}
             <td colSpan={2}></td>
           </tr>

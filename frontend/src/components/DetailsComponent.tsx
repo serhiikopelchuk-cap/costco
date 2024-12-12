@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './DetailsComponent.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClone, faSpinner, faCheck, faTable, faCog } from '@fortawesome/free-solid-svg-icons';
+import { faClone, faSpinner, faCheck, faTable, faCog, faMoneyBillTrendUp } from '@fortawesome/free-solid-svg-icons';
 import { cloneProgram, deleteProgram } from '../services/programService';
 import { cloneProject, deleteProject } from '../services/projectService';
 import { Category, Project } from '../types/program';
@@ -232,7 +232,7 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, id, programId
           className={`tab-button ${activeTab === 'settings' ? 'active' : ''}`}
           onClick={() => setActiveTab('settings')}
         >
-          <FontAwesomeIcon icon={faCog} /> Settings
+          <FontAwesomeIcon icon={faMoneyBillTrendUp} /> Investment
         </button>
       </div>
       <div className="header-with-clone">

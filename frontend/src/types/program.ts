@@ -31,6 +31,7 @@ export type Category = {
   cloudProviders?: CloudProvider[];
   items: Item[];
   project?: { id: number };
+  costType?: CostType;
 };
 
 export type Project = {
@@ -46,6 +47,14 @@ export type Program = {
   name: string;
   // description?: string;
   projects: Project[];
+  settings: any | {
+    teamName: string;
+    preparedBy: string;
+    directInvestment: number;
+    indirectInvestment: number;
+    directGrowthRates: number[];
+    indirectGrowthRates: number[];
+  };
 };
 
 // UI specific types

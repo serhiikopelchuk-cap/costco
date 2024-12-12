@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import './ToggleButton.css';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { fetchCostTypeByAliasAsync } from '../../store/slices/costTypesSlice';
-import { setProgramId, setProjectId, setCategoryId, setLineItems } from '../../store/slices/selectionSlice';
+import { setProgramId, setProjectId, setCategoryId, setLineItems, setCostType } from '../../store/slices/selectionSlice';
 
 const ToggleButton: React.FC = () => {
   const navigate = useNavigate();
@@ -29,6 +29,7 @@ const ToggleButton: React.FC = () => {
     dispatch(setProjectId(null));
     dispatch(setCategoryId(null));
     dispatch(setLineItems([]));
+    dispatch(setCostType(alias));
 
     // Select the first available Program, Project, Category, and Item
     const costType = alias === 'direct_costs' ? costTypes.directCosts : costTypes.indirectCosts;

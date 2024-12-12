@@ -89,7 +89,7 @@ const LineItemList: React.FC<LineItemListProps> = ({
   return (
     <div className="column minified">
       <div className="header-with-button">
-        <h3>Line Items</h3>
+        <h3>Sub Category</h3>
         <button
           className={`add-toggle-button ${showAddLineItemInput ? 'active' : ''}`}
           onClick={() => handleAddInputVisibility(!showAddLineItemInput)}

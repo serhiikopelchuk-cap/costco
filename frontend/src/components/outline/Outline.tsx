@@ -19,7 +19,7 @@ type OutlineProps = {
 
 const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
   const dispatch = useAppDispatch();
-  
+  // console.log('data:', data);
   // Selection state from Redux
   const {
     selectedProgramId,

@@ -8,9 +8,8 @@ import { Program } from '../../types/program';
 
 const ProgramList: React.FC = () => {
   const dispatch = useAppDispatch();
-  const costTypes = useAppSelector(state => state.costTypes);
-  const programs = useAppSelector(state => costTypes.item?.programs || []);
-  
+  const programs = useAppSelector(state => state.costTypes.item?.programs || state.costTypes.allPrograms || []);
+  // console.log('programs:', programs);
   // Selection state from Redux
   const selectedProgramId = useAppSelector(state => state.selection.selectedProgramId);
 
@@ -39,18 +38,18 @@ const ProgramList: React.FC = () => {
   };
 
   const handleAddProgram = (programName: string) => {
-    const costTypeId = costTypes.item?.id;
-    if (!costTypeId) return;
+    // const costTypeId = useAppSelector(state => state.costTypes.item?.id);
+    // if (!costTypeId) return;
 
-    const newProgram: Partial<Program> = { name: programName, projects: [] };
-    dispatch(createProgramAsync({ program: newProgram, costTypeId }))
-      .unwrap()
-      .then((createdProgram: Program) => {
-        dispatch(setProgramId(createdProgram.id));
-      })
-      .catch((error: any) => {
-        console.error('Failed to create program:', error);
-      });
+    // const newProgram: Partial<Program> = { name: programName, projects: [] };
+    // dispatch(createProgramAsync({ program: newProgram, costTypeId }))
+    //   .unwrap()
+    //   .then((createdProgram: Program) => {
+    //     dispatch(setProgramId(createdProgram.id));
+    //   })
+    //   .catch((error: any) => {
+    //     console.error('Failed to create program:', error);
+    //   });
   };
 
   return (

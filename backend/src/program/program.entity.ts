@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { Project } from '../project/project.entity';
 import { CostType } from '../cost-type/cost-type.entity';
 
@@ -16,6 +16,6 @@ export class Program {
   @OneToMany(() => Project, project => project.program, { cascade: true, onDelete: 'CASCADE' })
   projects: Project[];
 
-  @ManyToOne(() => CostType, costType => costType.programs)
-  costType: CostType;
+  @Column('jsonb', { nullable: true, default: {} })
+  settings: Record<string, any>;
 } 

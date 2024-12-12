@@ -1,0 +1,157 @@
+.column div:hover {
+  background-color: unset !important;
+}
+
+.items-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.header-row {
+  background-color: #f9f9f9;
+}
+
+.header-cell, .line-item-cell {
+  border: unset;
+  padding: 10px;
+  text-align: center;
+  font-weight: bold;
+  width: auto;
+  min-width: 50px;
+  max-width: 90px;
+}
+
+.line-item-label {
+  border: unset;
+  text-align: left;
+  padding: 5px 10px;
+  font-weight: bold;
+  background-color: #fff;
+  width: 100%;
+  min-width: 300px;
+  display: flex;
+  align-items: center;
+}
+
+.line-item-row {
+  border: unset;
+  overflow: hidden;
+}
+
+.line-item-input {
+  width: 100%;
+  padding: 5px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-weight: bold;
+}
+
+.line-item-input:hover,
+.line-item-input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+.summary-row .summary-cell {
+  padding: 8px;
+  text-align: center;
+  font-weight: normal;
+  border: none;
+  color: inherit;
+}
+
+.line-item-cell {
+  padding: 8px;
+  text-align: center;
+  font-weight: normal;
+  border: none;
+  color: inherit;
+  user-select: none;
+}
+
+.line-item-cell.selected {
+  background-color: rgba(0, 123, 255, 0.2);
+  border: 2px solid rgba(0, 123, 255, 0.4);
+}
+
+.line-item-cell.selected[data-vertical="true"] {
+  background-color: rgba(156, 39, 176, 0.2);
+  border: 2px solid rgba(156, 39, 176, 0.4);
+}
+
+.line-item-cell.selecting {
+  opacity: 0.8;
+}
+
+.input-container {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.cost-input {
+  width: 100%;
+  padding-right: 20px;
+  border: 1px solid transparent;
+  background: transparent;
+  text-align: center;
+}
+
+.cost-input:hover,
+.cost-input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+.spinner {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top-color: #000;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: translateY(-50%) rotate(0deg);
+  }
+  100% {
+    transform: translateY(-50%) rotate(360deg);
+  }
+}
+
+.line-item-cell.frozen {
+  background-color: rgba(0, 0, 0, 0.05);
+  cursor: not-allowed;
+}
+
+.line-item-cell.frozen.selected {
+  background-color: rgba(0, 0, 0, 0.05);
+  border: none;
+}
+
+.line-item-cell.frozen.selecting {
+  background-color: rgba(0, 0, 0, 0.05);
+  border: none;
+}
+
+.header-cell {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.header-cell:hover:not(.frozen) {
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+.header-cell.frozen {
+  cursor: not-allowed;
+  opacity: 0.7;
+} 

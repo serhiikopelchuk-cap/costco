@@ -7,56 +7,58 @@ import DirectCostsTable from '../components/dashboard/DirectCostsTable';
 import IndirectCostsTable from '../components/dashboard/IndirectCostsTable';
 import TopCharts from '../components/dashboard/TopCharts';
 import BottomCharts from '../components/dashboard/BottomCharts';
-import { fetchCostTypeByAlias } from '../services/costTypeService';
-import { CostType } from '../types/program';
+import { fetchProgramsAsync } from '../store/slices/costTypesSlice';
+import { CloudProvider, Program } from '../types/program';
 import ProviderFilter from '../components/common/ProviderFilter';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../store';
+import { AppDispatch } from '../store';
 
-// Register the necessary components
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement);
 
 function Dashboard() {
-  const [directCostsData, setDirectCostsData] = useState<CostType | null>(null);
-  const [indirectCostsData, setIndirectCostsData] = useState<CostType | null>(null);
+  const dispatch = useDispatch<AppDispatch>();
+  const programs = useSelector((state: RootState) => state.costTypes.allPrograms);
   const [selectedProvider, setSelectedProvider] = useState('');
-  const cloudProviders = ['azure', 'gcp'];
+  const [selectedProgramId, setSelectedProgramId] = useState<number | ''>('');
+  const cloudProviders: CloudProvider[] = [
+    { id: 1, name: 'Azure' },
+    { id: 2, name: 'GCP' }
+  ];
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const directCosts = await fetchCostTypeByAlias('direct_costs');
-        const indirectCosts = await fetchCostTypeByAlias('indirect_costs');
-        setDirectCostsData(directCosts);
-        setIndirectCostsData(indirectCosts);
-      } catch (error) {
-        console.error('Error fetching cost types:', error);
-      }
-    };
+    dispatch(fetchProgramsAsync());
+  }, [dispatch]);
 
-    fetchData();
-  }, []);
-
-  const filterCategoriesByProvider = (costsData: CostType | null) => {
-    if (!costsData) return null;
-    if (!selectedProvider) return costsData;
-
-    return {
-      ...costsData,
-      programs: costsData.programs.map(program => ({
+  const filterProgramsByProvider = (programs: Program[], costTypeId: number) => {
+    let filteredPrograms = programs
+      // First filter by selected program if any
+      .filter(program => !selectedProgramId || program.id === selectedProgramId)
+      .map(program => ({
         ...program,
         projects: program.projects.map(project => ({
           ...project,
-          categories: project.categories.filter(category =>
-            category.cloudProvider?.includes(selectedProvider)
-          ),
-        })),
-      })),
+          categories: project.categories.filter(category => 
+            category.costType?.id === costTypeId &&
+            (!selectedProvider || category.cloudProviders?.some(cp => 
+              cp.name.toLowerCase() === selectedProvider.toLowerCase()
+            ))
+          )
+        })).filter(project => project.categories.length > 0)
+      })).filter(program => program.projects.length > 0);
+
+    return {
+      id: costTypeId,
+      name: costTypeId === 1 ? 'direct_costs' : 'indirect_costs',
+      alias: costTypeId === 1 ? 'direct_costs' : 'indirect_costs',
+      programs: filteredPrograms
     };
   };
 
-  const filteredDirectCostsData = filterCategoriesByProvider(directCostsData);
-  const filteredIndirectCostsData = filterCategoriesByProvider(indirectCostsData);
+  const directCostsData = filterProgramsByProvider(programs, 1);
+  const indirectCostsData = filterProgramsByProvider(programs, 2);
 
-  if (!filteredDirectCostsData || !filteredIndirectCostsData) {
+  if (!programs.length) {
     return <div>Loading...</div>;
   }
 
@@ -64,32 +66,45 @@ function Dashboard() {
     <div className="dashboard">
       <div className="dashboard-header">
         <h2>Dashboard</h2>
-        <ProviderFilter
-          selectedProvider={selectedProvider}
-          onProviderChange={setSelectedProvider}
-          cloudProviders={cloudProviders}
-        />
+        <div className="dashboard-filters">
+          <select 
+            value={selectedProgramId} 
+            onChange={(e) => setSelectedProgramId(e.target.value ? Number(e.target.value) : '')}
+          >
+            <option value="">All Programs</option>
+            {programs.map(program => (
+              <option key={program.id} value={program.id}>
+                {program.name}
+              </option>
+            ))}
+          </select>
+          <ProviderFilter
+            selectedProvider={selectedProvider}
+            onProviderChange={setSelectedProvider}
+            cloudProviders={cloudProviders.map(cp => cp.name)}
+          />
+        </div>
       </div>
       <div className="top-section">
         <div className="forecast-table">
-          <ForecastTable directCostsData={filteredDirectCostsData} indirectCostsData={filteredIndirectCostsData} />
+          <ForecastTable directCostsData={directCostsData} indirectCostsData={indirectCostsData} />
         </div>
         <div className="top-charts-section">
-          <TopCharts directCostsData={filteredDirectCostsData} indirectCostsData={filteredIndirectCostsData} />
+          <TopCharts directCostsData={directCostsData} indirectCostsData={indirectCostsData} />
         </div>
       </div>
       <div className="tables">
         <div className="dashboard-section">
-          <TotalCostsTable directCostsData={filteredDirectCostsData} indirectCostsData={filteredIndirectCostsData} />
+          <TotalCostsTable directCostsData={directCostsData} indirectCostsData={indirectCostsData} />
         </div>
         <div className="dashboard-section">
-          <DirectCostsTable directCostsData={filteredDirectCostsData} />
+          <DirectCostsTable directCostsData={directCostsData} />
         </div>
         <div className="dashboard-section">
-          <BottomCharts indirectCostsData={filteredIndirectCostsData} />
+          <BottomCharts indirectCostsData={indirectCostsData} />
         </div>
         <div className="dashboard-section">
-          <IndirectCostsTable indirectCostsData={filteredIndirectCostsData} />
+          <IndirectCostsTable indirectCostsData={indirectCostsData} />
         </div>
       </div>
     </div>

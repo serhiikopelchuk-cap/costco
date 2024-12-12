@@ -12,6 +12,7 @@ interface SelectionState {
   selectedProvider: string;
   selectedCloudProviders: string[];
   _tempCategoryId: number | null;
+  selectedCostType: string | null;
 }
 
 const initialState: SelectionState = {
@@ -22,6 +23,7 @@ const initialState: SelectionState = {
   selectedProvider: '',
   selectedCloudProviders: [],
   _tempCategoryId: null,
+  selectedCostType: null,
 };
 
 const selectionSlice = createSlice({
@@ -84,6 +86,9 @@ const selectionSlice = createSlice({
     setSelectedCloudProviders: (state, action: PayloadAction<string[]>) => {
       state.selectedCloudProviders = action.payload;
     },
+    setCostType: (state, action: PayloadAction<string | null>) => {
+      state.selectedCostType = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -135,6 +140,7 @@ export const {
   updateLineItemCosts,
   updateSelections,
   setSelectedCloudProviders,
+  setCostType,
 } = selectionSlice.actions;
 
 export const selectSelectedProgramId = (state: RootState) => state.selection.selectedProgramId;

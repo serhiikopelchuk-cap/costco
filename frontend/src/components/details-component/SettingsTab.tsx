@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './SettingsTab.css';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
-import { updateProjectSettingsAsync } from '../../store/slices/costTypesSlice';
+import { updateProjectSettingsAsync, updateProgramSettingsAsync } from '../../store/slices/costTypesSlice';
 import { selectSelectedProgramId, selectSelectedProjectId } from '../../store/slices/selectionSlice';
 import { selectProjectById } from '../../store/slices/costTypesSlice';
 
@@ -14,6 +14,9 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ type }) => {
   const projectId = useAppSelector(selectSelectedProjectId);
   const programId = useAppSelector(selectSelectedProgramId);
   const project = useAppSelector((state) => selectProjectById(state, projectId!));
+  const program = useAppSelector((state) => 
+    state.costTypes.item?.programs.find(p => p.id === programId)
+  );
 
   const [teamName, setTeamName] = useState<string>('');
   const [preparedBy, setPreparedBy] = useState<string>('');
@@ -24,22 +27,18 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ type }) => {
   const [statusMessage, setStatusMessage] = useState<string>('');
 
   useEffect(() => {
-    if (project && project.settings) {
-      setTeamName(project.settings.teamName || '');
-      setPreparedBy(project.settings.preparedBy || '');
-      setDirectInvestment(project.settings.directInvestment || 0);
-      setIndirectInvestment(project.settings.indirectInvestment || 0);
-      setDirectGrowthRates(project.settings.directGrowthRates || Array(5).fill(0));
-      setIndirectGrowthRates(project.settings.indirectGrowthRates || Array(5).fill(0));
+    const settings = type === 'program' ? program?.settings : project?.settings;
+    if (settings) {
+      setTeamName(settings.teamName || '');
+      setPreparedBy(settings.preparedBy || '');
+      setDirectInvestment(settings.directInvestment || 0);
+      setIndirectInvestment(settings.indirectInvestment || 0);
+      setDirectGrowthRates(settings.directGrowthRates || Array(5).fill(0));
+      setIndirectGrowthRates(settings.indirectGrowthRates || Array(5).fill(0));
     }
-  }, [project]);
+  }, [type, program, project]);
 
   const handleSave = async () => {
-    if (projectId === null || programId === null) {
-      setStatusMessage('Please select a project and program.');
-      return;
-    }
-
     const settings = {
       teamName,
       preparedBy,
@@ -50,7 +49,13 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ type }) => {
     };
 
     try {
-      await dispatch(updateProjectSettingsAsync({ projectId, programId, settings })).unwrap();
+      if (type === 'program' && programId) {
+        await dispatch(updateProgramSettingsAsync({ programId, settings })).unwrap();
+      } else if (type === 'project' && projectId && programId) {
+        await dispatch(updateProjectSettingsAsync({ projectId, programId, settings })).unwrap();
+      } else {
+        throw new Error('Invalid type or missing ID');
+      }
       setStatusMessage('Settings saved successfully!');
     } catch (error) {
       console.error('Failed to save settings:', error);
@@ -89,8 +94,8 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ type }) => {
         <span className="instruction">Enter your own full Name to the bolded cell at left</span>
       </div>
 
-      {type === 'project' && (
-        <>
+      {/* {type === 'project' && (
+        <> */}
           <h5>Complete your {'>>'} Starting Cost and Initial Investment</h5>
           <div className="input-group">
             <label>
@@ -166,8 +171,8 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ type }) => {
             </tbody>
           </table>
           <span className="instruction">Enter your Average Annual Growth over 5 years. e.g. If you will use 10% more compute in year 2 enter 10%</span>
-        </>
-      )}
+        {/* </>
+      )} */}
       
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <button onClick={handleSave} className="save-button">Save Settings</button>
