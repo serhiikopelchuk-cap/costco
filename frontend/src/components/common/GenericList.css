@@ -11,7 +11,7 @@
 }
 
 .column.minified {
-  flex: 0.2;
+  flex: 1.2;
   max-width: 160px;
 }
 
@@ -92,11 +92,10 @@
 
 .item span {
   text-align: left;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal; /* Allow text to wrap */
+  word-wrap: break-word; /* Break long words if needed */
   flex-grow: 1;
-  margin-right: 10px; /* Space between text and button */
+  margin-right: 10px;
 }
 
 .item {
@@ -108,4 +107,47 @@
   padding: 5px;
   border-radius: 4px;
   transition: background-color 0.2s ease;
+}
+
+.expand-button {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: transparent;
+  border: none;
+  color: #666;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.expand-button:hover {
+  color: #333;
+}
+
+.icon-button {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: transparent;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, background-color 0.2s;
+  opacity: 0;
+}
+
+.icon-button:hover {
+  color: #333;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.item:hover .icon-button {
+  opacity: 1;
 } 

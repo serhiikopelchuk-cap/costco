@@ -1,116 +1,80 @@
 import React, { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import Outline from './outline/Outline';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
-import { fetchCostTypeByAliasAsync } from '../store/slices/costTypesSlice';
-import { setProgramId, setProjectId, setCategoryId, setLineItems, setCostType } from '../store/slices/selectionSlice';
-import { setCurrentPage } from '../store/slices/uiSlice';
-import { CostType } from '../types/program';
+import { fetchCostTypeByAliasAsync, fetchProgramsAsync } from '../store/slices/costTypesSlice';
+import { updateSelections, setCostType } from '../store/slices/selectionSlice';
+import { setCurrentPage, setDetails, UiState } from '../store/slices/uiSlice';
+import Outline from './outline/Outline';
+// import './CostTypePage.css';
 
 type CostTypeAlias = 'direct_costs' | 'indirect_costs';
 
-interface CostTypePageProps {
-  costTypeAlias?: CostTypeAlias;
-  costTypeSelector: (state: any) => {
-    status: string;
-    error: string | null;
-    [key: string]: any;
-  };
-}
-
-// const formatDisplayName = (alias: string) => {
-//   return alias.replace('_', '-');
-// };
-
-const formatUrlToStateKey = (url: string) => {
-  // Get the last part of the URL path
-  const path = url.split('/').pop() || '';
-  // Convert 'direct-costs' to 'directCosts'
-  return path.split('-')
-    .map((part, index) => index === 0 ? part : part.charAt(0).toUpperCase() + part.slice(1))
-    .join('');
-};
-
-const formatUrlToAlias = (url: string): CostTypeAlias => {
-  const path = url.split('/').pop() || '';
-  const alias = path.replace('-', '_');
-  if (alias !== 'direct_costs' && alias !== 'indirect_costs') {
-    throw new Error(`Invalid cost type alias: ${alias}`);
-  }
-  return alias;
-};
-
-const CostTypePage: React.FC<CostTypePageProps> = ({ costTypeAlias: propAlias, costTypeSelector }) => {
-  const location = useLocation();
-  const urlPath = location.pathname;
-  const stateKey = formatUrlToStateKey(urlPath);
-  const pageAlias = formatUrlToAlias(urlPath);
-  
+const CostTypePage: React.FC = () => {
   const dispatch = useAppDispatch();
-  const state = useAppSelector(costTypeSelector);
+  const currentPage = useAppSelector(state => state.ui.currentPage);
   const { selectedProgramId, selectedProjectId, selectedCategoryId } = useAppSelector(state => state.selection);
-  
-  const { status, error, [stateKey]: costType } = state;
+  const details = useAppSelector<UiState['details']>(state => state.ui.details);
+  const programs = useAppSelector(state => state.costTypes.item?.programs || []);
 
-  // Fetch cost types on mount
+  // Set initial cost type based on URL/page
   useEffect(() => {
-    dispatch(fetchCostTypeByAliasAsync(pageAlias));
-    const alias = location.pathname === '/direct-costs' ? 'direct_costs' : 'indirect_costs';
-    dispatch(setCostType(alias));
-  }, [dispatch, location.pathname]);
-
-  // Set initial selections only if no selections exist
-  useEffect(() => {
-    if (costType && Array.isArray(costType.programs) && costType.programs.length > 0 && 
-        !selectedProgramId && !selectedProjectId && !selectedCategoryId) {
-      const firstProgram = costType.programs[0];
-      if (firstProgram && Array.isArray(firstProgram.projects) && firstProgram.projects.length > 0) {
-        const firstProject = firstProgram.projects[0];
-        if (firstProject && Array.isArray(firstProject.categories) && firstProject.categories.length > 0) {
-          const firstCategory = firstProject.categories[0];
-          const firstItem = firstCategory.items && firstCategory.items.length > 0 ? firstCategory.items[0] : null;
-
-          dispatch(setProgramId(firstProgram.id));
-          dispatch(setProjectId(firstProject.id));
-          dispatch(setCategoryId(firstCategory.id));
-          dispatch(setLineItems(firstItem ? [firstItem] : []));
-        }
-      }
+    if (currentPage) {
+      dispatch(updateSelections({
+        selectedCostType: currentPage
+      }));
     }
-  }, [costType, selectedProgramId, selectedProjectId, selectedCategoryId, dispatch]);
+  }, [dispatch, currentPage]);
 
   useEffect(() => {
-    dispatch(setCurrentPage(pageAlias));
-  }, [dispatch, pageAlias]);
+    const loadData = async () => {
+      try {
+        // First clear selections except costType
+        dispatch(updateSelections({
+          selectedProgramId: null,
+          selectedProjectId: null,
+          selectedCategoryId: null,
+          selectedLineItems: [],
+        }));
 
-  // console.log('costType:', costType);
-//   console.log('status:', status);
+        // Clear details
+        dispatch(setDetails(null));
 
-  if (status === 'loading') {
-    return (
-      <div className="flex items-center justify-center min-h-[200px]">
-        <div className="text-lg">Loading...</div>
-      </div>
-    );
-  }
+        // Then load data
+        await dispatch(fetchProgramsAsync()).unwrap();
+        if (currentPage) {
+          await dispatch(fetchCostTypeByAliasAsync(currentPage as CostTypeAlias)).unwrap();
+        }
+      } catch (error) {
+        console.error('Error loading data:', error);
+      }
+    };
 
-  if (status === 'failed') {
-    return (
-      <div className="flex items-center justify-center min-h-[200px]">
-        <div className="text-red-600">Error: {error || 'Failed to load data'}</div>
-      </div>
-    );
-  }
+    loadData();
+  }, [dispatch, currentPage]);
 
-  if (!costType || !costType.programs || costType.programs.length === 0) {
-    return (
-      <div className="flex items-center justify-center min-h-[200px]">
-        <div className="text-gray-600">No data available</div>
-      </div>
-    );
-  }
+  // Set initial selections if none exist and no details are open
+  useEffect(() => {
+    if (
+      programs.length === 0 || 
+      selectedProgramId || 
+      details !== null
+    ) {
+      return;
+    }
 
-  return <Outline data={costType.programs} />;
+    const firstProgram = programs[0];
+    const firstProject = firstProgram.projects[0] || null;
+    const firstCategory = firstProject?.categories[0] || null;
+    const firstItem = firstCategory?.items[0] || null;
+
+    dispatch(updateSelections({
+      selectedProgramId: firstProgram.id,
+      selectedProjectId: firstProject?.id || null,
+      selectedCategoryId: firstCategory?.id || null,
+      selectedLineItems: firstItem ? [firstItem] : []
+    }));
+  }, [programs, selectedProgramId, details, dispatch]);
+
+  return <Outline data={programs} />;
 };
 
 export default CostTypePage; 

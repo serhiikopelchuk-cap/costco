@@ -2,52 +2,66 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './ToggleButton.css';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
-import { fetchCostTypeByAliasAsync } from '../../store/slices/costTypesSlice';
-import { setProgramId, setProjectId, setCategoryId, setLineItems, setCostType } from '../../store/slices/selectionSlice';
+import { fetchProgramsAsync } from '../../store/slices/costTypesSlice';
+import { updateSelections, setCostType } from '../../store/slices/selectionSlice';
+import { setDetails } from '../../store/slices/uiSlice';
 
 const ToggleButton: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isDirect, setIsDirect] = useState(true);
   const dispatch = useAppDispatch();
-  const costTypes = useAppSelector(state => state.costTypes);
+  const programs = useAppSelector(state => state.costTypes.item?.programs || []);
 
   useEffect(() => {
     setIsDirect(location.pathname === '/direct-costs');
   }, [location.pathname]);
 
   const handleClick = async () => {
-    setIsDirect(!isDirect);
     const newPath = isDirect ? '/indirect-costs' : '/direct-costs';
-    navigate(newPath);
-
     const alias = newPath === '/direct-costs' ? 'direct_costs' : 'indirect_costs';
-    await dispatch(fetchCostTypeByAliasAsync(alias));
 
-    // Reset selections
-    dispatch(setProgramId(null));
-    dispatch(setProjectId(null));
-    dispatch(setCategoryId(null));
-    dispatch(setLineItems([]));
+    // First update the UI state
+    setIsDirect(!isDirect);
+    navigate(newPath);
+    
+    // Reset all selections and details
+    dispatch(updateSelections({
+      selectedProgramId: null,
+      selectedProjectId: null,
+      selectedCategoryId: null,
+      selectedLineItems: []
+    }));
+    dispatch(setDetails(null));
+    
+    // Update cost type and fetch fresh data
     dispatch(setCostType(alias));
+    await dispatch(fetchProgramsAsync());
 
-    // Select the first available Program, Project, Category, and Item
-    const costType = alias === 'direct_costs' ? costTypes.directCosts : costTypes.indirectCosts;
-    if (costType && costType.programs.length > 0) {
-      const firstProgram = costType.programs[0];
-      dispatch(setProgramId(firstProgram.id));
+    // After data is loaded, set initial selections if available
+    const filteredPrograms = programs.filter(program => 
+      program.projects.some(project => 
+        project.categories.some(category => 
+          category.costType?.id === (alias === 'direct_costs' ? 1 : 2)
+        )
+      )
+    );
 
-      if (firstProgram.projects.length > 0) {
-        const firstProject = firstProgram.projects[0];
-        dispatch(setProjectId(firstProject.id));
-
-        if (firstProject.categories.length > 0) {
-          const firstCategory = firstProject.categories[0];
-          dispatch(setCategoryId(firstCategory.id));
-
-          const firstItem = firstCategory.items.length > 0 ? firstCategory.items[0] : null;
-          dispatch(setLineItems(firstItem ? [firstItem] : []));
-        }
+    if (filteredPrograms.length > 0) {
+      const firstProgram = filteredPrograms[0];
+      const firstProject = firstProgram.projects.find(project => 
+        project.categories.some(category => 
+          category.costType?.id === (alias === 'direct_costs' ? 1 : 2)
+        )
+      );
+      
+      if (firstProgram && firstProject) {
+        dispatch(updateSelections({
+          selectedProgramId: firstProgram.id,
+          selectedProjectId: firstProject.id,
+          selectedCategoryId: null,
+          selectedLineItems: []
+        }));
       }
     }
   };

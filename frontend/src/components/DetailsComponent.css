@@ -117,3 +117,40 @@
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
   outline: none;
 }
+
+/* Tab buttons styles */
+.tab-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  justify-content: center;
+  width: 100%;
+}
+
+.tab-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  background-color: var(--light-color);
+  color: var(--text-color);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.tab-button svg {
+  font-size: 16px;
+}
+
+.tab-button:hover {
+  background-color: var(--primary-lighter-color);
+}
+
+.tab-button.active {
+  background-color: var(--primary-color);
+  color: var(--background-color);
+}

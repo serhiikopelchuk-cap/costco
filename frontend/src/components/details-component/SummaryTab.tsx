@@ -26,6 +26,8 @@ const SummaryTab: React.FC<SummaryTabProps> = ({
   overallAverageSum,
   sums,
 }) => {
+  console.log('SummaryTab render:', { type, editingName });
+  
   return (
     <>
       <p>Summary for {type === 'program' ? 'Program' : 'Project'}:</p>
@@ -33,8 +35,12 @@ const SummaryTab: React.FC<SummaryTabProps> = ({
         type="text"
         value={editingName}
         onChange={handleNameChange}
-        onBlur={handleNameBlur}
+        onBlur={() => {
+          console.log('Input blur with name:', editingName);
+          handleNameBlur();
+        }}
         className="details-name-input"
+        placeholder={`Enter ${type} name`}
       />
       <table>
         <thead>

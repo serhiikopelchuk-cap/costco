@@ -30,11 +30,8 @@ export const deleteProgram = async (id: number): Promise<void> => {
 };
 
 // Create a program
-export const createProgram = async (program: Partial<Program>, costTypeId: number): Promise<Program> => {
-  const response = await axios.post<Program>(PROGRAMS_URL, {
-    ...program,
-    costType: { id: costTypeId } // Include costTypeId in the program data
-  });
+export const createProgram = async (program: Partial<Program>): Promise<Program> => {
+  const response = await axios.post<Program>(PROGRAMS_URL, program);
   return response.data;
 };
 

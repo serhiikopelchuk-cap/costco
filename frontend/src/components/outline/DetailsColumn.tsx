@@ -38,7 +38,7 @@ const DetailsColumn: React.FC<DetailsColumnProps> = ({
   cloudProviders
 }) => (
   <div className="column details-column">
-    {selectedCategoryId ? (
+    {selectedCategoryId && (
       <LineItemsTable 
         onLineItemAdd={handleLineItemAdd}
         onDeselectAll={handleDeselectAll}
@@ -51,14 +51,13 @@ const DetailsColumn: React.FC<DetailsColumnProps> = ({
         selectedCategoryId={selectedCategoryId}
         handleLineItemUpdate={handleLineItemUpdate}
       />
-    ) : (
-      details && (
-        <DetailsComponent 
-          type={details.type} 
-          id={details.id}
-          programId={details.type === 'project' && selectedProgramId !== null ? selectedProgramId : undefined}
-        />
-      )
+    )}
+    {!selectedCategoryId && details && (
+      <DetailsComponent 
+        type={details.type} 
+        id={details.id}
+        programId={details.type === 'project' && selectedProgramId !== null ? selectedProgramId : undefined}
+      />
     )}
   </div>
 );

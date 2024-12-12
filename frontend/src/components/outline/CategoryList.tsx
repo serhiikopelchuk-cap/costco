@@ -26,31 +26,25 @@ const CategoryList: React.FC = () => {
       dispatch(fetchProjectAsync({
         projectId: selectedProjectId,
         programId: selectedProgramId
-      })).unwrap().then(() => {
-        // console.log('Project fetched successfully');
-      }).catch(error => {
+      })).unwrap().catch(error => {
         console.error('Error fetching project:', error);
       });
     }
   }, [dispatch, selectedProjectId, selectedProgramId]);
 
-  useEffect(() => {
-    // console.log('Categories updated:', categories);
-  }, [categories]);
+  const filteredCategories = categories.filter(category => {
+    if (selectedCloudProviders.length === 0) {
+      return true;
+    }
 
-  const filteredCategories = selectedCloudProviders.length > 0
-    ? categories.filter(category =>
-        category.cloudProviders?.some(provider => selectedCloudProviders.includes(provider.name))
-      )
-    : categories;
+    if (!category.cloudProviders || category.cloudProviders.length === 0) {
+      return true;
+    }
 
-  // console.log('costType:', costType, filteredCategories);
-  // Filter categories based on the current cost type
-  const costTypeFilteredCategories = filteredCategories.filter(category => {
-    return category.costType?.alias === costType;
+    return category.cloudProviders.some(provider => 
+      selectedCloudProviders.includes(provider.name)
+    );
   });
-
-  // console.log('Filtered Categories:', filteredCategories);
 
   const handleCategoryToggle = (categoryId: number) => {
     if (selectedCategoryId === categoryId) {
@@ -63,32 +57,42 @@ const CategoryList: React.FC = () => {
   };
 
   const handleAddCategory = async (categoryName: string) => {
-    if (selectedProjectId && selectedProgramId) {
-      const newCategory: Partial<Category> = { 
-        name: categoryName, 
-        items: [], 
-        project: { id: selectedProjectId } 
-      };
+    if (!selectedProjectId || !selectedProgramId) {
+      console.error('Missing required data for category creation:', {
+        selectedProjectId,
+        selectedProgramId
+      });
+      return;
+    }
 
-      try {
-        const response = await dispatch(createCategoryAsync({ 
-          category: newCategory,
-          programId: selectedProgramId,
-          projectId: selectedProjectId
-        })).unwrap();
+    const newCategory: Partial<Category> = { 
+      name: categoryName, 
+      items: [], 
+      project: { id: selectedProjectId }
+    };
 
-        // console.log('Category created:', response);
+    try {
+      console.log('Creating category with data:', {
+        category: newCategory,
+        programId: selectedProgramId,
+        projectId: selectedProjectId
+      });
 
-        dispatch(setCategoryId(response.category.id));
+      const response = await dispatch(createCategoryAsync({ 
+        category: newCategory,
+        programId: selectedProgramId,
+        projectId: selectedProjectId
+      })).unwrap();
 
-        // Fetch the updated project to ensure categories are refreshed
-        await dispatch(fetchProjectAsync({
-          projectId: selectedProjectId,
-          programId: selectedProgramId
-        })).unwrap();
-      } catch (error) {
-        console.error('Failed to create category:', error);
-      }
+      console.log('Category created:', response);
+
+      dispatch(setCategoryId(response.category.id));
+      await dispatch(fetchProjectAsync({
+        projectId: selectedProjectId,
+        programId: selectedProgramId
+      })).unwrap();
+    } catch (error) {
+      console.error('Failed to create category:', error);
     }
   };
 
@@ -96,7 +100,7 @@ const CategoryList: React.FC = () => {
     <GenericList
       title="Categories"
       type="category"
-      items={costTypeFilteredCategories.map((category) => ({
+      items={filteredCategories.map((category) => ({
         id: category.id,
         name: category.name,
       }))}

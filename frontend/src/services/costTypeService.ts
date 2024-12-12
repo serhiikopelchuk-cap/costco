@@ -6,7 +6,6 @@ const COST_TYPES_URL = `${API_BASE_URL}/cost-types`;
 
 // Fetch a CostType by alias
 export const fetchCostTypeByAlias = async (alias: string): Promise<CostType> => {
-  console.log('fetchCostTypeByAlias', alias);
   const response = await axios.get<CostType>(`${COST_TYPES_URL}/alias/${alias}`);
   return response.data;
 }; 

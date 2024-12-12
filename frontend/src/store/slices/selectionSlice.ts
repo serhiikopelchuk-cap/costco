@@ -15,6 +15,14 @@ interface SelectionState {
   selectedCostType: string | null;
 }
 
+interface UpdateSelectionsPayload {
+  selectedProgramId?: number | null;
+  selectedProjectId?: number | null;
+  selectedCategoryId?: number | null;
+  selectedLineItems?: Item[];
+  selectedCostType?: string | null;
+}
+
 const initialState: SelectionState = {
   selectedProgramId: null,
   selectedProjectId: null,
@@ -64,23 +72,21 @@ const selectionSlice = createSlice({
         item.id === action.payload.id ? { ...item, costs: action.payload.costs } : item
       );
     },
-    updateSelections: (state, action: PayloadAction<{
-      programId?: number | null;
-      projectId?: number | null;
-      categoryId?: number | null;
-      lineItems?: Item[];
-    }>) => {
-      if (action.payload.programId !== undefined) {
-        state.selectedProgramId = action.payload.programId;
+    updateSelections: (state, action: PayloadAction<UpdateSelectionsPayload>) => {
+      if (action.payload.selectedProgramId !== undefined) {
+        state.selectedProgramId = action.payload.selectedProgramId;
       }
-      if (action.payload.projectId !== undefined) {
-        state.selectedProjectId = action.payload.projectId;
+      if (action.payload.selectedProjectId !== undefined) {
+        state.selectedProjectId = action.payload.selectedProjectId;
       }
-      if (action.payload.categoryId !== undefined) {
-        state.selectedCategoryId = action.payload.categoryId;
+      if (action.payload.selectedCategoryId !== undefined) {
+        state.selectedCategoryId = action.payload.selectedCategoryId;
       }
-      if (action.payload.lineItems) {
-        state.selectedLineItems = action.payload.lineItems;
+      if (action.payload.selectedLineItems) {
+        state.selectedLineItems = action.payload.selectedLineItems;
+      }
+      if (action.payload.selectedCostType !== undefined) {
+        state.selectedCostType = action.payload.selectedCostType;
       }
     },
     setSelectedCloudProviders: (state, action: PayloadAction<string[]>) => {
@@ -114,20 +120,8 @@ const selectionSlice = createSlice({
   },
 });
 
-// Add the async thunk for removing items
-export const removeItemFromSelection = createAsyncThunk(
-  'selection/removeItem',
-  async (itemId: number, { getState, dispatch }) => {
-    const state = getState() as RootState;
-    const { selectedLineItems } = state.selection;
-    
-    // Filter out the deleted item from selections
-    const updatedItems = selectedLineItems.filter(item => item.id !== itemId);
-    dispatch(setLineItems(updatedItems));
-    
-    return itemId;
-  }
-);
+export const selectSelectedProgramId = (state: RootState) => state.selection.selectedProgramId;
+export const selectSelectedProjectId = (state: RootState) => state.selection.selectedProjectId;
 
 export const {
   setProgramId,
@@ -142,8 +136,5 @@ export const {
   setSelectedCloudProviders,
   setCostType,
 } = selectionSlice.actions;
-
-export const selectSelectedProgramId = (state: RootState) => state.selection.selectedProgramId;
-export const selectSelectedProjectId = (state: RootState) => state.selection.selectedProjectId;
 
 export default selectionSlice.reducer;

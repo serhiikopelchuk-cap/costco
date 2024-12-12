@@ -53,8 +53,6 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ type }) => {
         await dispatch(updateProgramSettingsAsync({ programId, settings })).unwrap();
       } else if (type === 'project' && projectId && programId) {
         await dispatch(updateProjectSettingsAsync({ projectId, programId, settings })).unwrap();
-      } else {
-        throw new Error('Invalid type or missing ID');
       }
       setStatusMessage('Settings saved successfully!');
     } catch (error) {
@@ -65,63 +63,60 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ type }) => {
 
   return (
     <div className="settings-container">
-      <h4>{type === 'program' ? 'Program Settings' : 'Project Settings'}</h4>
-      
-      {/* Team Information Section */}
-      <h5>Complete your {'>>'} Team Information</h5>
-      <div className="input-group">
-        <label>
-          Team Name & Dept #:
+      <h2 className="settings-title">Program Starting Cost and Initial Investment</h2>
+
+      <section className="settings-section">
+        <h3 className="section-title">Team Information</h3>
+        
+        <div className="input-group">
+          <label>Team Name & Dept #</label>
           <input
             type="text"
             value={teamName}
             onChange={(e) => setTeamName(e.target.value)}
-            placeholder="Enter Team Name & Dept #"
+            placeholder="e.g. Sample Project D635"
           />
-        </label>
-        <span className="instruction">Enter your Project & Department to the bolded cell at left e.g. "Sample Project D635"</span>
-      </div>
-      <div className="input-group">
-        <label>
-          Prepared by:
+        </div>
+
+        <div className="input-group">
+          <label>Prepared by</label>
           <input
             type="text"
             value={preparedBy}
             onChange={(e) => setPreparedBy(e.target.value)}
-            placeholder="Enter your name"
+            placeholder="Enter your full name"
           />
-        </label>
-        <span className="instruction">Enter your own full Name to the bolded cell at left</span>
-      </div>
+        </div>
+      </section>
 
-      {/* {type === 'project' && (
-        <> */}
-          <h5>Complete your {'>>'} Starting Cost and Initial Investment</h5>
-          <div className="input-group">
-            <label>
-              Direct Initial Investment $:
-              <input
-                type="number"
-                value={directInvestment}
-                onChange={(e) => setDirectInvestment(Number(e.target.value))}
-                placeholder="$0"
-              />
-            </label>
-            <span className="instruction">Enter Costs (If any) incurred before the start of Year 1, Period 1.</span>
-          </div>
-          <div className="input-group">
-            <label>
-              Indirect Initial Investment $:
-              <input
-                type="number"
-                value={indirectInvestment}
-                onChange={(e) => setIndirectInvestment(Number(e.target.value))}
-                placeholder="$0"
-              />
-            </label>
-            <span className="instruction">e.g. if you incurred prior costs related to cloud infrastructure (Direct), software licenses (Indirect), talent (Indirect), etc.</span>
-          </div>
-          <h5>Complete your {'>>'} Cost Growth Rate</h5>
+      <section className="settings-section">
+        <h3 className="section-title">Starting Cost and Initial Investment</h3>
+        
+        <div className="input-group">
+          <label>Direct Initial Investment $</label>
+          <input
+            type="number"
+            value={directInvestment}
+            onChange={(e) => setDirectInvestment(Number(e.target.value))}
+            placeholder="Enter costs incurred before Year 1, Period 1"
+          />
+        </div>
+
+        <div className="input-group">
+          <label>Indirect Initial Investment $</label>
+          <input
+            type="number"
+            value={indirectInvestment}
+            onChange={(e) => setIndirectInvestment(Number(e.target.value))}
+            placeholder="e.g. cloud infrastructure, software licenses, talent"
+          />
+        </div>
+      </section>
+
+      <section className="settings-section">
+        <h3 className="section-title">Cost Growth Rate</h3>
+        
+        <div className="growth-rate-table">
           <table>
             <thead>
               <tr>
@@ -146,7 +141,6 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ type }) => {
                         newRates[index] = Number(e.target.value);
                         setDirectGrowthRates(newRates);
                       }}
-                      placeholder="e.g. 3%"
                     />
                   </td>
                 ))}
@@ -163,21 +157,24 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ type }) => {
                         newRates[index] = Number(e.target.value);
                         setIndirectGrowthRates(newRates);
                       }}
-                      placeholder="e.g. 3%"
                     />
                   </td>
                 ))}
               </tr>
             </tbody>
           </table>
-          <span className="instruction">Enter your Average Annual Growth over 5 years. e.g. If you will use 10% more compute in year 2 enter 10%</span>
-        {/* </>
-      )} */}
-      
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <button onClick={handleSave} className="save-button">Save Settings</button>
+          <p className="table-hint">
+            Enter your Average Annual Growth over 5 years. e.g. If you will use 10% more compute in year 2 enter 10%
+          </p>
+        </div>
+      </section>
+
+      <div className="settings-footer">
+        <button onClick={handleSave} className="save-button">
+          Save Settings
+        </button>
         {statusMessage && (
-          <span style={{ color: statusMessage.includes('successfully') ? 'green' : 'red', marginLeft: '10px' }}>
+          <span className={`status-message ${statusMessage.includes('successfully') ? 'success' : 'error'}`}>
             {statusMessage}
           </span>
         )}

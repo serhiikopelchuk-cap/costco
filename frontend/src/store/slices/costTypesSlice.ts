@@ -12,6 +12,7 @@ import { setCategoryId } from './selectionSlice';
 import { createProgram } from '../../services/programService';
 import { fetchProjectById } from '../../services/projectService';
 import { fetchProgramById } from '../../services/programService';
+import { createProject } from '../../services/projectService';
 
 interface CostTypesState {
   item: CostType | null;
@@ -50,14 +51,10 @@ const programsToCostType = (programs: Program[], costTypeId: number, alias: stri
       projects: program.projects.map(project => ({
         ...project,
         categories: project.categories.filter(category => 
-          category.costType?.id === costTypeId
+          !category.costType || category.costType?.id === costTypeId
         )
       }))
-    })).filter(program => 
-      program.projects.some(project => 
-        project.categories.length > 0
-      )
-    )
+    }))
   };
 };
 
@@ -233,8 +230,8 @@ export const fetchCategoryAsync = createAsyncThunk(
 
 export const createProgramAsync = createAsyncThunk(
   'costTypes/createProgram',
-  async ({ program, costTypeId }: { program: Partial<Program>; costTypeId: number }) => {
-    const response = await createProgram(program, costTypeId);
+  async ({ program }: { program: Partial<Program> }) => {
+    const response = await createProgram(program);
     return response;
   }
 );
@@ -267,7 +264,7 @@ export const updateProgramNameAsync = createAsyncThunk(
   'costTypes/updateProgramName',
   async ({ programId, name }: { programId: number; name: string }) => {
     const response = await updateProgramService(programId, { name });
-    return { programId, name };
+    return { id: programId, name };
   }
 );
 
@@ -325,6 +322,14 @@ export const fetchCostTypeByAliasAsync = createAsyncThunk(
         })).filter(project => project.categories.length > 0)
       })).filter(program => program.projects.length > 0)
     };
+  }
+);
+
+export const createProjectAsync = createAsyncThunk(
+  'costTypes/createProject',
+  async ({ programId, project }: { programId: number; project: Partial<Project> }) => {
+    const response = await createProject(programId, project);
+    return { project: response, programId };
   }
 );
 
@@ -408,6 +413,47 @@ const costTypesSlice = createSlice({
         state.item.programs = action.payload;
       }
     },
+    deleteProgramAction: (state, action: PayloadAction<number>) => {
+      const programId = action.payload;
+      
+      // Remove from allPrograms
+      state.allPrograms = state.allPrograms.filter(p => p.id !== programId);
+      
+      // Remove from all cost type structures
+      [state.directCosts, state.indirectCosts, state.item].forEach(costType => {
+        if (!costType) return;
+        
+        // Filter out the deleted program
+        costType.programs = costType.programs.filter(p => p.id !== programId);
+      });
+    },
+    deleteProjectAction: (state, action: PayloadAction<{ programId: number; projectId: number }>) => {
+      const { programId, projectId } = action.payload;
+      
+      // First update allPrograms
+      const programInAll = state.allPrograms.find(p => p.id === programId);
+      if (programInAll) {
+        programInAll.projects = programInAll.projects.filter(p => p.id !== projectId);
+      }
+
+      // Helper function to update program projects
+      const updateProgramProjects = (program: Program | undefined) => {
+        if (program) {
+          program.projects = program.projects.filter(p => p.id !== projectId);
+        }
+      };
+
+      // Update all structures
+      if (state.directCosts) {
+        updateProgramProjects(state.directCosts.programs.find(p => p.id === programId));
+      }
+      if (state.indirectCosts) {
+        updateProgramProjects(state.indirectCosts.programs.find(p => p.id === programId));
+      }
+      if (state.item) {
+        updateProgramProjects(state.item.programs.find(p => p.id === programId));
+      }
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -424,8 +470,12 @@ const costTypesSlice = createSlice({
         // Create indirect costs structure
         state.indirectCosts = programsToCostType(action.payload, 2, 'indirect_costs');
         
-        // Set default item (direct costs)
-        state.item = state.directCosts;
+        // Update current item based on what's currently selected
+        if (!state.item || state.item.alias === 'direct_costs') {
+          state.item = state.directCosts;
+        } else if (state.item.alias === 'indirect_costs') {
+          state.item = state.indirectCosts;
+        }
       })
       .addCase(fetchProgramsAsync.rejected, (state, action) => {
         state.status = 'failed';
@@ -560,9 +610,14 @@ const costTypesSlice = createSlice({
         });
       })
       .addCase(createProgramAsync.fulfilled, (state, action) => {
-        const costType = state.item;
-        if (costType) {
-          costType.programs.push(action.payload);
+        // Add the new program to allPrograms if it's not there already
+        if (!state.allPrograms.find(p => p.id === action.payload.id)) {
+          state.allPrograms.push(action.payload);
+        }
+        
+        // Add to item.programs if item exists and program isn't there
+        if (state.item && !state.item.programs.find(p => p.id === action.payload.id)) {
+          state.item.programs.push(action.payload);
         }
       })
       .addCase(fetchProjectAsync.fulfilled, (state, action) => {
@@ -609,19 +664,39 @@ const costTypesSlice = createSlice({
         });
       })
       .addCase(updateProgramNameAsync.fulfilled, (state, action) => {
-        const { programId, name } = action.payload;
-        const program = state.item?.programs.find(p => p.id === programId);
-        if (program) {
-          program.name = name;
+        console.log('updateProgramNameAsync.fulfilled:', action.payload);
+        
+        if (state.item) {
+          const program = state.item.programs.find(p => p.id === action.payload.id);
+          if (program) {
+            console.log('Updating program name:', {
+              oldName: program.name,
+              newName: action.payload.name
+            });
+            program.name = action.payload.name;
+          }
         }
       })
       .addCase(updateProjectNameAsync.fulfilled, (state, action) => {
+        console.log('updateProjectNameAsync.fulfilled:', action.payload);
+        
         const { projectId, programId, name } = action.payload;
-        const program = state.item?.programs.find(p => p.id === programId);
-        const project = program?.projects.find(p => p.id === projectId);
-        if (project) {
-          project.name = name;
-        }
+        
+        [state.directCosts, state.indirectCosts, state.item].forEach(costType => {
+          if (!costType) return;
+          
+          const program = costType.programs.find(p => p.id === programId);
+          if (!program) return;
+
+          const project = program.projects.find(p => p.id === projectId);
+          if (project) {
+            console.log('Updating project name:', {
+              oldName: project.name,
+              newName: name
+            });
+            project.name = name;
+          }
+        });
       })
       .addCase(updateProjectSettingsAsync.fulfilled, (state, action) => {
         // Handle the update in the state if necessary
@@ -634,17 +709,44 @@ const costTypesSlice = createSlice({
         }
       })
       .addCase(fetchCostTypeByAliasAsync.fulfilled, (state, action) => {
+        console.log('fetchCostTypeByAliasAsync.fulfilled:', {
+          payload: action.payload,
+          currentState: state
+        });
+        
         if (action.meta.arg === 'direct_costs') {
           state.directCosts = action.payload;
           state.item = action.payload;
         } else if (action.meta.arg === 'indirect_costs') {
           state.indirectCosts = action.payload;
+          state.item = action.payload;
         }
+      })
+      .addCase(createProjectAsync.fulfilled, (state, action) => {
+        const { project, programId } = action.payload;
+        
+        // Add to all relevant structures
+        [state.directCosts, state.indirectCosts, state.item].forEach(costType => {
+          if (!costType) return;
+          
+          const program = costType.programs.find(p => p.id === programId);
+          if (!program) return;
+
+          program.projects.push(project);
+        });
       });
   },
 });
 
-export const { updateLineItemInCostType, updateCategory, updateProgram, updateProject, updatePrograms } = costTypesSlice.actions;
+export const { 
+  updateLineItemInCostType, 
+  updateCategory, 
+  updateProgram, 
+  updateProject, 
+  updatePrograms, 
+  deleteProjectAction,
+  deleteProgramAction 
+} = costTypesSlice.actions;
 export default costTypesSlice.reducer;
 
 export const selectCategories = (selectedProgramId: number | null, selectedProjectId: number | null) =>

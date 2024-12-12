@@ -47,8 +47,8 @@ export const createProjectAsync = createAsyncThunk(
 
 export const createProgramAsync = createAsyncThunk(
   'programs/createProgram',
-  async ({ program, costTypeId }: { program: Partial<Program>; costTypeId: number }) => {
-    const response = await createProgram(program, costTypeId);
+  async ({ program }: { program: Partial<Program> }) => {
+    const response = await createProgram(program);
     return response;
   }
 );

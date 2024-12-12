@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-interface UiState {
+export interface UiState {
   search: {
     program: string;
     project: string;
@@ -14,9 +14,11 @@ interface UiState {
     lineItem: boolean;
   };
   details: {
-    type: string | null;
-    name: string;
+    type: string;
     id: number;
+    name: string;
+    activeTab?: 'settings' | 'summary';
+    isPinned?: boolean;
   } | null;
   currentPage: 'direct_costs' | 'indirect_costs' | null;
 }
@@ -54,8 +56,18 @@ const uiSlice = createSlice({
     ) => {
       state.addInputVisibility[action.payload.type] = action.payload.value;
     },
-    setDetails: (state, action: PayloadAction<UiState['details']>) => {
-      state.details = action.payload;
+    setDetails: (state, action: PayloadAction<{
+      type: string;
+      id: number;
+      name: string;
+      activeTab?: 'settings' | 'summary';
+      isPinned?: boolean;
+    } | null>) => {
+      if (action.payload === null && !state.details?.isPinned) {
+        state.details = null;
+      } else if (action.payload !== null) {
+        state.details = action.payload;
+      }
     },
     resetUi: (state) => {
       return initialState;
@@ -63,6 +75,11 @@ const uiSlice = createSlice({
     setCurrentPage: (state, action: PayloadAction<'direct_costs' | 'indirect_costs'>) => {
       state.currentPage = action.payload;
     },
+    unpinDetails: (state) => {
+      if (state.details) {
+        state.details.isPinned = false;
+      }
+    }
   },
 });
 
@@ -72,6 +89,7 @@ export const {
   setDetails,
   resetUi,
   setCurrentPage,
+  unpinDetails
 } = uiSlice.actions;
 
 export default uiSlice.reducer; 

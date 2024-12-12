@@ -7,9 +7,10 @@ import CloudProviderList from './CloudProviderList';
 import LineItemList from './LineItemList';
 import CategoryList from './CategoryList';
 import DetailsColumn from './DetailsColumn';
+import MiniProgramList from './MiniProgramList';
+import MiniProjectList from './MiniProjectList';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
-import { setCategoryId, setLineItems, setProvider } from '../../store/slices/selectionSlice';
-import { setDetails } from '../../store/slices/uiSlice';
+import { setLineItems, setProvider } from '../../store/slices/selectionSlice';
 import { fetchProgramByIdAsync } from '../../store/slices/programsSlice';
 import { selectCategoriesFromPrograms } from '../../store/slices/programsSlice';
 
@@ -34,25 +35,26 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
     search: { lineItem: lineItemSearch },
     addInputVisibility: { lineItem: showAddLineItemInput },
     details,
-  } = useAppSelector(state => state.ui);
+  } = useAppSelector(state => {
+    return state.ui;
+  });
 
-  const selectedProjectCategories = useAppSelector(state => selectCategoriesFromPrograms(selectedProgramId, selectedProjectId)(state));
+  // Get categories from the current project
+  const categories = useAppSelector(state => {
+    if (!selectedProgramId || !selectedProjectId) return [];
+    
+    const program = state.costTypes.item?.programs.find(p => p.id === selectedProgramId);
+    const project = program?.projects.find(p => p.id === selectedProjectId);
+    return project?.categories || [];
+  });
+
+  const selectedProgram = data.find(program => program.id === selectedProgramId);
 
   useEffect(() => {
     if (selectedProgramId) {
       dispatch(fetchProgramByIdAsync(selectedProgramId));
     }
   }, [dispatch, selectedProgramId]);
-
-  const handleCategoryToggle = (categoryId: number) => {
-    if (selectedCategoryId === categoryId) {
-      dispatch(setCategoryId(null));
-    } else {
-      dispatch(setCategoryId(categoryId));
-      dispatch(setDetails(null)); // Clear details when a category is selected
-      dispatch(setLineItems([]));
-    }
-  };
 
   const handleLineItemToggle = (lineItem: Item) => {
     const isSelected = selectedLineItems.some(item => item.id === lineItem.id);
@@ -70,28 +72,45 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
     dispatch(setLineItems(newSelectedItems));
   };
 
-  const lineItems = selectedProjectCategories
+  const lineItems = categories
     .find(category => category.id === selectedCategoryId)
     ?.items || [];
 
   return (
     <div className="outline-view">
-      <ProgramList />
-      <ProjectList />
-      <CloudProviderList />
-      <CategoryList />
-      {selectedCategoryId && !details && (
-        <LineItemList
-          onLineItemToggle={handleLineItemToggle}
-          onAddLineItem={(name: string) => console.log('Adding line item:', name)}
-          lineItemSearch={lineItemSearch}
-          showAddLineItemInput={showAddLineItemInput}
-          selectedCategoryId={selectedCategoryId}
-          selectedProgramId={selectedProgramId}
-          selectedProjectId={selectedProjectId}
-        />
+      {!selectedCategoryId ? (
+        <ProgramList />
+      ) : (
+        <div className="left-column-container">
+          <div className="mini-columns-container">
+            <MiniProgramList 
+              programs={data} 
+              selectedProgramId={selectedProgramId} 
+            />
+            {selectedProgramId && (
+              <MiniProjectList 
+                projects={selectedProgram?.projects || []} 
+                selectedProjectId={selectedProjectId} 
+              />
+            )}
+          </div>
+          <CloudProviderList />
+        </div>
       )}
-      <DetailsColumn
+
+      {selectedProgramId && !selectedCategoryId && <ProjectList />}
+      {selectedProgramId && !selectedCategoryId && <CloudProviderList />}
+      <CategoryList />
+      {selectedCategoryId && <LineItemList
+        onLineItemToggle={handleLineItemToggle}
+        onAddLineItem={(name: string) => console.log('Adding line item:', name)}
+        lineItemSearch={lineItemSearch}
+        showAddLineItemInput={showAddLineItemInput}
+        selectedCategoryId={selectedCategoryId}
+        selectedProgramId={selectedProgramId}
+        selectedProjectId={selectedProjectId}
+      />}
+      {(selectedCategoryId || details) && <DetailsColumn
         selectedCategoryId={selectedCategoryId}
         selectedLineItems={selectedLineItems}
         lineItems={lineItems}
@@ -105,13 +124,13 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
         selectedProgramId={selectedProgramId}
         selectedProjectId={selectedProjectId}
         detailsData={Object.fromEntries(
-          selectedProjectCategories.map((category: Category) => [
+          categories.map((category: Category) => [
             category.name,
             category.items
           ])
         )}
         cloudProviders={['azure', 'gcp']}
-      />
+      />}
     </div>
   );
 };

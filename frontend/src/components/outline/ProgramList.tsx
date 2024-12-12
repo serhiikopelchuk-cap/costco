@@ -1,14 +1,17 @@
 import React from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
-import { createProgramAsync } from '../../store/slices/costTypesSlice';
-import { setProgramId, updateSelections } from '../../store/slices/selectionSlice';
-import { setSearch, setAddInputVisibility, setDetails } from '../../store/slices/uiSlice';
+import { createProgramAsync, fetchProgramsAsync } from '../../store/slices/costTypesSlice';
+import { updateSelections } from '../../store/slices/selectionSlice';
+import { setSearch, setAddInputVisibility, setDetails, unpinDetails } from '../../store/slices/uiSlice';
 import GenericList from '../common/GenericList';
 import { Program } from '../../types/program';
 
 const ProgramList: React.FC = () => {
   const dispatch = useAppDispatch();
-  const programs = useAppSelector(state => state.costTypes.item?.programs || state.costTypes.allPrograms || []);
+  const programs = useAppSelector(state => {
+    console.log('ProgramList selector:', state.costTypes.item?.programs);
+    return state.costTypes.item?.programs || [];
+  });
   // console.log('programs:', programs);
   // Selection state from Redux
   const selectedProgramId = useAppSelector(state => state.selection.selectedProgramId);
@@ -16,40 +19,80 @@ const ProgramList: React.FC = () => {
   // UI state from Redux
   const showAddProgramInput = useAppSelector(state => state.ui.addInputVisibility.program);
   const programSearch = useAppSelector(state => state.ui.search.program);
+  const details = useAppSelector(state => state.ui.details);
 
   const handleProgramToggle = (programId: number) => {
-    if (selectedProgramId === programId) {
-      dispatch(updateSelections({ programId: null }));
-    } else {
-      const program = programs.find(p => p.id === programId);
-      if (program) {
-        dispatch(updateSelections({
-          programId,
-          projectId: program.projects.length > 0 ? program.projects[0].id : null,
-          categoryId: null,
-          lineItems: []
-        }));
+    console.log('handleProgramToggle called with:', programId);
+    const program = programs.find(p => p.id === programId);
+    if (program) {
+      // Only clear details if they're not pinned
+      if (!details?.isPinned) {
+        dispatch(setDetails(null));
       }
+      
+      dispatch(updateSelections({
+        selectedProgramId: programId,
+        selectedProjectId: program.projects.length > 0 ? program.projects[0].id : null,
+        selectedCategoryId: null,
+        selectedLineItems: []
+      }));
     }
   };
 
   const handleDetailsClick = (type: string, id: number) => {
-    dispatch(setDetails({ type, id, name: programs.find(p => p.id === id)?.name || '' }));
+    console.log('handleDetailsClick called with:', { type, id });
+    const program = programs.find(p => p.id === id);
+    if (!program) return;
+
+    // When clicking details of another program, unpin current details first
+    dispatch(unpinDetails());
+    
+    dispatch(updateSelections({
+      selectedProgramId: id,
+      selectedProjectId: null,
+      selectedCategoryId: null,
+      selectedLineItems: []
+    }));
+    
+    dispatch(setDetails({ 
+      type, 
+      id, 
+      name: program.name,
+      isPinned: false
+    }));
   };
 
-  const handleAddProgram = (programName: string) => {
-    // const costTypeId = useAppSelector(state => state.costTypes.item?.id);
-    // if (!costTypeId) return;
+  const handleAddProgram = async (programName: string) => {
+    console.log('handleAddProgram called with:', programName);
+    const newProgram: Partial<Program> = { 
+      name: programName, 
+      projects: [] 
+    };
 
-    // const newProgram: Partial<Program> = { name: programName, projects: [] };
-    // dispatch(createProgramAsync({ program: newProgram, costTypeId }))
-    //   .unwrap()
-    //   .then((createdProgram: Program) => {
-    //     dispatch(setProgramId(createdProgram.id));
-    //   })
-    //   .catch((error: any) => {
-    //     console.error('Failed to create program:', error);
-    //   });
+    try {
+      // Create new program and store its ID
+      const createdProgram = await dispatch(createProgramAsync({ program: newProgram })).unwrap();
+      const newProgramId = createdProgram.id;
+      
+      // First select the new program
+      dispatch(updateSelections({
+        selectedProgramId: newProgramId,
+        selectedProjectId: null,
+        selectedCategoryId: null,
+        selectedLineItems: []
+      }));
+
+      // Set pinned details
+      dispatch(setDetails({ 
+        type: 'program', 
+        id: newProgramId, 
+        name: programName,
+        activeTab: 'settings' as const,
+        isPinned: true
+      }));
+    } catch (error) {
+      console.error('Failed to create program:', error);
+    }
   };
 
   return (

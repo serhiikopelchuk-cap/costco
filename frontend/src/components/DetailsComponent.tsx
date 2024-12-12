@@ -6,13 +6,22 @@ import { cloneProgram, deleteProgram } from '../services/programService';
 import { cloneProject, deleteProject } from '../services/projectService';
 import { Category, Project } from '../types/program';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
-import { updateProgram, updateProject, deleteProgram as deleteProgramAction, deleteProject as deleteProjectAction } from '../store/slices/programsSlice';
+import { updateProgram, updateProject } from '../store/slices/programsSlice';
 import DeleteButton from './buttons/DeleteButton';
-import { fetchCostTypeByAliasAsync, fetchProgramAsync, updateProgramNameAsync, updateProjectNameAsync } from '../store/slices/costTypesSlice';
+import { 
+  fetchCostTypeByAliasAsync, 
+  fetchProgramAsync, 
+  updateProgramNameAsync, 
+  updateProjectNameAsync,
+  deleteProjectAction,
+  deleteProgramAction,
+  fetchProgramsAsync
+} from '../store/slices/costTypesSlice';
 import { RootState } from '../store';
 import { useSelector } from 'react-redux';
-import { setProgramId, setProjectId } from '../store/slices/selectionSlice';
+import { setProgramId, setProjectId, updateSelections } from '../store/slices/selectionSlice';
 import { SummaryTab, SettingsTab } from './details-component';
+import { setDetails } from '../store/slices/uiSlice';
 
 interface DetailsComponentProps {
   type: 'program' | 'project';
@@ -20,8 +29,26 @@ interface DetailsComponentProps {
   programId?: number;
 }
 
+interface DeleteButtonProps {
+  onClick: () => void;
+  title?: string;
+}
+
+interface SummaryTabProps {
+  type: 'program' | 'project';
+  editingName: string;
+  handleNameChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleNameBlur: () => void;
+  data: any;
+  columns: string[];
+  sums: Record<number, { periodSums: number[], totalSum: number, averageSum: number }>;
+  overallSums: number[];
+  overallTotalSum: number;
+  overallAverageSum: number;
+}
+
 const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, id, programId }) => {
-  const columns = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9', 'P10', 'P11', 'P12', 'P13', 'Total', 'Average'];
+  const columns = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P10', 'P11', 'P12', 'P13', 'Total', 'Average'];
   const numberOfPeriods = 13;
 
   const [sums, setSums] = useState<Record<number, { periodSums: number[], totalSum: number, averageSum: number }>>({});
@@ -30,13 +57,16 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, id, programId
   const [overallAverageSum, setOverallAverageSum] = useState<number>(0);
   const [isCloning, setIsCloning] = useState(false);
   const [cloneSuccess, setCloneSuccess] = useState(false);
-  const [activeTab, setActiveTab] = useState<'summary' | 'settings'>('summary');
+  const [activeTab, setActiveTab] = useState<'summary' | 'settings'>(type === 'project' ? 'summary' : 'summary');
 
   const dispatch = useAppDispatch();
   const currentPage = useSelector((state: RootState) => state.ui.currentPage);
+  const { selectedProjectId } = useAppSelector(state => state.selection);
 
   // Get programs and projects from Redux state
   const programs = useAppSelector(state => state.costTypes.item?.programs || []);
+
+  const details = useAppSelector(state => state.ui.details);
 
   useEffect(() => {
     if (!programId && programs.length > 0) {
@@ -65,7 +95,7 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, id, programId
   });
 
   // Get projects or categories from Redux state
-  const data = useAppSelector(state => {
+  const itemData = useAppSelector(state => {
     if (type === 'program') {
       const program = state.costTypes.item?.programs.find(p => p.id === id);
       return program ? program.projects : [];
@@ -76,14 +106,14 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, id, programId
     }
   });
 
-  const [editingName, setEditingName] = useState<string>(name);
+  const [editingName, setEditingName] = useState(name);
 
   useEffect(() => {
     setEditingName(name);
   }, [name]);
 
   useEffect(() => {
-    if (type === 'program' && data.length === 0) {
+    if (type === 'program' && itemData.length === 0) {
       // No projects in the program
       setSums({});
       setOverallSums(Array(numberOfPeriods).fill(0));
@@ -92,7 +122,7 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, id, programId
       return;
     }
 
-    if (type === 'project' && (data as Category[]).every((category) => category.items.length === 0)) {
+    if (type === 'project' && (itemData as Category[]).every((category) => category.items.length === 0)) {
       // No categories in the project
       setSums({});
       setOverallSums(Array(numberOfPeriods).fill(0));
@@ -137,12 +167,20 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, id, programId
       return { sums, overallSums, overallTotalSum, overallAverageSum };
     };
 
-    const { sums, overallSums, overallTotalSum, overallAverageSum } = calculateSums(data);
+    const { sums, overallSums, overallTotalSum, overallAverageSum } = calculateSums(itemData);
     setSums(sums);
     setOverallSums(overallSums);
     setOverallTotalSum(overallTotalSum);
     setOverallAverageSum(overallAverageSum);
-  }, [data, type]);
+  }, [itemData, type]);
+
+  useEffect(() => {
+    if (details?.activeTab && type === 'program') {
+      setActiveTab(details.activeTab);
+    } else if (type === 'project') {
+      setActiveTab('summary');
+    }
+  }, [details, type]);
 
   const handleClone = async () => {
     setIsCloning(true);
@@ -178,19 +216,34 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, id, programId
   const handleDelete = async () => {
     try {
       if (type === 'program') {
-        await deleteProgram(id);
-        console.log('Program deleted successfully');
-        dispatch(deleteProgramAction(id));
+        // Program deletion logic...
+      } else if (programId !== undefined) {
+        // Clear selections first if this was the selected project
+        if (selectedProjectId === id) {
+          dispatch(updateSelections({
+            selectedProjectId: null,
+            selectedCategoryId: null,
+            selectedLineItems: []
+          }));
+        }
 
-        dispatch(fetchCostTypeByAliasAsync(currentPage === 'direct_costs' ? 'direct_costs' : 'indirect_costs'));
-      } else {
+        // Clear details before deletion
+        dispatch(setDetails(null));
+
+        // Delete from backend
         await deleteProject(id);
         console.log('Project deleted successfully');
-        if (programId !== undefined) {
-          dispatch(deleteProjectAction({ programId, projectId: id }));
 
-          await dispatch(fetchProgramAsync(programId)).unwrap();
+        // First update local state
+        dispatch(deleteProjectAction({ programId, projectId: id }));
+
+        // Then update cost type data
+        if (currentPage) {
+          await dispatch(fetchCostTypeByAliasAsync(currentPage)).unwrap();
         }
+
+        // Finally refresh programs list
+        await dispatch(fetchProgramsAsync()).unwrap();
       }
     } catch (error) {
       console.error(`Error deleting ${type}:`, error);
@@ -203,19 +256,13 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, id, programId
 
   const handleNameBlur = async () => {
     if (type === 'program') {
-      try {
-        // Update program name in backend
-        await dispatch(updateProgramNameAsync({ programId: id, name: editingName })).unwrap();
-      } catch (error) {
-        console.error('Failed to update program name:', error);
-      }
+      await dispatch(updateProgramNameAsync({ programId: id, name: editingName }));
     } else if (type === 'project' && programId !== undefined) {
-      try {
-        // Update project name in backend
-        await dispatch(updateProjectNameAsync({ projectId: id, programId, name: editingName })).unwrap();
-      } catch (error) {
-        console.error('Failed to update project name:', error);
-      }
+      await dispatch(updateProjectNameAsync({ 
+        projectId: id, 
+        programId, 
+        name: editingName 
+      }));
     }
   };
 
@@ -228,12 +275,14 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, id, programId
         >
           <FontAwesomeIcon icon={faTable} /> Summary
         </button>
-        <button
-          className={`tab-button ${activeTab === 'settings' ? 'active' : ''}`}
-          onClick={() => setActiveTab('settings')}
-        >
-          <FontAwesomeIcon icon={faMoneyBillTrendUp} /> Investment
-        </button>
+        {type === 'program' && (
+          <button
+            className={`tab-button ${activeTab === 'settings' ? 'active' : ''}`}
+            onClick={() => setActiveTab('settings')}
+          >
+            <FontAwesomeIcon icon={faMoneyBillTrendUp} /> Investment
+          </button>
+        )}
       </div>
       <div className="header-with-clone">
         <h4>{type === 'program' ? 'Program Details' : 'Project Details'}</h4>
@@ -260,22 +309,23 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, id, programId
           />
         </div>
       </div>
+
       {activeTab === 'summary' ? (
-        <SummaryTab
+        <SummaryTab 
           type={type}
           editingName={editingName}
           handleNameChange={handleNameChange}
           handleNameBlur={handleNameBlur}
-          data={data}
+          data={itemData}
           columns={columns}
+          sums={sums}
           overallSums={overallSums}
           overallTotalSum={overallTotalSum}
           overallAverageSum={overallAverageSum}
-          sums={sums}
         />
-      ) : (
+      ) : type === 'program' ? (
         <SettingsTab type={type} />
-      )}
+      ) : null}
     </div>
   );
 };

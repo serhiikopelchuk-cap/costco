@@ -37,9 +37,9 @@
   transition: background-color 0.2s ease;
 }
 
-/* .column div:hover {
+.column div:hover {
   background-color: #e0e0e0;
-} */
+}
 
 .column div.selected {
   background-color: #d0e6ff;
@@ -70,11 +70,9 @@
 }
 
 .column.minified div {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  word-wrap: break-word;
   padding: 5px;
-  /* width: 100%; */
 } 
 
 .search-input {
@@ -203,4 +201,28 @@
   font-weight: normal;
   border: none;
   color: inherit;
+}
+
+/* Adjust mini columns container */
+.mini-columns-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* Make mini columns same width as CloudProviderList */
+.mini-columns-container .column.minified {
+  flex: 1.2;
+  max-width: 160px;
+  width: 100%;
+}
+
+.left-column-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px; 
+}
+
+.left-column-container .mini-columns-container {
+  margin: 0; 
 }

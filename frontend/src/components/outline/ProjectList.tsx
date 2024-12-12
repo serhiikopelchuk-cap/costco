@@ -1,8 +1,8 @@
 import React from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
-import { createProjectAsync } from '../../store/slices/programsSlice';
-import { setProjectId, clearCategoryId } from '../../store/slices/selectionSlice';
-import { setSearch, setAddInputVisibility, setDetails } from '../../store/slices/uiSlice';
+import { createProjectAsync } from '../../store/slices/costTypesSlice';
+import { updateSelections } from '../../store/slices/selectionSlice';
+import { setSearch, setAddInputVisibility, setDetails, unpinDetails } from '../../store/slices/uiSlice';
 import GenericList from '../common/GenericList';
 import { Project } from '../../types/program';
 
@@ -10,32 +10,81 @@ const ProjectList: React.FC = () => {
   const dispatch = useAppDispatch();
   const selectedProjectId = useAppSelector(state => state.selection.selectedProjectId);
   const selectedProgramId = useAppSelector(state => state.selection.selectedProgramId);
+  
+  // Get projects from the current cost type and selected program
   const projects = useAppSelector(state => {
-    const selectedProgram = state.costTypes.item?.programs.find(p => p.id === selectedProgramId);
-    return selectedProgram ? selectedProgram.projects : [];
+    if (!selectedProgramId) return [];
+    
+    // First try to get from current item
+    const program = state.costTypes.item?.programs.find(p => p.id === selectedProgramId);
+    if (program) return program.projects;
+    
+    // If not found in current item, try allPrograms
+    const allProgram = state.costTypes.allPrograms.find(p => p.id === selectedProgramId);
+    return allProgram ? allProgram.projects : [];
   });
 
   // UI state from Redux
   const showAddProjectInput = useAppSelector(state => state.ui.addInputVisibility.project);
   const projectSearch = useAppSelector(state => state.ui.search.project);
+  const details = useAppSelector(state => state.ui.details);
 
   const handleProjectToggle = (projectId: number) => {
-    if (selectedProjectId === projectId) {
-      dispatch(setProjectId(null));
-    } else {
-      dispatch(setProjectId(projectId));
+    // Only clear details if they're not pinned
+    if (!details?.isPinned) {
+      dispatch(setDetails(null));
     }
+
+    dispatch(updateSelections({
+      selectedProjectId: projectId,
+      selectedCategoryId: null,
+      selectedLineItems: []
+    }));
   };
 
   const handleDetailsClick = (type: string, id: number) => {
-    dispatch(setDetails({ type, id, name: projects.find(p => p.id === id)?.name || '' }));
-    dispatch(clearCategoryId());
+    // Unpin any pinned details when viewing details of another item
+    dispatch(unpinDetails());
+    
+    dispatch(updateSelections({ 
+      selectedProjectId: id,
+      selectedCategoryId: null,
+      selectedLineItems: []
+    }));
+    
+    dispatch(setDetails({ 
+      type, 
+      id, 
+      name: projects.find(p => p.id === id)?.name || '',
+      activeTab: 'settings' as const,
+      isPinned: false
+    }));
   };
 
-  const handleAddProject = (projectName: string) => {
+  const handleAddProject = async (projectName: string) => {
     if (selectedProgramId !== null) {
-      const newProject: Partial<Project> = { name: projectName, categories: [] };
-      dispatch(createProjectAsync({ programId: selectedProgramId, project: newProject })).unwrap();
+      try {
+        const newProject: Partial<Project> = { 
+          name: projectName, 
+          categories: [] 
+        };
+
+        // Create new project
+        const result = await dispatch(createProjectAsync({ 
+          programId: selectedProgramId, 
+          project: newProject 
+        })).unwrap();
+
+        // Select the new project
+        dispatch(updateSelections({
+          selectedProjectId: result.project.id,
+          selectedCategoryId: null,
+          selectedLineItems: []
+        }));
+
+      } catch (error) {
+        console.error('Failed to create project:', error);
+      }
     }
   };
 

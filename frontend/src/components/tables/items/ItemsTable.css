@@ -1,4 +1,4 @@
-.column div:hover {
+.column div.input-container:hover {
   background-color: unset !important;
 }
 

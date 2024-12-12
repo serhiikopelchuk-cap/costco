@@ -1,21 +1,51 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { RootState } from '../store';
-import { Program, Project, CostType } from '../types/program';
+import { RootState } from './index';
 
+// Создаем базовые селекторы для получения данных из state
+const selectSelection = (state: RootState) => state.selection;
+const selectCostType = (state: RootState) => state.costTypes.item;
+
+// Мемоизированный селектор для категорий
 export const selectCategories = createSelector(
-  (state: RootState) => state.costTypes.item,
-  (state: RootState) => state.selection.selectedProgramId,
-  (state: RootState) => state.selection.selectedProjectId,
-  (costType: CostType | null, selectedProgramId: number | null, selectedProjectId: number | null) => {
-    if (!costType) return [];
-    const program = costType.programs.find((p: Program) => p.id === selectedProgramId);
-    const project = program?.projects.find((p: Project) => p.id === selectedProjectId);
-    return project?.categories || [];
+  [selectSelection, selectCostType],
+  (selection, costType) => {
+    const { selectedProgramId, selectedProjectId, selectedCostType, selectedCloudProviders } = selection;
+
+    if (!selectedProgramId || !selectedProjectId || !costType) {
+      return [];
+    }
+
+    const program = costType.programs.find(p => p.id === selectedProgramId);
+    if (!program) return [];
+
+    const project = program.projects.find(p => p.id === selectedProjectId);
+    if (!project) return [];
+
+    let categories = project.categories || [];
+
+    // Filter by cost type only if it's set
+    if (selectedCostType) {
+      categories = categories.filter(category => 
+        !category.costType || category.costType?.alias === selectedCostType
+      );
+    }
+
+    // If no cloud providers selected, return all categories filtered by cost type
+    if (selectedCloudProviders.length === 0) {
+      return categories;
+    }
+
+    // If cloud providers are selected, show only categories with these providers
+    return categories.filter(category => {
+      return category.cloudProviders?.some(provider => 
+        selectedCloudProviders.includes(provider.name)
+      );
+    });
   }
 );
 
 export const selectCloudProvidersForProject = createSelector(
-  selectCategories,
+  [selectCategories],
   (categories) => {
     const providersSet = new Set<string>();
     categories.forEach(category => {
