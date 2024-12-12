@@ -299,28 +299,19 @@ export const selectProjectById = (state: RootState, projectId: number) => {
 
 export const fetchCostTypeByAliasAsync = createAsyncThunk(
   'costTypes/fetchCostTypeByAlias',
-  async (alias: string, { dispatch, getState }) => {
+  async (alias: string, { dispatch }) => {
     // First fetch all programs
     const response = await fetchPrograms();
     
     // Then update programs in state
     await dispatch(fetchProgramsAsync());
     
-    // Return programs filtered by cost type
-    const costTypeId = alias === 'direct_costs' ? 1 : 2;
+    // Return all programs without filtering
     return {
-      id: costTypeId,
+      id: alias === 'direct_costs' ? 1 : 2,
       name: alias,
       alias: alias,
-      programs: response.map(program => ({
-        ...program,
-        projects: program.projects.map(project => ({
-          ...project,
-          categories: project.categories.filter(category => 
-            category.costType?.id === costTypeId
-          )
-        })).filter(project => project.categories.length > 0)
-      })).filter(program => program.projects.length > 0)
+      programs: response
     };
   }
 );

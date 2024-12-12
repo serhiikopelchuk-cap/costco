@@ -45,12 +45,20 @@ export const selectCategories = createSelector(
 );
 
 export const selectCloudProvidersForProject = createSelector(
-  [selectCategories],
-  (categories) => {
+  [(state: RootState) => state.costTypes.item?.programs || []],
+  (programs) => {
     const providersSet = new Set<string>();
-    categories.forEach(category => {
-      category.cloudProviders?.forEach(provider => providersSet.add(provider.name));
+    
+    programs.forEach(program => {
+      program.projects.forEach(project => {
+        project.categories.forEach(category => {
+          category.cloudProviders?.forEach(provider => {
+            providersSet.add(provider.name);
+          });
+        });
+      });
     });
+
     return Array.from(providersSet);
   }
 );

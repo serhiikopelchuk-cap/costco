@@ -5,7 +5,7 @@ import { RootState } from '../store';
 const IndirectCost: React.FC = () => {
   return (
     <CostTypePage 
-      // costTypeSelector={(state: RootState) => state.costTypes}
+      currentPage="indirect_costs"
     />
   );
 };

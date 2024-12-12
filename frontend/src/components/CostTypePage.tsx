@@ -1,19 +1,29 @@
 import React, { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
-import { fetchCostTypeByAliasAsync, fetchProgramsAsync } from '../store/slices/costTypesSlice';
+import { fetchCostTypeByAliasAsync } from '../store/slices/costTypesSlice';
 import { updateSelections, setCostType } from '../store/slices/selectionSlice';
-import { setCurrentPage, setDetails, UiState } from '../store/slices/uiSlice';
 import Outline from './outline/Outline';
-// import './CostTypePage.css';
 
-type CostTypeAlias = 'direct_costs' | 'indirect_costs';
+interface CostTypePageProps {
+  currentPage: 'direct_costs' | 'indirect_costs';
+}
 
-const CostTypePage: React.FC = () => {
+const CostTypePage: React.FC<CostTypePageProps> = ({ currentPage }) => {
   const dispatch = useAppDispatch();
-  const currentPage = useAppSelector(state => state.ui.currentPage);
-  const { selectedProgramId, selectedProjectId, selectedCategoryId } = useAppSelector(state => state.selection);
-  const details = useAppSelector<UiState['details']>(state => state.ui.details);
-  const programs = useAppSelector(state => state.costTypes.item?.programs || []);
+  const programs = useAppSelector(state => {
+    const costTypeId = currentPage === 'direct_costs' ? 1 : 2;
+    return state.costTypes.item?.programs.map(program => ({
+      ...program,
+      projects: program.projects.map(project => ({
+        ...project,
+        categories: project.categories.filter(category => 
+          !category.costType || 
+          !category.cloudProviders?.length ||
+          category.costType?.id === costTypeId
+        )
+      }))
+    })) || [];
+  });
 
   // Set initial cost type based on URL/page
   useEffect(() => {
@@ -35,44 +45,15 @@ const CostTypePage: React.FC = () => {
           selectedLineItems: [],
         }));
 
-        // Clear details
-        dispatch(setDetails(null));
-
-        // Then load data
-        await dispatch(fetchProgramsAsync()).unwrap();
-        if (currentPage) {
-          await dispatch(fetchCostTypeByAliasAsync(currentPage as CostTypeAlias)).unwrap();
-        }
+        // Then fetch data for the current cost type
+        await dispatch(fetchCostTypeByAliasAsync(currentPage)).unwrap();
       } catch (error) {
-        console.error('Error loading data:', error);
+        console.error('Error loading cost type data:', error);
       }
     };
 
     loadData();
   }, [dispatch, currentPage]);
-
-  // Set initial selections if none exist and no details are open
-  useEffect(() => {
-    if (
-      programs.length === 0 || 
-      selectedProgramId || 
-      details !== null
-    ) {
-      return;
-    }
-
-    const firstProgram = programs[0];
-    const firstProject = firstProgram.projects[0] || null;
-    const firstCategory = firstProject?.categories[0] || null;
-    const firstItem = firstCategory?.items[0] || null;
-
-    dispatch(updateSelections({
-      selectedProgramId: firstProgram.id,
-      selectedProjectId: firstProject?.id || null,
-      selectedCategoryId: firstCategory?.id || null,
-      selectedLineItems: firstItem ? [firstItem] : []
-    }));
-  }, [programs, selectedProgramId, details, dispatch]);
 
   return <Outline data={programs} />;
 };

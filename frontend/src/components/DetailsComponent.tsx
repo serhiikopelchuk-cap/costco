@@ -48,7 +48,7 @@ interface SummaryTabProps {
 }
 
 const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, id, programId }) => {
-  const columns = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P10', 'P11', 'P12', 'P13', 'Total', 'Average'];
+  const columns = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9', 'P10', 'P11', 'P12', 'P13', 'Total', 'Average'];
   const numberOfPeriods = 13;
 
   const [sums, setSums] = useState<Record<number, { periodSums: number[], totalSum: number, averageSum: number }>>({});
@@ -140,7 +140,9 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, id, programId
         const periodSums = Array(numberOfPeriods).fill(0);
         let totalSum = 0;
 
-        const items = type === 'program' ? (item as Project).categories.flatMap(category => category.items) : (item as Category).items;
+        const items = type === 'program' 
+          ? (item as Project).categories.flatMap(category => category.items) 
+          : (item as Category).items;
 
         items.forEach(item => {
           item.costs.forEach(({ value }, index) => {
@@ -150,19 +152,18 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, id, programId
               overallSums[index] += numericValue;
             }
           });
-          totalSum += item.costs.reduce((sum, { value }) => {
-            const numericValue = Number(value);
-            return !isNaN(numericValue) ? sum + numericValue : sum;
-          }, 0);
         });
 
-        const averageSum = items.length > 0 ? totalSum / (items.length * numberOfPeriods) : 0;
+        totalSum = periodSums.reduce((sum, value) => sum + value, 0);
+        
+        const averageSum = totalSum / numberOfPeriods;
+
         const itemId = type === 'program' ? (item as Project).id : (item as Category).id;
         sums[itemId] = { periodSums, totalSum, averageSum };
         overallTotalSum += totalSum;
       });
 
-      const overallAverageSum = overallTotalSum / (data.flatMap(item => type === 'program' ? (item as Project).categories.flatMap(category => category.items) : (item as Category).items).length * numberOfPeriods);
+      const overallAverageSum = overallTotalSum / numberOfPeriods;
 
       return { sums, overallSums, overallTotalSum, overallAverageSum };
     };
