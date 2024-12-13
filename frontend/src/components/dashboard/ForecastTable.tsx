@@ -10,6 +10,11 @@ const ForecastTable: React.FC<ForecastTableProps> = ({ directCostsData, indirect
   const periodsCount = 6; // Initial Investment + Year 1 to Year 5
 
   const calculateProgramCosts = (program: Program, isDirectCost: boolean) => {
+    if (!program.settings) {
+      console.warn('Program settings are missing:', program);
+      return Array(periodsCount).fill(0);
+    }
+
     const settings = program.settings as {
       directInvestment: number;
       indirectInvestment: number;
@@ -17,8 +22,8 @@ const ForecastTable: React.FC<ForecastTableProps> = ({ directCostsData, indirect
       indirectGrowthRates: number[];
     };
 
-    const investment = isDirectCost ? settings.directInvestment : settings.indirectInvestment;
-    const growthRates = isDirectCost ? settings.directGrowthRates : settings.indirectGrowthRates;
+    const investment = isDirectCost ? (settings.directInvestment || 0) : (settings.indirectInvestment || 0);
+    const growthRates = isDirectCost ? (settings.directGrowthRates || []) : (settings.indirectGrowthRates || []);
     
     // Initialize with investment value
     const costs = [investment];
@@ -35,6 +40,11 @@ const ForecastTable: React.FC<ForecastTableProps> = ({ directCostsData, indirect
   };
 
   const calculateTotalCosts = (costsData: CostType, isDirectCost: boolean) => {
+    if (!costsData || !costsData.programs) {
+      console.warn('Cost data is missing:', costsData);
+      return Array(periodsCount).fill(0);
+    }
+
     const totalCosts = Array(periodsCount).fill(0);
     
     costsData.programs.forEach(program => {
@@ -57,14 +67,22 @@ const ForecastTable: React.FC<ForecastTableProps> = ({ directCostsData, indirect
   }, [] as number[]);
 
   const calculateAverageGrowthRates = (costsData: CostType, isDirectCost: boolean) => {
+    if (!costsData || !costsData.programs) {
+      console.warn('Cost data is missing for growth rates:', costsData);
+      return Array(periodsCount - 1).fill(0);
+    }
+
     const growthRates = Array(periodsCount - 1).fill(0);
     let programCount = 0;
 
     costsData.programs.forEach(program => {
+      if (!program.settings) return;
+
       const settings = program.settings as {
         directGrowthRates: number[];
         indirectGrowthRates: number[];
       };
+
       const rates = isDirectCost ? settings.directGrowthRates : settings.indirectGrowthRates;
       
       if (rates) {

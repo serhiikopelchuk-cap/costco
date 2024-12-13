@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import './LineItemsTable.css';
 import ActionButtons from './ActionButtons';
-import { cloneCategory } from '../services/categoryService';
+import { cloneCategory, updateCategory as updateCategoryService } from '../services/categoryService';
 import { periodService } from '../services/periodService';
 import { Program, Item, Cost, Category } from '../types/program';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
@@ -294,11 +294,83 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
     handleLineItemUpdate(updatedItem);
   };
 
+  // Define available providers with IDs
+  const availableProviders = [
+    { id: 1, name: 'Azure' },
+    { id: 2, name: 'GCP' }
+  ];
+
+  const handleProviderAdd = async (providerName: string) => {
+    if (!selectedCategory || !selectedProgramId || !selectedProjectId) return;
+
+    try {
+      // Find provider by name to get its ID
+      const provider = availableProviders.find(p => p.name === providerName);
+      if (!provider) return;
+
+      const updatedProviders = [
+        ...(selectedCategory.cloudProviders || []),
+        { id: provider.id, name: provider.name }
+      ];
+
+      // Update on backend first
+      await updateCategoryService(selectedCategory.id, {
+        cloudProviders: updatedProviders
+      });
+
+      // Then update Redux store
+      dispatch(updateCategory({
+        programId: selectedProgramId,
+        projectId: selectedProjectId,
+        category: {
+          ...selectedCategory,
+          cloudProviders: updatedProviders
+        }
+      }));
+    } catch (error) {
+      console.error('Failed to update category:', error);
+    }
+  };
+
+  const handleProviderRemove = async (providerName: string) => {
+    if (!selectedCategory || !selectedProgramId || !selectedProjectId) return;
+
+    try {
+      const updatedProviders = selectedCategory.cloudProviders?.filter(
+        p => p.name !== providerName
+      ) || [];
+
+      // Update on backend first
+      await updateCategoryService(selectedCategory.id, {
+        cloudProviders: updatedProviders
+      });
+
+      // Then update Redux store
+      dispatch(updateCategory({
+        programId: selectedProgramId,
+        projectId: selectedProjectId,
+        category: {
+          ...selectedCategory,
+          cloudProviders: updatedProviders
+        }
+      }));
+    } catch (error) {
+      console.error('Failed to update category:', error);
+    }
+  };
+
   return (
     <div className="line-items-table">
       <div className="table-header">
-        {selectedCategory && <CloudProviderChips providers={selectedCategory.cloudProviders || []} />}
         <h3 className="category-name">
+          {selectedCategory && selectedProgramId && selectedProjectId && (
+            <CloudProviderChips
+              availableProviders={availableProviders.map(p => p.name)} // Pass only names to keep interface simple
+              selectedProviders={selectedCategory.cloudProviders || []}
+              onProviderAdd={handleProviderAdd}
+              onProviderRemove={handleProviderRemove}
+            />
+          )}
           <input
             type="text"
             value={editingCategoryName}
@@ -318,18 +390,22 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
             disabled={isCloningCategory}
           />
         </h3>
-        <ActionButtons
-          handleDeselectAll={handleDeselectAll}
-          handleAddLineItem={handleAddLineItem}
-          selectedLineItemsCount={selectedLineItems.length}
-          cloudProviders={cloudProviders}
-          selectedProvider={selectedProvider}
-          onProviderChange={onProviderChange}
-          selectedProgramId={selectedProgramId}
-          selectedProjectId={selectedProjectId}
-          selectedCategoryId={selectedCategoryId}
-          lineItems={lineItems}
-        />
+
+        <div className="action-buttons-container">
+          
+          <ActionButtons
+            handleDeselectAll={handleDeselectAll}
+            handleAddLineItem={handleAddLineItem}
+            selectedLineItemsCount={selectedLineItems.length}
+            cloudProviders={cloudProviders}
+            selectedProvider={selectedProvider}
+            onProviderChange={onProviderChange}
+            selectedProgramId={selectedProgramId}
+            selectedProjectId={selectedProjectId}
+            selectedCategoryId={selectedCategoryId}
+            lineItems={lineItems}
+          />
+        </div>
       </div>
       <ItemsTable
         items={lineItems}

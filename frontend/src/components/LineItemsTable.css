@@ -152,7 +152,8 @@
   position: absolute;
   right: 0;
   display: flex;
-  gap: 5px;
+  align-items: center;
+  gap: 10px;
 }
 
 .action-buttons-container:hover {
@@ -174,12 +175,24 @@
 }
 
 .category-name {
-  margin: 0;
+  margin: unset !important;
   font-size: 1.5em;
   font-weight: bold;
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.header-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 20px;
+}
+
+.cloud-provider-chips-container {
+  margin-right: 10px;
 }
 
 .summary-row .summary-cell {

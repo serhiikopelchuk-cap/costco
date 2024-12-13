@@ -5,27 +5,6 @@ import { Category } from '../types/program';
 // Define the base URL for your API
 const CATEGORIES_URL = `${API_BASE_URL}/categories`;
 
-// Define the types for Category, Item, and Cost
-// export interface Cost {
-//   id?: number;
-//   value: number;
-// }
-
-// export interface Item {
-//   id?: number;
-//   name: string;
-//   category: Category;
-//   costs: Cost[];
-// }
-
-// export interface Category {
-//   id?: number;
-//   name: string;
-//   description: string;
-//   note: string;
-//   items: Item[];
-// }
-
 // Fetch all categories
 export const fetchCategories = async (): Promise<Category[]> => {
   const response = await axios.get<Category[]>(CATEGORIES_URL);

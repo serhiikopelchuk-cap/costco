@@ -17,17 +17,16 @@ export type Item = {
   costs: Cost[];
 };
 
-export type CloudProvider = {
+export interface CloudProvider {
   id?: number;
   name: string;
-};
+}
 
 export type Category = {
   id: number;
   name: string;
   description?: string;
   note?: string;
-  cloudProvider?: string; // TODO: remove this
   cloudProviders?: CloudProvider[];
   items: Item[];
   project?: { id: number };
