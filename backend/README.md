@@ -32,7 +32,41 @@
 $ npm install
 ```
 
-## Compile and run the project
+## Database Setup and Seeding
+
+### Initial Setup
+```bash
+# Create database tables
+$ npm run typeorm:run-migrations
+
+# Seed initial data
+$ npm run seed
+```
+
+The seed command will populate the database with:
+- Default cost types
+- Sample categories
+- Test programs and projects
+- Cloud provider configurations
+
+### Available Seed Commands
+```bash
+# Run all seeds
+$ npm run seed
+
+# Run specific seed
+$ npm run seed:cost-types #TODO: Add more seeds
+$ npm run seed:categories #TODO: Add more seeds
+$ npm run seed:cloud-providers #TODO: Add more seeds
+```
+
+### Development Seeds
+For development environment, additional test data can be seeded:
+```bash
+$ npm run seed:dev
+```
+
+## Running the Application
 
 ```bash
 # development

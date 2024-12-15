@@ -22,7 +22,6 @@ const ProgramList: React.FC = () => {
   const details = useAppSelector(state => state.ui.details);
 
   const handleProgramToggle = (programId: number) => {
-    console.log('handleProgramToggle called with:', programId);
     const program = programs.find(p => p.id === programId);
     if (program) {
       // Only clear details if they're not pinned
@@ -40,7 +39,6 @@ const ProgramList: React.FC = () => {
   };
 
   const handleDetailsClick = (type: string, id: number) => {
-    console.log('handleDetailsClick called with:', { type, id });
     const program = programs.find(p => p.id === id);
     if (!program) return;
 
@@ -63,7 +61,6 @@ const ProgramList: React.FC = () => {
   };
 
   const handleAddProgram = async (programName: string) => {
-    console.log('handleAddProgram called with:', programName);
     const newProgram: Partial<Program> = { 
       name: programName, 
       projects: [] 

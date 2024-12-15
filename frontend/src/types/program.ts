@@ -8,7 +8,7 @@ export interface CostType {
 
 export interface Cost {
   id?: number;
-  value: number | string;
+  value: number;
 }
 
 export type Item = {

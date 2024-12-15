@@ -23,11 +23,8 @@ export class BasicDataSeeder implements Seeder {
     const costTypeRepository = dataSource.getRepository(CostType);
     const cloudProviderRepository = dataSource.getRepository(CloudProvider);
 
-    // Create Cloud Providers
-    const cloudProviders = await cloudProviderRepository.save([
-      { name: 'Azure' },
-      { name: 'GCP' },
-    ]);
+    // Create or get existing Cloud Providers
+    const cloudProviders = await this.getOrCreateCloudProviders(cloudProviderRepository);
 
     // Create CostTypes
     const directCostType = await this.createCostType(costTypeRepository, 'direct_costs');
@@ -69,6 +66,30 @@ export class BasicDataSeeder implements Seeder {
       cloudProviders,
       indirectCostType
     );
+  }
+
+  private async getOrCreateCloudProviders(cloudProviderRepository) {
+    const providers = ['Azure', 'GCP'];
+    const cloudProviders = [];
+
+    for (const providerName of providers) {
+      let provider = await cloudProviderRepository.findOne({ 
+        where: { name: providerName } 
+      });
+
+      if (!provider) {
+        provider = await cloudProviderRepository.save({ 
+          name: providerName 
+        });
+        console.log(`Created new cloud provider: ${providerName}`);
+      } else {
+        console.log(`Using existing cloud provider: ${providerName}`);
+      }
+
+      cloudProviders.push(provider);
+    }
+
+    return cloudProviders;
   }
 
   private async createCostType(costTypeRepository, alias) {

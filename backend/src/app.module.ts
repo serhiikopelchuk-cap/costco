@@ -9,10 +9,15 @@ import { ProgramModule } from './program/program.module';
 import { PeriodModule } from './period/period.module';
 import { CostTypeModule } from './cost-type/cost-type.module';
 import { CloudProviderModule } from './cloud-provider/cloud-provider.module';
+import { AuthModule } from './auth/auth.module';
+import { AppConfigModule } from './config/config.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
+    AppConfigModule,
     TypeOrmModule.forRoot(ormConfig),
+    HealthModule,
     TeamSpendModule,
     CategoryModule,
     ItemModule,
@@ -21,6 +26,7 @@ import { CloudProviderModule } from './cloud-provider/cloud-provider.module';
     PeriodModule,
     CostTypeModule,
     CloudProviderModule,
+    AuthModule,
   ],
 })
 export class AppModule {}

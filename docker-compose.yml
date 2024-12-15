@@ -10,10 +10,8 @@ services:
     ports:
       - "80:80"
     environment:
-      - API_URL=http://backend:3000
-      - REACT_APP_API_URL=http://backend:3000
-    depends_on:
-      - backend
+      - NODE_ENV=development
+      - REACT_APP_API_URL=http://localhost:3000
 
   backend:
     build:
@@ -22,14 +20,41 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=production
+      # Node environment
+      - NODE_ENV=development
+      
+      # URLs
+      - FRONTEND_URL=http://localhost:80
+      - BACKEND_URL=http://localhost:3000
+      
+      # Database
       - DATABASE_HOST=postgres
       - DATABASE_PORT=5432
       - DATABASE_USER=postgres
       - DATABASE_PASSWORD=postgres
       - DATABASE_NAME=mydatabase
+      
+      # Security
+      - JWT_SECRET=your-secret-key-here
+      
+      # SAML Settings
+      - SAML_ENTRY_POINT=https://loginnp.costco.com/idp/SSO.saml2
+      - SAML_ISSUER=costco-crm-app  # Should match what's registered with Costco IdP
+      - SAML_IDENTIFIER_FORMAT=urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified
+      
+      # SAML Certificates (for production)
+      - SAML_CERTIFICATE=${SAML_CERTIFICATE}
+      - SAML_PRIVATE_KEY=${SAML_PRIVATE_KEY}
+    volumes:
+      - ./backend/src/certs:/app/src/certs:ro  # Mount certificates for development
     depends_on:
       - postgres
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://backend:3000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
 
   postgres:
     image: postgres:13

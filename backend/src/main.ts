@@ -15,13 +15,20 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('Team Spend API')
-    .setDescription('API for managing team spend records')
+    .setDescription('API for managing team spend records and authentication')
     .setVersion('1.0')
     .addTag('team-spend')
+    .addTag('Authentication')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(3000);
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+
+  // Log application URL and port
+  const url = await app.getUrl();
+  console.log(`🚀 Application is running on: ${url}`);
+  console.log(`📝 API documentation available at: ${url}/api`);
 }
 bootstrap();

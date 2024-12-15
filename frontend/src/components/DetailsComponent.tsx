@@ -217,7 +217,18 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, id, programId
   const handleDelete = async () => {
     try {
       if (type === 'program') {
-        // Program deletion logic...
+        // Clear details before deletion
+        dispatch(setDetails(null));
+
+        // Delete from backend
+        await deleteProgram(id);
+        console.log('Program deleted successfully');
+
+        // Update local state
+        dispatch(deleteProgramAction(id));
+
+        // Refresh programs list
+        await dispatch(fetchProgramsAsync()).unwrap();
       } else if (programId !== undefined) {
         // Clear selections first if this was the selected project
         if (selectedProjectId === id) {
