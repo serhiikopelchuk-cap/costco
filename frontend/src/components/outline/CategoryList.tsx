@@ -21,6 +21,9 @@ const CategoryList: React.FC = () => {
   const showAddCategoryInput = useSelector((state: RootState) => state.ui.addInputVisibility.category);
   const categorySearch = useSelector((state: RootState) => state.ui.search.category);
 
+  // Add new selector to get current costType from store
+  const currentCostType = useSelector((state: RootState) => state.costTypes.item);
+
   useEffect(() => {
     if (selectedProjectId && selectedProgramId) {
       dispatch(fetchProjectAsync({
@@ -57,10 +60,12 @@ const CategoryList: React.FC = () => {
   };
 
   const handleAddCategory = async (categoryName: string) => {
-    if (!selectedProjectId || !selectedProgramId) {
+    if (!selectedProjectId || !selectedProgramId || !costType || !currentCostType) {
       console.error('Missing required data for category creation:', {
         selectedProjectId,
-        selectedProgramId
+        selectedProgramId,
+        costType,
+        currentCostType
       });
       return;
     }
@@ -68,14 +73,21 @@ const CategoryList: React.FC = () => {
     const newCategory: Partial<Category> = { 
       name: categoryName, 
       items: [], 
-      project: { id: selectedProjectId }
+      project: { id: selectedProjectId },
+      costType: {
+        id: currentCostType.id,
+        name: currentCostType.name,
+        alias: currentCostType.alias,
+        programs: []
+      }
     };
 
     try {
       console.log('Creating category with data:', {
         category: newCategory,
         programId: selectedProgramId,
-        projectId: selectedProjectId
+        projectId: selectedProjectId,
+        costType: currentCostType
       });
 
       const response = await dispatch(createCategoryAsync({ 

@@ -8,7 +8,8 @@ interface ForecastTableProps {
 
 const ForecastTable: React.FC<ForecastTableProps> = ({ directCostsData, indirectCostsData }) => {
   const periodsCount = 6; // Initial Investment + Year 1 to Year 5
-
+  console.log("directCostsData", directCostsData);
+  console.log("indirectCostsData", indirectCostsData);
   const calculateProgramCosts = (program: Program, isDirectCost: boolean) => {
     if (!program.settings) {
       console.warn('Program settings are missing:', program);

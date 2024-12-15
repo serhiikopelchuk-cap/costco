@@ -23,6 +23,11 @@ export class CloudProviderService {
     return this.cloudProviderRepository.save(provider);
   }
 
+  async createMultiple(names: string[]): Promise<CloudProvider[]> {
+    const providers = names.map(name => this.cloudProviderRepository.create({ name }));
+    return this.cloudProviderRepository.save(providers);
+  }
+
   async update(id: number, name: string): Promise<CloudProvider> {
     await this.cloudProviderRepository.update(id, { name });
     return this.findOne(id);

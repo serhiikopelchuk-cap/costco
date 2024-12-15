@@ -9,7 +9,7 @@ import { Program } from '../../types/program';
 const ProgramList: React.FC = () => {
   const dispatch = useAppDispatch();
   const programs = useAppSelector(state => {
-    console.log('ProgramList selector:', state.costTypes.item?.programs);
+    // console.log('ProgramList selector:', state.costTypes.item?.programs);
     return state.costTypes.item?.programs || [];
   });
   // console.log('programs:', programs);

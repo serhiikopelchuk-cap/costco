@@ -1,9 +1,9 @@
 import React from 'react';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler } from 'chart.js';
-import { CostType } from '../../types/program'; // Import CostType
+import { CostType, Program } from '../../types/program';
+// import './TopCharts.css';
 
-// Register the necessary components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
 interface TopChartsProps {
@@ -12,32 +12,60 @@ interface TopChartsProps {
 }
 
 const TopCharts: React.FC<TopChartsProps> = ({ directCostsData, indirectCostsData }) => {
-  const periodsCount = 13; // Number of periods (P1 to P13)
-  const growthRates = [0, 0.06, 0.06, 0.06, 0.10]; // Growth rates for Year 2-5
+  const periodsCount = 6; // Initial Investment + Year 1 to Year 5
 
-  const calculateTotalCosts = (costsData: CostType) => {
+  // Calculate program costs using settings (similar to ForecastTable)
+  const calculateProgramCosts = (program: Program, isDirectCost: boolean) => {
+    if (!program.settings) {
+      console.warn('Program settings are missing:', program);
+      return Array(periodsCount).fill(0);
+    }
+
+    const settings = program.settings as {
+      directInvestment: number;
+      indirectInvestment: number;
+      directGrowthRates: number[];
+      indirectGrowthRates: number[];
+    };
+
+    const investment = isDirectCost ? (settings.directInvestment || 0) : (settings.indirectInvestment || 0);
+    const growthRates = isDirectCost ? (settings.directGrowthRates || []) : (settings.indirectGrowthRates || []);
+    
+    // Initialize with investment value
+    const costs = [investment];
+    
+    // Calculate costs for each year using growth rates
+    let currentValue = investment;
+    for (let i = 0; i < periodsCount - 1; i++) {
+      const growthRate = (growthRates[i] || 0) / 100; // Convert percentage to decimal
+      currentValue = currentValue * (1 + growthRate);
+      costs.push(currentValue);
+    }
+    
+    return costs;
+  };
+
+  // Calculate total costs for direct/indirect (similar to ForecastTable)
+  const calculateTotalCosts = (costsData: CostType, isDirectCost: boolean) => {
+    if (!costsData || !costsData.programs) {
+      console.warn('Cost data is missing:', costsData);
+      return Array(periodsCount).fill(0);
+    }
+
     const totalCosts = Array(periodsCount).fill(0);
-    costsData.programs.forEach((program) => {
-      program.projects.forEach((project) => {
-        project.categories.forEach((category) => {
-          category.items.forEach((item) => {
-            item.costs.forEach((cost, index) => {
-              if (index < periodsCount) {
-                const value = typeof cost.value === 'string' ? parseFloat(cost.value) : cost.value;
-                if (!isNaN(value)) {
-                  totalCosts[index] += value;
-                }
-              }
-            });
-          });
-        });
+    
+    costsData.programs.forEach(program => {
+      const programCosts = calculateProgramCosts(program, isDirectCost);
+      programCosts.forEach((cost, index) => {
+        totalCosts[index] += cost;
       });
     });
+
     return totalCosts;
   };
 
-  const directTotal = calculateTotalCosts(directCostsData);
-  const indirectTotal = calculateTotalCosts(indirectCostsData);
+  const directTotal = calculateTotalCosts(directCostsData, true);
+  const indirectTotal = calculateTotalCosts(indirectCostsData, false);
   const totalCosts = directTotal.map((value, index) => value + indirectTotal[index]);
 
   const cumulativeCosts = totalCosts.reduce((acc, value, index) => {
@@ -50,30 +78,28 @@ const TopCharts: React.FC<TopChartsProps> = ({ directCostsData, indirectCostsDat
     datasets: [
       {
         label: 'Cumulative Costs',
-        data: cumulativeCosts.slice(0, growthRates.length),
+        data: cumulativeCosts,
         borderColor: 'red',
-        backgroundColor: 'rgba(220, 53, 69, 0.2)', // Light red fill color
-        fill: false, // Fill to the x-axis
+        backgroundColor: 'rgba(220, 53, 69, 0.2)',
+        fill: false,
       },
       {
         label: 'Annual Costs',
-        data: totalCosts.slice(0, growthRates.length),
-        backgroundColor: '#cce5ff', // Light blue bar color
-        borderColor: '#007bff', // Blue border color
-        fill: false, // Fill to the x-axis
+        data: totalCosts,
+        backgroundColor: '#cce5ff',
+        borderColor: '#007bff',
+        fill: false,
       },
     ],
   };
 
   const options = {
-    // responsive: false,
-    // maintainAspectRatio: false,
     scales: {
       y: {
         beginAtZero: true,
         ticks: {
           callback: function (value: any) {
-            return `${value}$`; // Add dollar sign to y-axis labels
+            return `${value}$`;
           },
         },
       },
@@ -91,7 +117,7 @@ const TopCharts: React.FC<TopChartsProps> = ({ directCostsData, indirectCostsDat
               label += ': ';
             }
             if (context.parsed.y !== null) {
-              label += `${context.parsed.y}$`; // Add dollar sign to tooltip values
+              label += `${context.parsed.y.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}$`;
             }
             return label;
           },

@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CostType } from './cost-type.entity';
+import { CostType, CreateCostTypeDto } from './cost-type.entity';
 
 @Injectable()
 export class CostTypeService {
@@ -22,12 +22,18 @@ export class CostTypeService {
     return costType;
   }
 
-  create(costType: CostType): Promise<CostType> {
+  create(createDto: CreateCostTypeDto): Promise<CostType> {
+    const costType = this.costTypeRepository.create(createDto);
     return this.costTypeRepository.save(costType);
   }
 
-  async update(id: number, costType: CostType): Promise<CostType> {
-    await this.costTypeRepository.update(id, costType);
+  async createMultiple(createDtos: CreateCostTypeDto[]): Promise<CostType[]> {
+    const costTypes = createDtos.map(dto => this.costTypeRepository.create(dto));
+    return this.costTypeRepository.save(costTypes);
+  }
+
+  async update(id: number, updateDto: CreateCostTypeDto): Promise<CostType> {
+    await this.costTypeRepository.update(id, updateDto);
     return this.findOne(id);
   }
 
@@ -35,6 +41,7 @@ export class CostTypeService {
     await this.costTypeRepository.delete(id);
   }
 
+  // TODO: To be removed
   async findByAlias(alias: string): Promise<CostType> {
     const costType = await this.costTypeRepository
       .createQueryBuilder('costType')
