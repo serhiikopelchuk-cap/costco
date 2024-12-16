@@ -21,7 +21,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
     <header className="header">
       <button className="hamburger button-primary" onClick={toggleSidebar}>☰</button>
       <img 
-        src={require('../../C3Elogo.png')} 
+        src={require('../../costcologo.png')} 
         alt="App Logo" 
         className="logo" 
         onClick={handleLogoClick}
@@ -29,6 +29,13 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
       />
       {isDirectOrIndirectPage && <ToggleButton />}
       <h1 className="header-title">Total Cost of Ownership (TCO) Portal</h1>
+      <img 
+        src={require('../../C3Elogo.png')} 
+        alt="App Logo" 
+        className="logo" 
+        onClick={handleLogoClick}
+        style={{ cursor: 'pointer' }}
+      />
     </header>
   );
 }

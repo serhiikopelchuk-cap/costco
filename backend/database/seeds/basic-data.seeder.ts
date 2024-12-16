@@ -2,6 +2,7 @@ import { Seeder, SeederFactoryManager } from 'typeorm-extension';
 import { DataSource } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
+import { mkdirSync, existsSync } from 'fs';
 import { Category } from 'src/category/category.entity';
 import { Item } from 'src/item/item.entity';
 import { Cost } from 'src/cost/cost.entity';
@@ -11,10 +12,18 @@ import { CostType } from 'src/cost-type/cost-type.entity';
 import { CloudProvider } from 'src/cloud-provider/cloud-provider.entity';
 
 export class BasicDataSeeder implements Seeder {
+  private ensureDataDirectoryExists() {
+    const dataDir = path.join(process.cwd(), 'dist', 'database', 'data');
+    if (!existsSync(dataDir)) {
+      mkdirSync(dataDir, { recursive: true });
+    }
+  }
+
   async run(
     dataSource: DataSource, 
     factoryManager: SeederFactoryManager
   ): Promise<void> {
+    this.ensureDataDirectoryExists();
     const categoryRepository = dataSource.getRepository(Category);
     const itemRepository = dataSource.getRepository(Item);
     const costRepository = dataSource.getRepository(Cost);
@@ -30,11 +39,18 @@ export class BasicDataSeeder implements Seeder {
     const directCostType = await this.createCostType(costTypeRepository, 'direct_costs');
     const indirectCostType = await this.createCostType(costTypeRepository, 'indirect_costs');
 
-    // Create single Program and Project
+    // Create single Program with settings
     const program = await programRepository.save({
       name: 'Main Program',
       description: 'Main program for all costs',
-      settings: {},
+      settings: {
+        teamName: "test team name",
+        preparedBy: "test prepered by",
+        directInvestment: 10,
+        directGrowthRates: [10, 10, 10, 10, 10],
+        indirectInvestment: 20,
+        indirectGrowthRates: [20, 20, 20, 20, 20]
+      },
     });
 
     const project = await projectRepository.save({
@@ -157,15 +173,32 @@ export class BasicDataSeeder implements Seeder {
     console.log(`Seeding Categories: Done`);
   }
 
+  private getDataFilePath(filename: string): string {
+    // Try multiple possible locations
+    const possiblePaths = [
+      path.join(process.cwd(), 'database', 'data', filename),
+      path.join(process.cwd(), 'dist', 'database', 'data', filename),
+      path.join(__dirname, '..', '..', 'database', 'data', filename),
+      path.join(__dirname, '..', 'data', filename)
+    ];
+
+    for (const filePath of possiblePaths) {
+      if (fs.existsSync(filePath)) {
+        console.log('Found data file at:', filePath);
+        return filePath;
+      }
+    }
+
+    throw new Error(`Could not find ${filename} in any of the expected locations`);
+  }
+
   private readIndirectCostJson() {
-    const filePath = path.join(__dirname, '../data/indirect-costs.json');
-    const jsonData = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(jsonData);
+    const filePath = this.getDataFilePath('indirect-costs.json');
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
   }
 
   private readDirectCostJson() {
-    const filePath = path.join(__dirname, '../data/direct-cost.json');
-    const jsonData = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(jsonData);
+    const filePath = this.getDataFilePath('direct-cost.json');
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
   }
 } 

@@ -14,7 +14,7 @@ async function bootstrap() {
   });
 
   const config = new DocumentBuilder()
-    .setTitle('Team Spend API')
+    .setTitle('Total Cost of Ownership API')
     .setDescription('API for managing team spend records and authentication')
     .setVersion('1.0')
     .addTag('team-spend')

@@ -4,6 +4,8 @@ import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { updateProjectSettingsAsync, updateProgramSettingsAsync } from '../../store/slices/costTypesSlice';
 import { selectSelectedProgramId, selectSelectedProjectId } from '../../store/slices/selectionSlice';
 import { selectProjectById } from '../../store/slices/costTypesSlice';
+import CurrencyInput from '../common/CurrencyInput';
+import PercentageInput from '../common/PercentageInput';
 
 interface SettingsTabProps {
   type: 'program' | 'project';
@@ -93,21 +95,19 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ type }) => {
         <h3 className="section-title">Starting Cost and Initial Investment</h3>
         
         <div className="input-group">
-          <label>Direct Initial Investment $</label>
-          <input
-            type="number"
+          <label>Direct Initial Investment</label>
+          <CurrencyInput
             value={directInvestment}
-            onChange={(e) => setDirectInvestment(Number(e.target.value))}
+            onChange={(value) => setDirectInvestment(Number(value.replace(/\$/g, '')) || 0)}
             placeholder="Enter costs incurred before Year 1, Period 1"
           />
         </div>
 
         <div className="input-group">
-          <label>Indirect Initial Investment $</label>
-          <input
-            type="number"
+          <label>Indirect Initial Investment</label>
+          <CurrencyInput
             value={indirectInvestment}
-            onChange={(e) => setIndirectInvestment(Number(e.target.value))}
+            onChange={(value) => setIndirectInvestment(Number(value.replace(/\$/g, '')) || 0)}
             placeholder="e.g. cloud infrastructure, software licenses, talent"
           />
         </div>
@@ -133,14 +133,14 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ type }) => {
                 <td>Direct Costs Growth Rate %</td>
                 {directGrowthRates.map((rate, index) => (
                   <td key={index}>
-                    <input
-                      type="number"
+                    <PercentageInput
                       value={rate}
-                      onChange={(e) => {
+                      onChange={(value) => {
                         const newRates = [...directGrowthRates];
-                        newRates[index] = Number(e.target.value);
+                        newRates[index] = Number(value.replace(/%/g, '')) || 0;
                         setDirectGrowthRates(newRates);
                       }}
+                      className="growth-rate-input"
                     />
                   </td>
                 ))}
@@ -149,14 +149,14 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ type }) => {
                 <td>Indirect Costs Growth Rate %</td>
                 {indirectGrowthRates.map((rate, index) => (
                   <td key={index}>
-                    <input
-                      type="number"
+                    <PercentageInput
                       value={rate}
-                      onChange={(e) => {
+                      onChange={(value) => {
                         const newRates = [...indirectGrowthRates];
-                        newRates[index] = Number(e.target.value);
+                        newRates[index] = Number(value.replace(/%/g, '')) || 0;
                         setIndirectGrowthRates(newRates);
                       }}
+                      className="growth-rate-input"
                     />
                   </td>
                 ))}

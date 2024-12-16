@@ -1,0 +1,19 @@
+.currency-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  text-align: right;
+}
+
+.currency-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.currency-input:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+} 

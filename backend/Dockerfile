@@ -30,4 +30,4 @@ HEALTHCHECK --interval=30s --timeout=3s \
   CMD curl -f ${BACKEND_URL:-http://backend:3000}/health || exit 1
 
 # Start the application
-CMD ["sh", "-c", "npm run seed && node dist/src/main.js"]
+CMD ["node", "dist/src/main.js"]

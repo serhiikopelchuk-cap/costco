@@ -14,7 +14,7 @@ interface ForecastTableProps {
 
 const ForecastTable: React.FC<ForecastTableProps> = ({ settings, directCostsData, indirectCostsData }) => {
   const periodsCount = 6;
-
+  console.log("settings", settings, "directCostsData", directCostsData, "indirectCostsData", indirectCostsData);
   const calculateCosts = (isDirectCost: boolean) => {
     const investment = isDirectCost 
       ? settings?.directInvestment || 0 
@@ -127,16 +127,16 @@ const ForecastTable: React.FC<ForecastTableProps> = ({ settings, directCostsData
           <tr>
             <td>Direct Growth Rate</td>
             <td>base year</td>
-            {directGrowthRates.map((rate, index) => (
-              <td key={index}>+ {rate.toFixed(1)}%</td>
+            {settings.directGrowthRates.map((rate, index) => (
+              <td key={index}>+{rate.toFixed(1)}%</td>
             ))}
             <td colSpan={2}></td>
           </tr>
           <tr>
             <td>Indirect Growth Rate</td>
             <td>base year</td>
-            {indirectGrowthRates.map((rate, index) => (
-              <td key={index}>+ {rate.toFixed(1)}%</td>
+            {settings.indirectGrowthRates.map((rate, index) => (
+              <td key={index}>+{rate.toFixed(1)}%</td>
             ))}
             <td colSpan={2}></td>
           </tr>

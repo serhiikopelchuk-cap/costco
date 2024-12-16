@@ -33,30 +33,36 @@
 }
 
 .input-group {
+    display: flex;
+    align-items: center;
     margin-bottom: 20px;
-    text-align: left;
 }
 
 .input-group label {
-    display: block;
+    margin-right: 15px;
+    min-width: 200px;
+    display: inline-block;
     font-weight: normal;
-    margin-bottom: 8px;
     color: #000;
     text-align: left;
 }
 
-.input-group input {
-    width: 100%;
-    max-width: 500px;
+.input-group input,
+.input-group .currency-input {
+    width: 50%;
+    max-width: 250px;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 14px;
+    text-align: right;
 }
 
-.input-group input:focus {
+.input-group input:focus,
+.input-group .currency-input:focus {
     outline: none;
-    border-color: #666;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
 table {
@@ -77,12 +83,9 @@ th {
     font-weight: 500;
 }
 
-td input {
+.growth-rate-table input,
+.growth-rate-table .percentage-input {
     width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    text-align: center;
 }
 
 .table-hint {

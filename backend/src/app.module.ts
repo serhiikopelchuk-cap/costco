@@ -12,6 +12,7 @@ import { CloudProviderModule } from './cloud-provider/cloud-provider.module';
 import { AuthModule } from './auth/auth.module';
 import { AppConfigModule } from './config/config.module';
 import { HealthModule } from './health/health.module';
+import { MaintenanceModule } from './maintenance/maintenance.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { HealthModule } from './health/health.module';
     CostTypeModule,
     CloudProviderModule,
     AuthModule,
+    MaintenanceModule,
   ],
 })
 export class AppModule {}

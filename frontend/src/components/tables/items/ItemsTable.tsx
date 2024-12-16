@@ -14,6 +14,7 @@ import DeleteButton from '../../buttons/DeleteButton';
 import { cloneItem } from '../../../services/itemService';
 import { updateCategory as updateCategoryService } from '../../../services/categoryService';
 import { bulkUpdateItems } from '../../../services/itemService';
+import CurrencyInput from '../../common/CurrencyInput';
 
 interface ItemsTableProps {
   items: Item[];
@@ -432,35 +433,19 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
                   return (
                     <td 
                       key={cost.id} 
-                      className={`line-item-cell 
-                        ${isSelected ? 'selected' : ''} 
-                        ${isSelecting && selectionStart?.itemId === item.id! ? 'selecting' : ''}
-                        ${isFrozen ? 'frozen' : ''}`}
+                      className={`line-item-cell ${isSelected ? 'selected' : ''} ${isFrozen ? 'frozen' : ''}`}
                       data-item-id={item.id}
                       data-cost-id={cost.id}
-                      onClick={(e) => {
-                        if (e.target === e.currentTarget || e.target === e.currentTarget.firstChild) {
-                          handleMouseDown(item.id!, cost.id!, index, e);
-                        }
-                      }}
+                      onClick={(e) => handleMouseDown(item.id!, cost.id!, index, e)}
                       onMouseEnter={() => handleMouseEnter(item.id!, cost.id!, index)}
                     >
                       <div className="input-container">
-                        <input
-                          type="text"
-                          value={
-                            editingValues[loadingKey] !== undefined
-                              ? editingValues[loadingKey]
-                              : `${cost.value}$`
-                          }
-                          onChange={(e) => handleInputChange(item.id!, cost.id!, e.target.value)}
-                          onBlur={(e) => handleInputBlur(item.id!, cost.id!, e.target.value)}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.currentTarget.select();
-                          }}
-                          className="cost-input"
+                        <CurrencyInput
+                          value={editingValues[loadingKey] !== undefined ? editingValues[loadingKey] : cost.value}
+                          onChange={(value) => handleInputChange(item.id!, cost.id!, value)}
+                          onBlur={(value) => handleInputBlur(item.id!, cost.id!, value)}
                           disabled={frozenPeriods[index + 1] || loadingItems[loadingKey]}
+                          className="cost-input"
                         />
                         {loadingItems[loadingKey] && <span className="spinner"></span>}
                       </div>
