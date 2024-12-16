@@ -8,7 +8,8 @@ import IndirectCostsTable from '../components/dashboard/IndirectCostsTable';
 import TopCharts from '../components/dashboard/TopCharts';
 import BottomCharts from '../components/dashboard/BottomCharts';
 import { fetchProgramsAsync } from '../store/slices/costTypesSlice';
-import { CloudProvider, Program } from '../types/program';
+import { fetchCloudProvidersAsync } from '../store/slices/cloudProvidersSlice';
+import { Program } from '../types/program';
 import ProviderFilter from '../components/common/ProviderFilter';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../store';
@@ -21,13 +22,10 @@ function Dashboard() {
   const programs = useSelector((state: RootState) => state.costTypes.allPrograms);
   const [selectedProvider, setSelectedProvider] = useState('');
   const [selectedProgramId, setSelectedProgramId] = useState<number | ''>('');
-  const cloudProviders: CloudProvider[] = [
-    { id: 1, name: 'Azure' },
-    { id: 2, name: 'GCP' }
-  ];
 
   useEffect(() => {
     dispatch(fetchProgramsAsync());
+    dispatch(fetchCloudProvidersAsync());
   }, [dispatch]);
 
   const filterProgramsByProvider = (programs: Program[], costTypeId: number) => {
@@ -102,7 +100,6 @@ function Dashboard() {
           <ProviderFilter
             selectedProvider={selectedProvider}
             onProviderChange={setSelectedProvider}
-            cloudProviders={cloudProviders.map(cp => cp.name)}
           />
           <select 
             value={selectedProgramId} 

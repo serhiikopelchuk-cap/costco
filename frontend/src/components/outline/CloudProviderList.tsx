@@ -1,45 +1,59 @@
-import React, { useEffect, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useEffect } from 'react';
+import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import GenericList from '../common/GenericList';
-import { selectCloudProvidersForProject } from '../../store/selectors';
 import { setSelectedCloudProviders } from '../../store/slices/selectionSlice';
-import { RootState } from '../../store';
+import { fetchCloudProvidersAsync } from '../../store/slices/cloudProvidersSlice';
+import { CloudProvider } from '../../types/program';
+
+interface ListItem {
+  id: number;
+  name: string;
+}
 
 const CloudProviderList: React.FC = () => {
-  const dispatch = useDispatch();
-  const currentProviders = useSelector(selectCloudProvidersForProject);
-  const selectedCloudProviders = useSelector((state: RootState) => state.selection.selectedCloudProviders);
-  
-  const [allProviders, setAllProviders] = useState<string[]>([]);
+  const dispatch = useAppDispatch();
+  const cloudProviders = useAppSelector(state => state.cloudProviders.items);
+  const selectedCloudProviders = useAppSelector(state => state.selection.selectedCloudProviders);
+  const status = useAppSelector(state => state.cloudProviders.status);
 
   useEffect(() => {
-    setAllProviders(prev => {
-      const newProviders = new Set([...prev, ...currentProviders]);
-      return Array.from(newProviders);
-    });
-  }, [currentProviders]);
+    if (status === 'idle') {
+      dispatch(fetchCloudProvidersAsync());
+    }
+  }, [status, dispatch]);
 
   const handleProviderToggle = (providerId: number) => {
-    const providerName = allProviders[providerId];
-    const isSelected = selectedCloudProviders.includes(providerName);
+    const provider = cloudProviders.find(p => p.id === providerId);
+    if (!provider) return;
+
+    const isSelected = selectedCloudProviders.includes(provider.name);
     const updatedProviders = isSelected
-      ? selectedCloudProviders.filter(name => name !== providerName)
-      : [...selectedCloudProviders, providerName];
+      ? selectedCloudProviders.filter(name => name !== provider.name)
+      : [...selectedCloudProviders, provider.name];
 
     dispatch(setSelectedCloudProviders(updatedProviders));
   };
+
+  // First filter out invalid providers, then map to ListItem type
+  const mappedProviders = cloudProviders
+    .filter((provider): provider is Required<CloudProvider> => 
+      typeof provider.id === 'number' && typeof provider.name === 'string'
+    )
+    .map((provider): ListItem => ({
+      id: provider.id,
+      name: provider.name
+    }));
+
+  const selectedIds = mappedProviders
+    .filter(provider => selectedCloudProviders.includes(provider.name))
+    .map(provider => provider.id);
 
   return (
     <GenericList
       title="Providers"
       type="provider"
-      items={allProviders.map((provider, index) => ({
-        id: index,
-        name: provider,
-      }))}
-      selectedItemIds={allProviders
-        .map((provider, index) => index)
-        .filter(index => selectedCloudProviders.includes(allProviders[index]))}
+      items={mappedProviders}
+      selectedItemIds={selectedIds}
       onItemToggle={handleProviderToggle}
       onAddItem={() => {}}
       itemSearch=""

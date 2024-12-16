@@ -1,14 +1,20 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilter } from '@fortawesome/free-solid-svg-icons';
+import { useAppSelector } from '../../hooks/reduxHooks';
+import { CloudProvider } from '../../types/program';
 
 interface ProviderFilterProps {
   selectedProvider: string;
   onProviderChange: (provider: string) => void;
-  cloudProviders: string[];
 }
 
-const ProviderFilter: React.FC<ProviderFilterProps> = ({ selectedProvider, onProviderChange, cloudProviders = ['azure', 'gcp'] }) => {
+const ProviderFilter: React.FC<ProviderFilterProps> = ({ 
+  selectedProvider, 
+  onProviderChange 
+}) => {
+  const cloudProviders = useAppSelector(state => state.cloudProviders.items);
+
   return (
     <div className="filter-container">
       <FontAwesomeIcon icon={faFilter} className="filter-icon" />
@@ -19,8 +25,8 @@ const ProviderFilter: React.FC<ProviderFilterProps> = ({ selectedProvider, onPro
       >
         <option value="">All Providers</option>
         {cloudProviders.map((provider) => (
-          <option key={provider} value={provider}>
-            {provider}
+          <option key={provider.id} value={provider.name}>
+            {provider.name}
           </option>
         ))}
       </select>

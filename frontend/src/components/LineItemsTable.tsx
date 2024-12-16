@@ -3,7 +3,7 @@ import './LineItemsTable.css';
 import ActionButtons from './ActionButtons';
 import { cloneCategory, updateCategory as updateCategoryService } from '../services/categoryService';
 import { periodService } from '../services/periodService';
-import { Program, Item, Cost, Category } from '../types/program';
+import { Program, Item, Cost, Category, CloudProvider } from '../types/program';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
 import { updateCategory, deleteCategoryAsync, fetchCategoryAsync, createLineItemAsync, deleteLineItemAsync, updateItemCostsAsync, fetchProjectAsync, updateCategoryNameAsync, updateLineItemInCostType } from '../store/slices/costTypesSlice';
 import CloneButton from './buttons/CloneButton';
@@ -300,17 +300,13 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
     { id: 2, name: 'GCP' }
   ];
 
-  const handleProviderAdd = async (providerName: string) => {
+  const handleProviderAdd = async (provider: CloudProvider) => {
     if (!selectedCategory || !selectedProgramId || !selectedProjectId) return;
 
     try {
-      // Find provider by name to get its ID
-      const provider = availableProviders.find(p => p.name === providerName);
-      if (!provider) return;
-
       const updatedProviders = [
         ...(selectedCategory.cloudProviders || []),
-        { id: provider.id, name: provider.name }
+        provider  // Now we can use the provider object directly
       ];
 
       // Update on backend first
@@ -332,12 +328,12 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
     }
   };
 
-  const handleProviderRemove = async (providerName: string) => {
+  const handleProviderRemove = async (provider: CloudProvider) => {
     if (!selectedCategory || !selectedProgramId || !selectedProjectId) return;
 
     try {
       const updatedProviders = selectedCategory.cloudProviders?.filter(
-        p => p.name !== providerName
+        p => p.id !== provider.id  // Compare by id instead of name
       ) || [];
 
       // Update on backend first
@@ -365,7 +361,6 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
         <h3 className="category-name">
           {selectedCategory && selectedProgramId && selectedProjectId && (
             <CloudProviderChips
-              availableProviders={availableProviders.map(p => p.name)} // Pass only names to keep interface simple
               selectedProviders={selectedCategory.cloudProviders || []}
               onProviderAdd={handleProviderAdd}
               onProviderRemove={handleProviderRemove}

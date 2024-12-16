@@ -18,7 +18,7 @@ export type Item = {
 };
 
 export interface CloudProvider {
-  id?: number;
+  id: number;
   name: string;
 }
 

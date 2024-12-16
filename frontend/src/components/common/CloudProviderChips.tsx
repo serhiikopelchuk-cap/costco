@@ -1,40 +1,41 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { useAppSelector } from '../../hooks/reduxHooks';
+import { CloudProvider } from '../../types/program';
 import './CloudProviderChips.css';
 
 interface CloudProviderChipsProps {
-  availableProviders: string[];
-  selectedProviders: { name: string }[];
-  onProviderAdd: (providerName: string) => void;
-  onProviderRemove: (providerName: string) => void;
+  selectedProviders: CloudProvider[];
+  onProviderAdd: (provider: CloudProvider) => void;
+  onProviderRemove: (provider: CloudProvider) => void;
   disabled?: boolean;
 }
 
 const CloudProviderChips: React.FC<CloudProviderChipsProps> = ({
-  availableProviders,
   selectedProviders,
   onProviderAdd,
   onProviderRemove,
   disabled = false
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
+  const allProviders = useAppSelector(state => state.cloudProviders.items);
 
   // Filter out providers that are already selected
-  const unselectedProviders = availableProviders.filter(
-    provider => !selectedProviders.some(p => p.name === provider)
+  const unselectedProviders = allProviders.filter(
+    provider => !selectedProviders.some(p => p.id === provider.id)
   );
 
   return (
     <div className="cloud-provider-chips-container">
       <div className="cloud-provider-chips">
         {selectedProviders.map((provider) => (
-          <span key={provider.name} className={`chip ${disabled ? 'disabled' : ''}`}>
+          <span key={provider.id} className={`chip ${disabled ? 'disabled' : ''}`}>
             {provider.name}
             {!disabled && (
               <button
                 className="remove-provider"
-                onClick={() => onProviderRemove(provider.name)}
+                onClick={() => onProviderRemove(provider)}
                 aria-label={`Remove ${provider.name}`}
               >
                 <FontAwesomeIcon icon={faTimes} />
@@ -57,14 +58,14 @@ const CloudProviderChips: React.FC<CloudProviderChipsProps> = ({
         <div className="provider-dropdown">
           {unselectedProviders.map((provider) => (
             <div
-              key={provider}
+              key={provider.id}
               className="provider-option"
               onClick={() => {
                 onProviderAdd(provider);
                 setIsDropdownOpen(false);
               }}
             >
-              {provider}
+              {provider.name}
             </div>
           ))}
         </div>
