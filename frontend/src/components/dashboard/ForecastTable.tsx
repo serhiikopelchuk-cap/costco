@@ -2,37 +2,32 @@ import React from 'react';
 import { CostType, Program } from '../../types/program';
 
 interface ForecastTableProps {
+  settings: {
+    directInvestment: number;
+    indirectInvestment: number;
+    directGrowthRates: number[];
+    indirectGrowthRates: number[];
+  };
   directCostsData: CostType;
   indirectCostsData: CostType;
 }
 
-const ForecastTable: React.FC<ForecastTableProps> = ({ directCostsData, indirectCostsData }) => {
-  const periodsCount = 6; // Initial Investment + Year 1 to Year 5
-  console.log("directCostsData", directCostsData);
-  console.log("indirectCostsData", indirectCostsData);
-  const calculateProgramCosts = (program: Program, isDirectCost: boolean) => {
-    if (!program.settings) {
-      console.warn('Program settings are missing:', program);
-      return Array(periodsCount).fill(0);
-    }
+const ForecastTable: React.FC<ForecastTableProps> = ({ settings, directCostsData, indirectCostsData }) => {
+  const periodsCount = 6;
 
-    const settings = program.settings as {
-      directInvestment: number;
-      indirectInvestment: number;
-      directGrowthRates: number[];
-      indirectGrowthRates: number[];
-    };
-
-    const investment = isDirectCost ? (settings.directInvestment || 0) : (settings.indirectInvestment || 0);
-    const growthRates = isDirectCost ? (settings.directGrowthRates || []) : (settings.indirectGrowthRates || []);
+  const calculateCosts = (isDirectCost: boolean) => {
+    const investment = isDirectCost 
+      ? settings?.directInvestment || 0 
+      : settings?.indirectInvestment || 0;
+    const growthRates = isDirectCost 
+      ? settings?.directGrowthRates || Array(periodsCount - 1).fill(0)
+      : settings?.indirectGrowthRates || Array(periodsCount - 1).fill(0);
     
-    // Initialize with investment value
     const costs = [investment];
-    
-    // Calculate costs for each year using growth rates
     let currentValue = investment;
+    
     for (let i = 0; i < periodsCount - 1; i++) {
-      const growthRate = (growthRates[i] || 0) / 100; // Convert percentage to decimal
+      const growthRate = (growthRates[i] || 0) / 100;
       currentValue = currentValue * (1 + growthRate);
       costs.push(currentValue);
     }
@@ -40,26 +35,8 @@ const ForecastTable: React.FC<ForecastTableProps> = ({ directCostsData, indirect
     return costs;
   };
 
-  const calculateTotalCosts = (costsData: CostType, isDirectCost: boolean) => {
-    if (!costsData || !costsData.programs) {
-      console.warn('Cost data is missing:', costsData);
-      return Array(periodsCount).fill(0);
-    }
-
-    const totalCosts = Array(periodsCount).fill(0);
-    
-    costsData.programs.forEach(program => {
-      const programCosts = calculateProgramCosts(program, isDirectCost);
-      programCosts.forEach((cost, index) => {
-        totalCosts[index] += cost;
-      });
-    });
-
-    return totalCosts;
-  };
-
-  const directTotal = calculateTotalCosts(directCostsData, true);
-  const indirectTotal = calculateTotalCosts(indirectCostsData, false);
+  const directTotal = calculateCosts(true);
+  const indirectTotal = calculateCosts(false);
   const totalCosts = directTotal.map((value, index) => value + indirectTotal[index]);
 
   const cumulativeCosts = totalCosts.reduce((acc, value, index) => {

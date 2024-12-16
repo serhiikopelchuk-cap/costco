@@ -5,6 +5,7 @@ import { updateSelections } from '../../store/slices/selectionSlice';
 import { setSearch, setAddInputVisibility, setDetails, unpinDetails } from '../../store/slices/uiSlice';
 import GenericList from '../common/GenericList';
 import { Program } from '../../types/program';
+import { DetailsState } from '../../store/slices/uiSlice';
 
 const ProgramList: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -42,50 +43,48 @@ const ProgramList: React.FC = () => {
     const program = programs.find(p => p.id === id);
     if (!program) return;
 
-    // When clicking details of another program, unpin current details first
     dispatch(unpinDetails());
     
+    const detailsState: DetailsState = {
+      type: 'program',
+      id,
+      name: program.name,
+      isPinned: false,
+      activeTab: 'summary'
+    };
+    
+    dispatch(setDetails(detailsState));
+    
+    // Update selections after setting details
     dispatch(updateSelections({
       selectedProgramId: id,
       selectedProjectId: null,
       selectedCategoryId: null,
       selectedLineItems: []
     }));
-    
-    dispatch(setDetails({ 
-      type, 
-      id, 
-      name: program.name,
-      isPinned: false
-    }));
   };
 
   const handleAddProgram = async (programName: string) => {
-    const newProgram: Partial<Program> = { 
-      name: programName, 
-      projects: [] 
-    };
-
     try {
-      // Create new program and store its ID
-      const createdProgram = await dispatch(createProgramAsync({ program: newProgram })).unwrap();
-      const newProgramId = createdProgram.id;
+      const createdProgram = await dispatch(createProgramAsync({ 
+        program: { name: programName, projects: [] } 
+      })).unwrap();
+
+      const detailsState: DetailsState = {
+        type: 'program',
+        id: createdProgram.id,
+        name: programName,
+        isPinned: true,
+        activeTab: 'settings'
+      };
+
+      dispatch(setDetails(detailsState));
       
-      // First select the new program
       dispatch(updateSelections({
-        selectedProgramId: newProgramId,
+        selectedProgramId: createdProgram.id,
         selectedProjectId: null,
         selectedCategoryId: null,
         selectedLineItems: []
-      }));
-
-      // Set pinned details
-      dispatch(setDetails({ 
-        type: 'program', 
-        id: newProgramId, 
-        name: programName,
-        activeTab: 'settings' as const,
-        isPinned: true
       }));
     } catch (error) {
       console.error('Failed to create program:', error);

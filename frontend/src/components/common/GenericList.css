@@ -99,14 +99,29 @@
 }
 
 .item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   cursor: pointer;
   margin-bottom: 5px;
   padding: 5px;
   border-radius: 4px;
   transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.item:hover {
+  background-color: #e0e0e0;
+}
+
+.item.selected {
+  background-color: #d0e6ff;
+  color: #0056b3;
+}
+
+/* Add a stronger highlight when both selected and in details */
+.item.selected.details {
+  background-color: #b8daff;
+  border: 1px solid #0056b3;
 }
 
 .expand-button {

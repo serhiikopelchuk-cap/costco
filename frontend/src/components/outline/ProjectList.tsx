@@ -1,33 +1,51 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
-import { createProjectAsync } from '../../store/slices/costTypesSlice';
+import { createProjectAsync, fetchProgramAsync } from '../../store/slices/costTypesSlice';
 import { updateSelections } from '../../store/slices/selectionSlice';
 import { setSearch, setAddInputVisibility, setDetails, unpinDetails } from '../../store/slices/uiSlice';
 import GenericList from '../common/GenericList';
 import { Project } from '../../types/program';
+import { DetailsState } from '../../store/slices/uiSlice';
 
 const ProjectList: React.FC = () => {
   const dispatch = useAppDispatch();
   const selectedProjectId = useAppSelector(state => state.selection.selectedProjectId);
   const selectedProgramId = useAppSelector(state => state.selection.selectedProgramId);
+  const details = useAppSelector(state => state.ui.details);
   
   // Get projects from the current cost type and selected program
   const projects = useAppSelector(state => {
     if (!selectedProgramId) return [];
-    
-    // First try to get from current item
-    const program = state.costTypes.item?.programs.find(p => p.id === selectedProgramId);
-    if (program) return program.projects;
-    
-    // If not found in current item, try allPrograms
-    const allProgram = state.costTypes.allPrograms.find(p => p.id === selectedProgramId);
-    return allProgram ? allProgram.projects : [];
+    const costType = state.costTypes.item;
+    if (!costType) return [];
+    const program = costType.programs.find(p => p.id === selectedProgramId);
+    return program?.projects || [];
   });
 
   // UI state from Redux
   const showAddProjectInput = useAppSelector(state => state.ui.addInputVisibility.project);
   const projectSearch = useAppSelector(state => state.ui.search.project);
-  const details = useAppSelector(state => state.ui.details);
+
+  // Get project ID from details if it's a project AND belongs to current program
+  const detailsProjectId = details?.type === 'project' && 
+    details.parentProgramId === selectedProgramId 
+      ? details.id 
+      : null;
+
+  // Fetch program data when program ID changes
+  useEffect(() => {
+    if (selectedProgramId) {
+      dispatch(fetchProgramAsync(selectedProgramId));
+    }
+  }, [selectedProgramId, dispatch]);
+
+  console.log('Current state:', {
+    selectedProgramId,
+    projects,
+    details,
+    detailsProjectId,
+    selectedProjectId
+  });
 
   const handleProjectToggle = (projectId: number) => {
     // Only clear details if they're not pinned
@@ -35,30 +53,49 @@ const ProjectList: React.FC = () => {
       dispatch(setDetails(null));
     }
 
-    dispatch(updateSelections({
-      selectedProjectId: projectId,
-      selectedCategoryId: null,
-      selectedLineItems: []
-    }));
+    // Find the project
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return;
+
+    // If clicking the same project, deselect it
+    if (selectedProjectId === projectId) {
+      dispatch(updateSelections({
+        selectedProjectId: null,
+        selectedCategoryId: null,
+        selectedLineItems: []
+      }));
+    } else {
+      // Select the project and its first category if available
+      dispatch(updateSelections({
+        selectedProjectId: projectId,
+        selectedCategoryId: project.categories.length > 0 ? project.categories[0].id : null,
+        selectedLineItems: []
+      }));
+    }
   };
 
   const handleDetailsClick = (type: string, id: number) => {
-    // Unpin any pinned details when viewing details of another item
+    console.log('Details click:', {
+      type,
+      id,
+      selectedProgramId,
+      project: projects.find(p => p.id === id)
+    });
+    const project = projects.find(p => p.id === id);
+    if (!project || !selectedProgramId) return;
+
     dispatch(unpinDetails());
     
-    dispatch(updateSelections({ 
-      selectedProjectId: id,
-      selectedCategoryId: null,
-      selectedLineItems: []
-    }));
+    const detailsState: DetailsState = {
+      type: 'project',
+      id,
+      name: project.name,
+      isPinned: false,
+      activeTab: 'summary',
+      parentProgramId: selectedProgramId
+    };
     
-    dispatch(setDetails({ 
-      type, 
-      id, 
-      name: projects.find(p => p.id === id)?.name || '',
-      activeTab: 'settings' as const,
-      isPinned: false
-    }));
+    dispatch(setDetails(detailsState));
   };
 
   const handleAddProject = async (projectName: string) => {
@@ -75,6 +112,18 @@ const ProjectList: React.FC = () => {
           project: newProject 
         })).unwrap();
 
+        // Set details for the new project
+        const detailsState: DetailsState = {
+          type: 'project',
+          id: result.project.id,
+          name: projectName,
+          isPinned: true,
+          activeTab: 'summary',
+          parentProgramId: selectedProgramId
+        };
+        
+        dispatch(setDetails(detailsState));
+        
         // Select the new project
         dispatch(updateSelections({
           selectedProjectId: result.project.id,
@@ -96,7 +145,10 @@ const ProjectList: React.FC = () => {
         id: project.id,
         name: project.name,
       }))}
-      selectedItemIds={selectedProjectId ? [selectedProjectId] : []}
+      selectedItemIds={[
+        ...(selectedProjectId ? [selectedProjectId] : []),
+        ...(detailsProjectId ? [detailsProjectId] : [])
+      ]}
       onItemToggle={handleProjectToggle}
       onAddItem={handleAddProject}
       onDetailsClick={handleDetailsClick}

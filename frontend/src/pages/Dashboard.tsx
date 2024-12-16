@@ -32,10 +32,15 @@ function Dashboard() {
 
   const filterProgramsByProvider = (programs: Program[], costTypeId: number) => {
     let filteredPrograms = programs
-      // First filter by selected program if any
       .filter(program => !selectedProgramId || program.id === selectedProgramId)
       .map(program => ({
         ...program,
+        settings: program.settings || {
+          directInvestment: 0,
+          indirectInvestment: 0,
+          directGrowthRates: Array(5).fill(0),
+          indirectGrowthRates: Array(5).fill(0)
+        },
         projects: program.projects.map(project => ({
           ...project,
           categories: project.categories.filter(category => 
@@ -58,6 +63,33 @@ function Dashboard() {
   const directCostsData = filterProgramsByProvider(programs, 1);
   const indirectCostsData = filterProgramsByProvider(programs, 2);
 
+  const getProgramSettings = (programId: number | '') => {
+    if (!programId) {
+      // If no program selected, combine all programs' settings
+      return programs.reduce((acc, program) => ({
+        directInvestment: (acc.directInvestment || 0) + (program.settings?.directInvestment || 0),
+        indirectInvestment: (acc.indirectInvestment || 0) + (program.settings?.indirectInvestment || 0),
+        directGrowthRates: program.settings?.directGrowthRates || Array(5).fill(0),
+        indirectGrowthRates: program.settings?.indirectGrowthRates || Array(5).fill(0)
+      }), {
+        directInvestment: 0,
+        indirectInvestment: 0,
+        directGrowthRates: Array(5).fill(0),
+        indirectGrowthRates: Array(5).fill(0)
+      });
+    }
+
+    const program = programs.find(p => p.id === programId);
+    return program?.settings || {
+      directInvestment: 0,
+      indirectInvestment: 0,
+      directGrowthRates: Array(5).fill(0),
+      indirectGrowthRates: Array(5).fill(0)
+    };
+  };
+
+  const programSettings = getProgramSettings(selectedProgramId);
+
   if (!programs.length) {
     return <div>Loading...</div>;
   }
@@ -67,6 +99,11 @@ function Dashboard() {
       <div className="dashboard-header">
         <h2>Dashboard</h2>
         <div className="dashboard-filters">
+          <ProviderFilter
+            selectedProvider={selectedProvider}
+            onProviderChange={setSelectedProvider}
+            cloudProviders={cloudProviders.map(cp => cp.name)}
+          />
           <select 
             value={selectedProgramId} 
             onChange={(e) => setSelectedProgramId(e.target.value ? Number(e.target.value) : '')}
@@ -78,19 +115,22 @@ function Dashboard() {
               </option>
             ))}
           </select>
-          <ProviderFilter
-            selectedProvider={selectedProvider}
-            onProviderChange={setSelectedProvider}
-            cloudProviders={cloudProviders.map(cp => cp.name)}
-          />
         </div>
       </div>
       <div className="top-section">
         <div className="forecast-table">
-          <ForecastTable directCostsData={directCostsData} indirectCostsData={indirectCostsData} />
+          <ForecastTable 
+            settings={programSettings}
+            directCostsData={directCostsData} 
+            indirectCostsData={indirectCostsData} 
+          />
         </div>
         <div className="top-charts-section">
-          <TopCharts directCostsData={directCostsData} indirectCostsData={indirectCostsData} />
+          <TopCharts 
+            settings={programSettings}
+            directCostsData={directCostsData} 
+            indirectCostsData={indirectCostsData} 
+          />
         </div>
       </div>
       <div className="tables">

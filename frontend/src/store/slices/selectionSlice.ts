@@ -73,6 +73,10 @@ const selectionSlice = createSlice({
       );
     },
     updateSelections: (state, action: PayloadAction<UpdateSelectionsPayload>) => {
+      console.log('Updating selections:', {
+        current: state,
+        update: action.payload
+      });
       if (action.payload.selectedProgramId !== undefined) {
         state.selectedProgramId = action.payload.selectedProgramId;
       }

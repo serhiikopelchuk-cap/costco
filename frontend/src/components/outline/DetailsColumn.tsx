@@ -53,11 +53,7 @@ const DetailsColumn: React.FC<DetailsColumnProps> = ({
       />
     )}
     {!selectedCategoryId && details && (
-      <DetailsComponent 
-        type={details.type} 
-        id={details.id}
-        programId={details.type === 'project' && selectedProgramId !== null ? selectedProgramId : undefined}
-      />
+      <DetailsComponent />
     )}
   </div>
 );

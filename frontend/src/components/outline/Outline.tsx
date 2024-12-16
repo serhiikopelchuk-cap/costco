@@ -13,6 +13,7 @@ import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { setLineItems, setProvider } from '../../store/slices/selectionSlice';
 import { fetchProgramByIdAsync } from '../../store/slices/programsSlice';
 import { selectCategoriesFromPrograms } from '../../store/slices/programsSlice';
+import { clearDetails } from '../../store/slices/uiSlice';
 
 type OutlineProps = {
   data: Program[];
@@ -35,6 +36,7 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
     search: { lineItem: lineItemSearch },
     addInputVisibility: { lineItem: showAddLineItemInput },
     details,
+    currentPage,
   } = useAppSelector(state => {
     return state.ui;
   });
@@ -75,6 +77,26 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
   const lineItems = categories
     .find(category => category.id === selectedCategoryId)
     ?.items || [];
+
+  useEffect(() => {
+    // Cleanup details when navigating away
+    return () => {
+      dispatch(clearDetails());
+    };
+  }, []);
+
+  useEffect(() => {
+    // Clear unpinned details when changing pages
+    if (!details?.isPinned) {
+      dispatch(clearDetails());
+    }
+  }, [currentPage]);
+
+  console.log('Outline render:', {
+    selectedProgramId,
+    selectedProjectId,
+    details
+  });
 
   return (
     <div className="outline-view">

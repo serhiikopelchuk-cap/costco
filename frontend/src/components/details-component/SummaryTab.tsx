@@ -25,9 +25,7 @@ const SummaryTab: React.FC<SummaryTabProps> = ({
   overallTotalSum,
   overallAverageSum,
   sums,
-}) => {
-  console.log('SummaryTab render:', { type, editingName });
-  
+}) => {  
   return (
     <>
       <p>Summary for {type === 'program' ? 'Program' : 'Project'}:</p>

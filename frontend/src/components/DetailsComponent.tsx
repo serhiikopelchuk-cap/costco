@@ -15,194 +15,134 @@ import {
   updateProjectNameAsync,
   deleteProjectAction,
   deleteProgramAction,
-  fetchProgramsAsync
+  fetchProgramsAsync,
+  fetchProjectAsync
 } from '../store/slices/costTypesSlice';
-import { RootState } from '../store';
-import { useSelector } from 'react-redux';
 import { setProgramId, setProjectId, updateSelections } from '../store/slices/selectionSlice';
 import { SummaryTab, SettingsTab } from './details-component';
 import { setDetails } from '../store/slices/uiSlice';
 
-interface DetailsComponentProps {
-  type: 'program' | 'project';
-  id: number;
-  programId?: number;
-}
 
-interface DeleteButtonProps {
-  onClick: () => void;
-  title?: string;
-}
-
-interface SummaryTabProps {
-  type: 'program' | 'project';
-  editingName: string;
-  handleNameChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleNameBlur: () => void;
-  data: any;
-  columns: string[];
-  sums: Record<number, { periodSums: number[], totalSum: number, averageSum: number }>;
-  overallSums: number[];
-  overallTotalSum: number;
-  overallAverageSum: number;
-}
-
-const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, id, programId }) => {
-  const columns = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9', 'P10', 'P11', 'P12', 'P13', 'Total', 'Average'];
-  const numberOfPeriods = 13;
-
+const DetailsComponent: React.FC = () => {
+  const dispatch = useAppDispatch();
+  const details = useAppSelector(state => state.ui.details);
+  const currentPage = useAppSelector(state => state.ui.currentPage);
+  const { selectedProjectId } = useAppSelector(state => state.selection);
+  const programs = useAppSelector(state => state.costTypes.item?.programs || []);
+  
+  const itemData = useAppSelector(state => {
+    if (!details?.id) return [];
+    if (details.type === 'program') {
+      const program = programs.find(p => p.id === details.id);
+      return program ? program.projects : [];
+    } else if (details.type === 'project' && details.parentProgramId) {
+      const program = programs.find(p => p.id === details.parentProgramId);
+      const project = program?.projects.find(p => p.id === details.id);
+      return project ? project.categories : [];
+    }
+    return [];
+  });
+  
   const [sums, setSums] = useState<Record<number, { periodSums: number[], totalSum: number, averageSum: number }>>({});
-  const [overallSums, setOverallSums] = useState<number[]>(Array(numberOfPeriods).fill(0));
+  const [overallSums, setOverallSums] = useState<number[]>(Array(13).fill(0));
   const [overallTotalSum, setOverallTotalSum] = useState<number>(0);
   const [overallAverageSum, setOverallAverageSum] = useState<number>(0);
   const [isCloning, setIsCloning] = useState(false);
   const [cloneSuccess, setCloneSuccess] = useState(false);
-  const [activeTab, setActiveTab] = useState<'summary' | 'settings'>(type === 'project' ? 'summary' : 'summary');
-
-  const dispatch = useAppDispatch();
-  const currentPage = useSelector((state: RootState) => state.ui.currentPage);
-  const { selectedProjectId } = useAppSelector(state => state.selection);
-
-  // Get programs and projects from Redux state
-  const programs = useAppSelector(state => state.costTypes.item?.programs || []);
-
-  const details = useAppSelector(state => state.ui.details);
+  const [activeTab, setActiveTab] = useState<'summary' | 'settings'>('summary');
+  const [editingName, setEditingName] = useState('');
 
   useEffect(() => {
-    if (!programId && programs.length > 0) {
-      // Select the first available program if none is selected
-      const firstProgram = programs[0];
-      dispatch(setProgramId(firstProgram.id));
-
-      if (type === 'project' && firstProgram.projects.length > 0) {
-        // Select the first available project if none is selected
-        const firstProject = firstProgram.projects[0];
-        dispatch(setProjectId(firstProject.id));
-      }
+    if (!details) return;
+    if (!details.id || !details.type) return;
+    
+    const { type, id, parentProgramId } = details;
+    if (type === 'program' && typeof id === 'number') {
+      dispatch(fetchProgramAsync(id));
+    } else if (type === 'project' && typeof id === 'number' && typeof parentProgramId === 'number') {
+      dispatch(fetchProjectAsync({ projectId: id, programId: parentProgramId }));
     }
-  }, [programId, programs, dispatch, type]);
+  }, [details, dispatch]);
 
-  // Get program/project name from Redux state
-  const name = useAppSelector(state => {
-    if (type === 'program') {
-      const program = state.costTypes.item?.programs.find(p => p.id === id);
-      return program ? program.name : '';
+  useEffect(() => {
+    if (!details?.name) return;
+    setEditingName(details.name);
+  }, [details?.name]);
+
+  useEffect(() => {
+    if (!details) return;
+    calculateAndSetSums();
+  }, [itemData, details?.type]);
+
+  useEffect(() => {
+    if (!details) return;
+    if (details.type === 'program') {
+      setActiveTab(details.activeTab || 'summary');
     } else {
-      const program = state.costTypes.item?.programs.find(p => p.id === programId);
-      const project = program?.projects.find(p => p.id === id);
-      return project ? project.name : '';
+      setActiveTab('summary');
     }
-  });
+  }, [details]);
 
-  // Get projects or categories from Redux state
-  const itemData = useAppSelector(state => {
-    if (type === 'program') {
-      const program = state.costTypes.item?.programs.find(p => p.id === id);
-      return program ? program.projects : [];
-    } else {
-      const program = state.costTypes.item?.programs.find(p => p.id === programId);
-      const project = program?.projects.find(p => p.id === id);
-      return project ? project.categories : [];
-    }
-  });
+  if (!details?.id || !details.type) return null;
+  const { type, id, name, isPinned, parentProgramId } = details;
 
-  const [editingName, setEditingName] = useState(name);
+  const columns = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9', 'P10', 'P11', 'P12', 'P13', 'Total', 'Average'];
+  const numberOfPeriods = 13;
 
-  useEffect(() => {
-    setEditingName(name);
-  }, [name]);
+  const calculateAndSetSums = () => {
+    const sums: Record<number, { periodSums: number[], totalSum: number, averageSum: number }> = {};
+    const overallSums = Array(numberOfPeriods).fill(0);
+    let overallTotalSum = 0;
 
-  useEffect(() => {
-    if (type === 'program' && itemData.length === 0) {
-      // No projects in the program
-      setSums({});
-      setOverallSums(Array(numberOfPeriods).fill(0));
-      setOverallTotalSum(0);
-      setOverallAverageSum(0);
-      return;
-    }
+    itemData.forEach(item => {
+      const periodSums = Array(numberOfPeriods).fill(0);
+      let totalSum = 0;
 
-    if (type === 'project' && (itemData as Category[]).every((category) => category.items.length === 0)) {
-      // No categories in the project
-      setSums({});
-      setOverallSums(Array(numberOfPeriods).fill(0));
-      setOverallTotalSum(0);
-      setOverallAverageSum(0);
-      return;
-    }
+      const items = type === 'program' 
+        ? (item as Project).categories.flatMap(category => category.items) 
+        : (item as Category).items;
 
-    const calculateSums = (data: (Project | Category)[]) => {
-      const sums: Record<number, { periodSums: number[], totalSum: number, averageSum: number }> = {};
-      const overallSums = Array(numberOfPeriods).fill(0);
-      let overallTotalSum = 0;
-
-      data.forEach(item => {
-        const periodSums = Array(numberOfPeriods).fill(0);
-        let totalSum = 0;
-
-        const items = type === 'program' 
-          ? (item as Project).categories.flatMap(category => category.items) 
-          : (item as Category).items;
-
-        items.forEach(item => {
-          item.costs.forEach(({ value }, index) => {
-            const numericValue = Number(value);
-            if (!isNaN(numericValue)) {
-              periodSums[index] += numericValue;
-              overallSums[index] += numericValue;
-            }
-          });
+      items.forEach(item => {
+        item.costs.forEach(({ value }, index) => {
+          const numericValue = Number(value);
+          if (!isNaN(numericValue)) {
+            periodSums[index] += numericValue;
+            overallSums[index] += numericValue;
+          }
         });
-
-        totalSum = periodSums.reduce((sum, value) => sum + value, 0);
-        
-        const averageSum = totalSum / numberOfPeriods;
-
-        const itemId = type === 'program' ? (item as Project).id : (item as Category).id;
-        sums[itemId] = { periodSums, totalSum, averageSum };
-        overallTotalSum += totalSum;
       });
 
-      const overallAverageSum = overallTotalSum / numberOfPeriods;
+      totalSum = periodSums.reduce((sum, value) => sum + value, 0);
+      
+      const averageSum = totalSum / numberOfPeriods;
 
-      return { sums, overallSums, overallTotalSum, overallAverageSum };
-    };
+      const itemId = type === 'program' ? (item as Project).id : (item as Category).id;
+      sums[itemId] = { periodSums, totalSum, averageSum };
+      overallTotalSum += totalSum;
+    });
 
-    const { sums, overallSums, overallTotalSum, overallAverageSum } = calculateSums(itemData);
+    const overallAverageSum = overallTotalSum / numberOfPeriods;
+
     setSums(sums);
     setOverallSums(overallSums);
     setOverallTotalSum(overallTotalSum);
     setOverallAverageSum(overallAverageSum);
-  }, [itemData, type]);
-
-  useEffect(() => {
-    if (details?.activeTab && type === 'program') {
-      setActiveTab(details.activeTab);
-    } else if (type === 'project') {
-      setActiveTab('summary');
-    }
-  }, [details, type]);
+  };
 
   const handleClone = async () => {
+    if (!id) return;
     setIsCloning(true);
     setCloneSuccess(false);
+    
     try {
       if (type === 'program') {
         const clonedProgram = await cloneProgram(id);
-        console.log('Program cloned successfully:', clonedProgram);
         dispatch(updateProgram(clonedProgram));
-
-        dispatch(fetchCostTypeByAliasAsync(currentPage === 'direct_costs' ? 'direct_costs' : 'indirect_costs'));
-      } else {
-        if (programId === undefined) {
-          console.error('Program ID is required to clone a project');
-          return;
-        }
-        const clonedProject = await cloneProject(id, programId);
-        console.log('Project cloned successfully:', clonedProject);
-        dispatch(updateProject({ programId, project: clonedProject }));
-
-        await dispatch(fetchProgramAsync(programId)).unwrap();
+        dispatch(fetchCostTypeByAliasAsync(currentPage || 'direct_costs'));
+      } else if (parentProgramId) {
+        const clonedProject = await cloneProject(id, parentProgramId);
+        dispatch(updateProject({ programId: parentProgramId, project: clonedProject }));
+        await dispatch(fetchProgramAsync(parentProgramId)).unwrap();
       }
 
       setCloneSuccess(true);
@@ -215,22 +155,15 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, id, programId
   };
 
   const handleDelete = async () => {
+    if (typeof id !== 'number') return;
+
     try {
       if (type === 'program') {
-        // Clear details before deletion
         dispatch(setDetails(null));
-
-        // Delete from backend
         await deleteProgram(id);
-        console.log('Program deleted successfully');
-
-        // Update local state
         dispatch(deleteProgramAction(id));
-
-        // Refresh programs list
         await dispatch(fetchProgramsAsync()).unwrap();
-      } else if (programId !== undefined) {
-        // Clear selections first if this was the selected project
+      } else if (type === 'project' && typeof parentProgramId === 'number') {
         if (selectedProjectId === id) {
           dispatch(updateSelections({
             selectedProjectId: null,
@@ -239,22 +172,16 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, id, programId
           }));
         }
 
-        // Clear details before deletion
         dispatch(setDetails(null));
-
-        // Delete from backend
         await deleteProject(id);
-        console.log('Project deleted successfully');
+        dispatch(deleteProjectAction({ 
+          programId: parentProgramId, 
+          projectId: id 
+        }));
 
-        // First update local state
-        dispatch(deleteProjectAction({ programId, projectId: id }));
-
-        // Then update cost type data
         if (currentPage) {
           await dispatch(fetchCostTypeByAliasAsync(currentPage)).unwrap();
         }
-
-        // Finally refresh programs list
         await dispatch(fetchProgramsAsync()).unwrap();
       }
     } catch (error) {
@@ -267,12 +194,17 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, id, programId
   };
 
   const handleNameBlur = async () => {
+    if (typeof id !== 'number') return;
+
     if (type === 'program') {
-      await dispatch(updateProgramNameAsync({ programId: id, name: editingName }));
-    } else if (type === 'project' && programId !== undefined) {
+      await dispatch(updateProgramNameAsync({ 
+        programId: id, 
+        name: editingName 
+      }));
+    } else if (type === 'project' && typeof parentProgramId === 'number') {
       await dispatch(updateProjectNameAsync({ 
         projectId: id, 
-        programId, 
+        programId: parentProgramId, 
         name: editingName 
       }));
     }
@@ -322,7 +254,7 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, id, programId
         </div>
       </div>
 
-      {activeTab === 'summary' ? (
+      {activeTab === 'summary' && type && (
         <SummaryTab 
           type={type}
           editingName={editingName}
@@ -335,9 +267,10 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({ type, id, programId
           overallTotalSum={overallTotalSum}
           overallAverageSum={overallAverageSum}
         />
-      ) : type === 'program' ? (
+      )}
+      {activeTab === 'settings' && type === 'program' && (
         <SettingsTab type={type} />
-      ) : null}
+      )}
     </div>
   );
 };
