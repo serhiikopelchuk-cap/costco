@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import './ItemsTable.css';
 import { Item, Cost, Category } from '../../../types/program';
 import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
@@ -15,6 +15,15 @@ import { cloneItem } from '../../../services/itemService';
 import { updateCategory as updateCategoryService } from '../../../services/categoryService';
 import { bulkUpdateItems } from '../../../services/itemService';
 import CurrencyInput from '../../common/CurrencyInput';
+import { SelectionProvider, SelectionContext } from './SelectionContext';
+import CellSelection from './CellSelection';
+
+interface CellRange {
+  cells: Array<{
+    itemId: number;
+    costId: number;
+  }>;
+}
 
 interface ItemsTableProps {
   items: Item[];
@@ -24,12 +33,224 @@ interface ItemsTableProps {
   selectedCategoryId: number | null;
   frozenPeriods: { [key: number]: boolean };
   onItemUpdate: (item: Item) => void;
+  onBulkCellChange?: (cells: Array<{itemId: number, costId: number}>, value: string) => void;
 }
 
 interface CellPosition {
   itemId: number;
   costId: number;
 }
+
+interface FrozenPeriods {
+  [key: number]: boolean;
+}
+
+const frozenTestPeriods: FrozenPeriods = {
+  [1]: true,  // P1 заморожен
+  [2]: false, // P2 не заморожен
+  [3]: false,
+  [4]: false,
+  [5]: false
+};
+
+const TestSelectionTable: React.FC = () => {
+  const testItems: Item[] = [
+    {
+      id: 1,
+      name: "Test Item 1",
+      costs: [
+        { id: 101, value: 100 },
+        { id: 102, value: 200 },
+        { id: 103, value: 300 },
+        { id: 104, value: 400 },
+        { id: 105, value: 500 },
+      ]
+    },
+    {
+      id: 2,
+      name: "Test Item 2",
+      costs: [
+        { id: 201, value: 150 },
+        { id: 202, value: 250 },
+        { id: 203, value: 350 },
+        { id: 204, value: 450 },
+        { id: 205, value: 550 },
+      ]
+    },
+    {
+      id: 3,
+      name: "Test Item 3",
+      costs: [
+        { id: 301, value: 160 },
+        { id: 302, value: 260 },
+        { id: 303, value: 360 },
+        { id: 304, value: 460 },
+        { id: 305, value: 560 },
+      ]
+    }
+  ];
+
+  return (
+    <div style={{ padding: '20px' }}>
+      <h3>Test Selection Table</h3>
+      <SelectionProvider items={testItems} frozenPeriods={frozenTestPeriods}>
+        <TestTableContent />
+      </SelectionProvider>
+    </div>
+  );
+};
+
+const TestTableContent: React.FC = () => {
+  const { selectedCells } = useContext(SelectionContext);
+  const [editingValues, setEditingValues] = useState<{ [key: string]: string }>({});
+  const [testItemsState, setTestItemsState] = useState<Item[]>([
+    {
+      id: 1,
+      name: "Test Item 1",
+      costs: [
+        { id: 101, value: 100 },
+        { id: 102, value: 200 },
+        { id: 103, value: 300 },
+        { id: 104, value: 400 },
+        { id: 105, value: 500 },
+      ]
+    },
+    {
+      id: 2,
+      name: "Test Item 2",
+      costs: [
+        { id: 201, value: 150 },
+        { id: 202, value: 250 },
+        { id: 203, value: 350 },
+        { id: 204, value: 450 },
+        { id: 205, value: 550 },
+      ]
+    },
+    {
+      id: 3,
+      name: "Test Item 3",
+      costs: [
+        { id: 301, value: 160 },
+        { id: 302, value: 260 },
+        { id: 303, value: 360 },
+        { id: 304, value: 460 },
+        { id: 305, value: 560 },
+      ]
+    }
+  ]);
+
+  const handleInputChange = (itemId: number, costId: number, value: string) => {
+    const sanitizedValue = value.replace(/[^0-9.$]/g, '');
+    const numericValue = parseFloat(sanitizedValue.replace(/\$/g, ''));
+    
+    if (numericValue < 0) return;
+
+    if (selectedCells.some(cell => cell.itemId === itemId && cell.costId === costId)) {
+      // Обновляем все выделенные ячейки
+      selectedCells.forEach(cell => {
+        const key = `${cell.itemId}-${cell.costId}`;
+        setEditingValues(prev => ({
+          ...prev,
+          [key]: sanitizedValue
+        }));
+      });
+    } else {
+      // Обновляем только текущую ячейку
+      const key = `${itemId}-${costId}`;
+      setEditingValues(prev => ({
+        ...prev,
+        [key]: sanitizedValue
+      }));
+    }
+  };
+
+  const handleInputBlur = (itemId: number, costId: number, value: string) => {
+    const numericValue = parseFloat(value.replace(/\$/g, '')) || 0;
+
+    if (selectedCells.some(cell => cell.itemId === itemId && cell.costId === costId)) {
+      // Обновляем все выделенные ячейки
+      const updatedItems = [...testItemsState];
+      selectedCells.forEach(cell => {
+        const itemIndex = updatedItems.findIndex(item => item.id === cell.itemId);
+        if (itemIndex !== -1) {
+          const costIndex = updatedItems[itemIndex].costs.findIndex(cost => cost.id === cell.costId);
+          if (costIndex !== -1) {
+            updatedItems[itemIndex].costs[costIndex].value = numericValue;
+          }
+        }
+      });
+      setTestItemsState(updatedItems);
+    } else {
+      // Обновляем только текущую ячейку
+      setTestItemsState(prev => 
+        prev.map(item => {
+          if (item.id === itemId) {
+            return {
+              ...item,
+              costs: item.costs.map(cost => 
+                cost.id === costId ? { ...cost, value: numericValue } : cost
+              )
+            };
+          }
+          return item;
+        })
+      );
+    }
+    setEditingValues({});
+  };
+
+  return (
+    <table className="items-table">
+      <thead>
+        <tr>
+          <th>Item Name</th>
+          {['P1', 'P2', 'P3', 'P4', 'P5'].map((period, index) => (
+            <th key={period} className={`header-cell ${frozenTestPeriods[index + 1] ? 'frozen' : ''}`}>
+              {period}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {testItemsState.map((item) => (
+          <tr key={item.id}>
+            <td>{item.name}</td>
+            {[...item.costs].sort((a, b) => (a.id || 0) - (b.id || 0)).map((cost, index) => {
+              const isSelected = selectedCells.some(cell => 
+                cell.itemId === item.id! && 
+                cell.costId === cost.id!
+              );
+              const isFrozen = frozenTestPeriods[index + 1];
+              
+              return (
+                <CellSelection
+                  key={cost.id}
+                  itemId={item.id!}
+                  costId={cost.id!}
+                  index={index}
+                  isFrozen={isFrozen}
+                  isSelected={isSelected}
+                >
+                  <div className="input-container">
+                    <CurrencyInput
+                      value={editingValues[`${item.id!}-${cost.id}`] !== undefined 
+                        ? editingValues[`${item.id!}-${cost.id}`] 
+                        : cost.value?.toString() || ''}
+                      onChange={(value) => handleInputChange(item.id!, cost.id!, value)}
+                      onBlur={(value) => handleInputBlur(item.id!, cost.id!, value)}
+                      disabled={isFrozen}
+                      className="cost-input"
+                    />
+                  </div>
+                </CellSelection>
+              );
+            })}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+};
 
 const ItemsTable: React.FC<ItemsTableProps> = ({
   items,
@@ -39,6 +260,7 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
   selectedCategoryId,
   frozenPeriods,
   onItemUpdate,
+  onBulkCellChange
 }) => {
   const dispatch = useAppDispatch();
   const selectedCategory = useAppSelector(state => 
@@ -55,6 +277,7 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
   const [selectedCells, setSelectedCells] = useState<CellPosition[]>([]);
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionStart, setSelectionStart] = useState<CellPosition | null>(null);
+  const [selectedRange, setSelectedRange] = useState<CellRange | null>(null);
 
   const columns = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9', 'P10', 'P11', 'P12', 'P13', 'Total', 'Average'];
   const numberOfCosts = 13;
@@ -120,7 +343,7 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
     
     if (numericValue < 0) return;
 
-    if (isCellSelected(itemId, costId)) {
+    if (selectedCells.some(cell => cell.itemId === itemId && cell.costId === costId)) {
       console.log('Updating multiple cells with value:', sanitizedValue);
       selectedCells.forEach(cell => {
         const key = `${cell.itemId}-${cell.costId}`;
@@ -142,7 +365,7 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
   const handleInputBlur = async (itemId: number, costId: number, value: string) => {
     const numericValue = parseFloat(value.replace(/\$/g, '')) || 0;
 
-    if (isCellSelected(itemId, costId)) {
+    if (selectedCells.some(cell => cell.itemId === itemId && cell.costId === costId)) {
       // Multiple cells update logic
       const updatedItems = new Map<number, Item>();
       
@@ -278,7 +501,18 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
   };
 
   const isCellSelected = (itemId: number, costId: number) => {
-    return selectedCells.some(cell => cell.itemId === itemId && cell.costId === costId);
+    // Проверяем выделение через selectedRange
+    if (selectedRange) {
+      return selectedRange.cells.some(
+        (cell: {itemId: number, costId: number}) => 
+          cell.itemId === itemId && cell.costId === costId
+      );
+    }
+    
+    // Проверяем выделение через selectedCells
+    return selectedCells.some(cell => 
+      cell.itemId === itemId && cell.costId === costId
+    );
   };
 
   const isCellFrozen = (index: number) => {
@@ -366,100 +600,126 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
     }
   };
 
+  const handleRangeSelect = (range: CellRange) => {
+    setSelectedRange(range);
+  };
+
+  const handleBulkEdit = (value: string) => {
+    if (selectedRange && onBulkCellChange) {
+      onBulkCellChange(selectedRange.cells, value);
+    }
+  };
+
+  const TableContent: React.FC = () => {
+    const { selectedCells } = useContext(SelectionContext);
+
+    return (
+      <table className="items-table">
+        <thead>
+          <tr className="header-row">
+            {columns.map((col, index) => (
+              <th 
+                key={index} 
+                className={`header-cell ${isCellFrozen(index) ? 'frozen' : ''}`}
+                onClick={() => handleHeaderClick(index)}
+              >
+                {col}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          <tr className="summary-row">
+            {costTotals.map((total, index) => (
+              <td key={index} className="summary-cell">{Number(total).toFixed(0)}$</td>
+            ))}
+            <td className="summary-cell">{Number(totalOfTotals).toFixed(2)}$</td>
+            <td className="summary-cell">{Number(averageOfAverages).toFixed(2)}$</td>
+          </tr>
+          {itemsToDisplay.map((item) => {
+            const itemTotal = item.costs.reduce((sum: number, cost: Cost) => 
+              sum + (Number(cost.value) || 0), 0);
+            const itemAverage = itemTotal / numberOfCosts;
+            const sortedCosts = item.costs.slice().sort((a, b) => (a.id || 0) - (b.id || 0));
+
+            return (
+              <React.Fragment key={item.id}>
+                <tr className="line-item-row">
+                  <td className="line-item-label" colSpan={columns.length}>
+                    <input
+                      type="text"
+                      value={editingName[item.id!] !== undefined ? editingName[item.id!] : item.name}
+                      onChange={(e) => handleNameChange(item.id!, e.target.value)}
+                      onBlur={() => handleNameBlur(item.id!)}
+                      className="line-item-input"
+                    />
+                    <CloneButton
+                      isCloning={cloningItems[item.id!]}
+                      cloneSuccess={cloneItemSuccess[item.id!]}
+                      onClick={() => handleCloneItem(item)}
+                      title="Clone item"
+                    />
+                    <DeleteButton
+                      onClick={() => handleRemoveItem(item.id!)}
+                      title="Delete item"
+                      disabled={cloningItems[item.id!]}
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  {sortedCosts.map((cost, index) => {
+                    const loadingKey = `${item.id!}-${cost.id}`;
+                    const isSelected = selectedCells.some(cell => 
+                      cell.itemId === item.id! && 
+                      cell.costId === cost.id!
+                    );
+                    const isFrozen = isCellFrozen(index);
+                    
+                    return (
+                      <CellSelection
+                        key={cost.id}
+                        itemId={item.id!}
+                        costId={cost.id!}
+                        index={index}
+                        isFrozen={isFrozen}
+                        isSelected={isSelected}
+                      >
+                        <div className="input-container">
+                          <CurrencyInput
+                            value={editingValues[loadingKey] !== undefined ? editingValues[loadingKey] : cost.value}
+                            onChange={(value) => handleInputChange(item.id!, cost.id!, value)}
+                            onBlur={(value) => handleInputBlur(item.id!, cost.id!, value)}
+                            disabled={isFrozen || loadingItems[loadingKey]}
+                            className="cost-input"
+                          />
+                          {loadingItems[loadingKey] && <span className="spinner"></span>}
+                        </div>
+                      </CellSelection>
+                    );
+                  })}
+                  <td className="line-item-cell">{Number(itemTotal).toFixed(2)}$</td>
+                  <td className="line-item-cell">{Number(itemAverage).toFixed(2)}$</td>
+                </tr>
+              </React.Fragment>
+            );
+          })}
+        </tbody>
+      </table>
+    );
+  };
+
   useEffect(() => {
     window.addEventListener('mouseup', handleMouseUp);
     return () => window.removeEventListener('mouseup', handleMouseUp);
   }, []);
 
   return (
-    <table className="items-table">
-      <thead>
-        <tr className="header-row">
-          {columns.map((col, index) => (
-            <th 
-              key={index} 
-              className={`header-cell ${isCellFrozen(index) ? 'frozen' : ''}`}
-              onClick={() => handleHeaderClick(index)}
-            >
-              {col}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        <tr className="summary-row">
-          {costTotals.map((total, index) => (
-            <td key={index} className="summary-cell">{Number(total).toFixed(0)}$</td>
-          ))}
-          <td className="summary-cell">{Number(totalOfTotals).toFixed(2)}$</td>
-          <td className="summary-cell">{Number(averageOfAverages).toFixed(2)}$</td>
-        </tr>
-        {itemsToDisplay.map((item) => {
-          const itemTotal = item.costs.reduce((sum: number, cost: Cost) => 
-            sum + (Number(cost.value) || 0), 0);
-          const itemAverage = itemTotal / numberOfCosts;
-          const sortedCosts = item.costs.slice().sort((a, b) => (a.id || 0) - (b.id || 0));
-
-          return (
-            <React.Fragment key={item.id}>
-              <tr className="line-item-row">
-                <td className="line-item-label" colSpan={columns.length}>
-                  <input
-                    type="text"
-                    value={editingName[item.id!] !== undefined ? editingName[item.id!] : item.name}
-                    onChange={(e) => handleNameChange(item.id!, e.target.value)}
-                    onBlur={() => handleNameBlur(item.id!)}
-                    className="line-item-input"
-                  />
-                  <CloneButton
-                    isCloning={cloningItems[item.id!]}
-                    cloneSuccess={cloneItemSuccess[item.id!]}
-                    onClick={() => handleCloneItem(item)}
-                    title="Clone item"
-                  />
-                  <DeleteButton
-                    onClick={() => handleRemoveItem(item.id!)}
-                    title="Delete item"
-                    disabled={cloningItems[item.id!]}
-                  />
-                </td>
-              </tr>
-              <tr>
-                {sortedCosts.map((cost, index) => {
-                  const loadingKey = `${item.id!}-${cost.id}`;
-                  const isSelected = isCellSelected(item.id!, cost.id!);
-                  const isFrozen = isCellFrozen(index);
-                  
-                  return (
-                    <td 
-                      key={cost.id} 
-                      className={`line-item-cell ${isSelected ? 'selected' : ''} ${isFrozen ? 'frozen' : ''}`}
-                      data-item-id={item.id}
-                      data-cost-id={cost.id}
-                      onClick={(e) => handleMouseDown(item.id!, cost.id!, index, e)}
-                      onMouseEnter={() => handleMouseEnter(item.id!, cost.id!, index)}
-                    >
-                      <div className="input-container">
-                        <CurrencyInput
-                          value={editingValues[loadingKey] !== undefined ? editingValues[loadingKey] : cost.value}
-                          onChange={(value) => handleInputChange(item.id!, cost.id!, value)}
-                          onBlur={(value) => handleInputBlur(item.id!, cost.id!, value)}
-                          disabled={frozenPeriods[index + 1] || loadingItems[loadingKey]}
-                          className="cost-input"
-                        />
-                        {loadingItems[loadingKey] && <span className="spinner"></span>}
-                      </div>
-                    </td>
-                  );
-                })}
-                <td className="line-item-cell">{Number(itemTotal).toFixed(2)}$</td>
-                <td className="line-item-cell">{Number(itemAverage).toFixed(2)}$</td>
-              </tr>
-            </React.Fragment>
-          );
-        })}
-      </tbody>
-    </table>
+    <>
+      <SelectionProvider items={itemsToDisplay} frozenPeriods={frozenPeriods}>
+        <TableContent />
+      </SelectionProvider>
+      <TestSelectionTable />
+    </>
   );
 };
 

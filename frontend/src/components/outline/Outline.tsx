@@ -69,6 +69,7 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
 
   const handleLineItemUpdate = (updatedItem: Item) => {
     const newSelectedItems = selectedLineItems.map(item => 
+      
       item.id === updatedItem.id ? updatedItem : item
     );
     dispatch(setLineItems(newSelectedItems));
@@ -91,12 +92,6 @@ const Outline: React.FC<OutlineProps> = ({ data = [] }) => {
       dispatch(clearDetails());
     }
   }, [currentPage]);
-
-  console.log('Outline render:', {
-    selectedProgramId,
-    selectedProjectId,
-    details
-  });
 
   return (
     <div className="outline-view">

@@ -99,6 +99,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ type }) => {
           <CurrencyInput
             value={directInvestment}
             onChange={(value) => setDirectInvestment(Number(value.replace(/\$/g, '')) || 0)}
+            onBlur={(value) => setDirectInvestment(Number(value.replace(/\$/g, '')) || 0)}
             placeholder="Enter costs incurred before Year 1, Period 1"
           />
         </div>
@@ -108,6 +109,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ type }) => {
           <CurrencyInput
             value={indirectInvestment}
             onChange={(value) => setIndirectInvestment(Number(value.replace(/\$/g, '')) || 0)}
+            onBlur={(value) => setIndirectInvestment(Number(value.replace(/\$/g, '')) || 0)}
             placeholder="e.g. cloud infrastructure, software licenses, talent"
           />
         </div>

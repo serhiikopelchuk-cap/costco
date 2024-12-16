@@ -39,14 +39,6 @@ const ProjectList: React.FC = () => {
     }
   }, [selectedProgramId, dispatch]);
 
-  console.log('Current state:', {
-    selectedProgramId,
-    projects,
-    details,
-    detailsProjectId,
-    selectedProjectId
-  });
-
   const handleProjectToggle = (projectId: number) => {
     // Only clear details if they're not pinned
     if (!details?.isPinned) {

@@ -42,14 +42,14 @@
 .line-item-input {
   width: 100%;
   padding: 5px;
-  border: 1px solid transparent;
+  border: none;
   background: transparent;
   font-weight: bold;
 }
 
 .line-item-input:hover,
 .line-item-input:focus {
-  border-color: var(--primary-color);
+  border: none;
   outline: none;
 }
 
@@ -62,26 +62,34 @@
 }
 
 .line-item-cell {
-  padding: 8px;
-  text-align: center;
-  font-weight: normal;
-  border: none;
-  color: inherit;
+  position: relative;
+  cursor: cell;
   user-select: none;
+  border: 1px solid transparent;
+  transition: all 0.1s ease;
 }
 
 .line-item-cell.selected {
-  background-color: rgba(0, 123, 255, 0.2);
-  border: 2px solid rgba(0, 123, 255, 0.4);
-}
-
-.line-item-cell.selected[data-vertical="true"] {
-  background-color: rgba(156, 39, 176, 0.2);
-  border: 2px solid rgba(156, 39, 176, 0.4);
+  background-color: rgba(0, 123, 255, 0.2) !important;
+  border: 1px solid rgba(0, 123, 255, 0.4) !important;
+  z-index: 1;
+  position: relative;
+  background-color: white;
 }
 
 .line-item-cell.selecting {
-  opacity: 0.8;
+  background-color: rgba(144, 238, 144, 0.2);
+  border: 1px dashed rgba(0, 128, 0, 0.4);
+}
+
+.line-item-cell.frozen {
+  background-color: rgba(0, 0, 0, 0.05);
+  cursor: not-allowed;
+}
+
+.line-item-cell.frozen.selected {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  border: none !important;
 }
 
 .input-container {
@@ -93,15 +101,15 @@
 .cost-input {
   width: 100%;
   padding-right: 20px;
-  border: 1px solid transparent;
-  background: transparent;
+  border: none !important;
+  background: transparent !important;
   text-align: center;
 }
 
 .cost-input:hover,
 .cost-input:focus {
-  border-color: var(--primary-color);
-  outline: none;
+  border: none !important;
+  outline: none !important;
 }
 
 .spinner {
@@ -124,21 +132,6 @@
   100% {
     transform: translateY(-50%) rotate(360deg);
   }
-}
-
-.line-item-cell.frozen {
-  background-color: rgba(0, 0, 0, 0.05);
-  cursor: not-allowed;
-}
-
-.line-item-cell.frozen.selected {
-  background-color: rgba(0, 0, 0, 0.05);
-  border: none;
-}
-
-.line-item-cell.frozen.selecting {
-  background-color: rgba(0, 0, 0, 0.05);
-  border: none;
 }
 
 .header-cell {
