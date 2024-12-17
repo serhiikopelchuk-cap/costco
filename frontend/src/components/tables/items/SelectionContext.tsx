@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useMemo } from 'react';
 import { Item } from '../../../types/program';
 import { SelectionManager, CellPosition } from './SelectionManager';
 
@@ -23,34 +23,30 @@ export const SelectionProvider: React.FC<{
 
   useEffect(() => {
     const updateSelectedCells = () => {
-      console.log('Updating selected cells');
-      setSelectedCells(rangeSelector.getSelectedCells());
+      console.log('Selection Manager updating cells');
+      const newSelectedCells = rangeSelector.getSelectedCells();
+      console.log('New selected cells:', newSelectedCells);
+      setSelectedCells(newSelectedCells);
     };
 
     rangeSelector.subscribe(updateSelectedCells);
     return () => rangeSelector.unsubscribe(updateSelectedCells);
   }, [rangeSelector]);
 
-  useEffect(() => {
-    const handleMouseUp = () => {
-      console.log('Mouse up, isSelecting:', isSelecting);
-      if (isSelecting) {
-        setIsSelecting(false);
-      }
-    };
+  const contextValue = useMemo(() => ({
+    rangeSelector,
+    isSelecting,
+    setIsSelecting,
+    selectedCells,
+    setSelectedCells
+  }), [rangeSelector, isSelecting, selectedCells]);
 
-    window.addEventListener('mouseup', handleMouseUp);
-    return () => window.removeEventListener('mouseup', handleMouseUp);
-  }, [isSelecting]);
+  useEffect(() => {
+    console.log('Context value updated:', contextValue);
+  }, [contextValue]);
 
   return (
-    <SelectionContext.Provider value={{ 
-      rangeSelector, 
-      isSelecting, 
-      setIsSelecting,
-      selectedCells,
-      setSelectedCells 
-    }}>
+    <SelectionContext.Provider value={contextValue}>
       {children}
     </SelectionContext.Provider>
   );
