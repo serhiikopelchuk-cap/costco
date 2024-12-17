@@ -171,41 +171,8 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
     setSelectionStart(null);
   };
 
-  const handleHeaderClick = (columnIndex: number) => {
-    if (isCellFrozen(columnIndex)) return;
-
-    const columnCells: CellPosition[] = [];
-    itemsToDisplay.forEach(item => {
-      const sortedCosts = [...item.costs].sort((a, b) => (a.id || 0) - (b.id || 0));
-      const cost = sortedCosts[columnIndex];
-      
-      if (cost?.id) {
-        columnCells.push({ 
-          itemId: item.id!, 
-          costId: cost.id 
-        });
-      }
-    });
-
-    const allSelected = columnCells.every(cell => 
-      selectedCells.some((selected: CellPosition) => 
-        selected.itemId === cell.itemId && selected.costId === cell.costId
-      )
-    );
-
-    if (allSelected) {
-      setSelectedCells(selectedCells.filter((selected: CellPosition) => 
-        !columnCells.some(cell => 
-          cell.itemId === selected.itemId && cell.costId === selected.costId
-        )
-      ));
-    } else {
-      setSelectedCells([...selectedCells, ...columnCells]);
-    }
-  };
-
   const TableContent: React.FC = () => {
-    const { selectedCells } = useContext(SelectionContext);
+    const { selectedCells, setSelectedCells } = useContext(SelectionContext);
     const [editingValues, setEditingValues] = useState<{ [key: string]: string }>({});
     const [loadingItems, setLoadingItems] = useState<{ [key: string]: boolean }>({});
 
@@ -330,6 +297,39 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
       }
     };
 
+    const handleHeaderClick = (columnIndex: number) => {
+      if (isCellFrozen(columnIndex)) return;
+
+      const columnCells: CellPosition[] = [];
+      itemsToDisplay.forEach(item => {
+        const sortedCosts = [...item.costs].sort((a, b) => (a.id || 0) - (b.id || 0));
+        const cost = sortedCosts[columnIndex];
+        
+        if (cost?.id) {
+          columnCells.push({ 
+            itemId: item.id!, 
+            costId: cost.id 
+          });
+        }
+      });
+
+      const allSelected = columnCells.every(cell => 
+        selectedCells?.some((selected: CellPosition) => 
+          selected.itemId === cell.itemId && selected.costId === cell.costId
+        )
+      );
+
+      if (allSelected) {
+        setSelectedCells(selectedCells.filter((selected: CellPosition) => 
+          !columnCells.some(cell => 
+            cell.itemId === selected.itemId && cell.costId === selected.costId
+          )
+        ));
+      } else {
+        setSelectedCells([...selectedCells, ...columnCells]);
+      }
+    };
+
     return (
       <table className="items-table">
         <thead>
@@ -437,7 +437,7 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
       <SelectionProvider items={itemsToDisplay} frozenPeriods={frozenPeriods}>
         <TableContent />
       </SelectionProvider>
-      <TestSelectionTable />
+      {/* <TestSelectionTable /> */}
     </>
   );
 };

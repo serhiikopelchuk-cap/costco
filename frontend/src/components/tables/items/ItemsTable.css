@@ -15,7 +15,7 @@
 .header-cell, .line-item-cell {
   border: unset;
   padding: 10px;
-  text-align: center;
+  text-align: end;
   font-weight: bold;
   width: auto;
   min-width: 50px;
@@ -55,7 +55,7 @@
 
 .summary-row .summary-cell {
   padding: 8px;
-  text-align: center;
+  text-align: end;
   font-weight: normal;
   border: none;
   color: inherit;
