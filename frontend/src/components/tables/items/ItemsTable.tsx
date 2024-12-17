@@ -12,11 +12,11 @@ import { setLineItems as setLineItemsAction } from '../../../store/slices/select
 import CloneButton from '../../buttons/CloneButton';
 import DeleteButton from '../../buttons/DeleteButton';
 import { cloneItem } from '../../../services/itemService';
-import { updateCategory as updateCategoryService } from '../../../services/categoryService';
 import { bulkUpdateItems } from '../../../services/itemService';
 import CurrencyInput from '../../common/CurrencyInput';
 import { SelectionProvider, SelectionContext } from './SelectionContext';
 import CellSelection from './CellSelection';
+import TestSelectionTable from './TestSelectionTable';
 
 interface CellRange {
   cells: Array<{
@@ -41,217 +41,6 @@ interface CellPosition {
   costId: number;
 }
 
-interface FrozenPeriods {
-  [key: number]: boolean;
-}
-
-const frozenTestPeriods: FrozenPeriods = {
-  [1]: true,  // P1 заморожен
-  [2]: false, // P2 не заморожен
-  [3]: false,
-  [4]: false,
-  [5]: false
-};
-
-const TestSelectionTable: React.FC = () => {
-  const testItems: Item[] = [
-    {
-      id: 1,
-      name: "Test Item 1",
-      costs: [
-        { id: 101, value: 100 },
-        { id: 102, value: 200 },
-        { id: 103, value: 300 },
-        { id: 104, value: 400 },
-        { id: 105, value: 500 },
-      ]
-    },
-    {
-      id: 2,
-      name: "Test Item 2",
-      costs: [
-        { id: 201, value: 150 },
-        { id: 202, value: 250 },
-        { id: 203, value: 350 },
-        { id: 204, value: 450 },
-        { id: 205, value: 550 },
-      ]
-    },
-    {
-      id: 3,
-      name: "Test Item 3",
-      costs: [
-        { id: 301, value: 160 },
-        { id: 302, value: 260 },
-        { id: 303, value: 360 },
-        { id: 304, value: 460 },
-        { id: 305, value: 560 },
-      ]
-    }
-  ];
-
-  return (
-    <div style={{ padding: '20px' }}>
-      <h3>Test Selection Table</h3>
-      <SelectionProvider items={testItems} frozenPeriods={frozenTestPeriods}>
-        <TestTableContent />
-      </SelectionProvider>
-    </div>
-  );
-};
-
-const TestTableContent: React.FC = () => {
-  const { selectedCells } = useContext(SelectionContext);
-  const [editingValues, setEditingValues] = useState<{ [key: string]: string }>({});
-  const [testItemsState, setTestItemsState] = useState<Item[]>([
-    {
-      id: 1,
-      name: "Test Item 1",
-      costs: [
-        { id: 101, value: 100 },
-        { id: 102, value: 200 },
-        { id: 103, value: 300 },
-        { id: 104, value: 400 },
-        { id: 105, value: 500 },
-      ]
-    },
-    {
-      id: 2,
-      name: "Test Item 2",
-      costs: [
-        { id: 201, value: 150 },
-        { id: 202, value: 250 },
-        { id: 203, value: 350 },
-        { id: 204, value: 450 },
-        { id: 205, value: 550 },
-      ]
-    },
-    {
-      id: 3,
-      name: "Test Item 3",
-      costs: [
-        { id: 301, value: 160 },
-        { id: 302, value: 260 },
-        { id: 303, value: 360 },
-        { id: 304, value: 460 },
-        { id: 305, value: 560 },
-      ]
-    }
-  ]);
-
-  const handleInputChange = (itemId: number, costId: number, value: string) => {
-    const sanitizedValue = value.replace(/[^0-9.$]/g, '');
-    const numericValue = parseFloat(sanitizedValue.replace(/\$/g, ''));
-    
-    if (numericValue < 0) return;
-
-    if (selectedCells.some(cell => cell.itemId === itemId && cell.costId === costId)) {
-      // Обновляем все выделенные ячейки
-      selectedCells.forEach(cell => {
-        const key = `${cell.itemId}-${cell.costId}`;
-        setEditingValues(prev => ({
-          ...prev,
-          [key]: sanitizedValue
-        }));
-      });
-    } else {
-      // Обновляем только текущую ячейку
-      const key = `${itemId}-${costId}`;
-      setEditingValues(prev => ({
-        ...prev,
-        [key]: sanitizedValue
-      }));
-    }
-  };
-
-  const handleInputBlur = (itemId: number, costId: number, value: string) => {
-    const numericValue = parseFloat(value.replace(/\$/g, '')) || 0;
-
-    if (selectedCells.some(cell => cell.itemId === itemId && cell.costId === costId)) {
-      // Обновляем все выделенные ячейки
-      const updatedItems = [...testItemsState];
-      selectedCells.forEach(cell => {
-        const itemIndex = updatedItems.findIndex(item => item.id === cell.itemId);
-        if (itemIndex !== -1) {
-          const costIndex = updatedItems[itemIndex].costs.findIndex(cost => cost.id === cell.costId);
-          if (costIndex !== -1) {
-            updatedItems[itemIndex].costs[costIndex].value = numericValue;
-          }
-        }
-      });
-      setTestItemsState(updatedItems);
-    } else {
-      // Обновляем только текущую ячейку
-      setTestItemsState(prev => 
-        prev.map(item => {
-          if (item.id === itemId) {
-            return {
-              ...item,
-              costs: item.costs.map(cost => 
-                cost.id === costId ? { ...cost, value: numericValue } : cost
-              )
-            };
-          }
-          return item;
-        })
-      );
-    }
-    setEditingValues({});
-  };
-
-  return (
-    <table className="items-table">
-      <thead>
-        <tr>
-          <th>Item Name</th>
-          {['P1', 'P2', 'P3', 'P4', 'P5'].map((period, index) => (
-            <th key={period} className={`header-cell ${frozenTestPeriods[index + 1] ? 'frozen' : ''}`}>
-              {period}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {testItemsState.map((item) => (
-          <tr key={item.id}>
-            <td>{item.name}</td>
-            {[...item.costs].sort((a, b) => (a.id || 0) - (b.id || 0)).map((cost, index) => {
-              const isSelected = selectedCells.some(cell => 
-                cell.itemId === item.id! && 
-                cell.costId === cost.id!
-              );
-              const isFrozen = frozenTestPeriods[index + 1];
-              
-              return (
-                <CellSelection
-                  key={cost.id}
-                  itemId={item.id!}
-                  costId={cost.id!}
-                  index={index}
-                  isFrozen={isFrozen}
-                  isSelected={isSelected}
-                >
-                  <div className="input-container">
-                    <CurrencyInput
-                      value={editingValues[`${item.id!}-${cost.id}`] !== undefined 
-                        ? editingValues[`${item.id!}-${cost.id}`] 
-                        : cost.value?.toString() || ''}
-                      onChange={(value) => handleInputChange(item.id!, cost.id!, value)}
-                      onBlur={(value) => handleInputBlur(item.id!, cost.id!, value)}
-                      disabled={isFrozen}
-                      className="cost-input"
-                    />
-                  </div>
-                </CellSelection>
-              );
-            })}
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-};
-
 const ItemsTable: React.FC<ItemsTableProps> = ({
   items,
   selectedItems,
@@ -260,7 +49,6 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
   selectedCategoryId,
   frozenPeriods,
   onItemUpdate,
-  onBulkCellChange
 }) => {
   const dispatch = useAppDispatch();
   const selectedCategory = useAppSelector(state => 
@@ -500,66 +288,8 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
     }
   };
 
-  const isCellSelected = (itemId: number, costId: number) => {
-    // Проверяем выделение через selectedRange
-    if (selectedRange) {
-      return selectedRange.cells.some(
-        (cell: {itemId: number, costId: number}) => 
-          cell.itemId === itemId && cell.costId === costId
-      );
-    }
-    
-    // Проверяем выделение через selectedCells
-    return selectedCells.some(cell => 
-      cell.itemId === itemId && cell.costId === costId
-    );
-  };
-
   const isCellFrozen = (index: number) => {
     return frozenPeriods[index + 1];
-  };
-
-  const handleMouseDown = (itemId: number, costId: number, index: number, e: React.MouseEvent) => {
-    if (e.button !== 0 || isCellFrozen(index)) return;
-    
-    const isSelected = selectedCells.some(cell => 
-      cell.itemId === itemId && cell.costId === costId
-    );
-
-    if (isSelected) {
-      setSelectedCells(selectedCells.filter(cell => 
-        !(cell.itemId === itemId && cell.costId === costId)
-      ));
-    } else {
-      setIsSelecting(true);
-      setSelectionStart({ itemId, costId });
-      setSelectedCells([...selectedCells, { itemId, costId }]);
-    }
-  };
-
-  const handleMouseEnter = (itemId: number, costId: number, index: number) => {
-    if (!isSelecting || !selectionStart || isCellFrozen(index)) return;
-
-    const startItemIndex = itemsToDisplay.findIndex(item => item.id === selectionStart.itemId);
-    const currentItemIndex = itemsToDisplay.findIndex(item => item.id === itemId);
-    
-    const startCostId = selectionStart.costId;
-    const minItemIndex = Math.min(startItemIndex, currentItemIndex);
-    const maxItemIndex = Math.max(startItemIndex, currentItemIndex);
-    const minCostId = Math.min(startCostId, costId);
-    const maxCostId = Math.max(startCostId, costId);
-
-    const newSelection: CellPosition[] = [];
-    for (let i = minItemIndex; i <= maxItemIndex; i++) {
-      const item = itemsToDisplay[i];
-      for (let j = minCostId; j <= maxCostId; j++) {
-        if (!isCellFrozen(j - 1)) {
-          newSelection.push({ itemId: item.id!, costId: j });
-        }
-      }
-    }
-
-    setSelectedCells(newSelection);
   };
 
   const handleMouseUp = () => {
@@ -597,16 +327,6 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
       ));
     } else {
       setSelectedCells([...selectedCells, ...columnCells]);
-    }
-  };
-
-  const handleRangeSelect = (range: CellRange) => {
-    setSelectedRange(range);
-  };
-
-  const handleBulkEdit = (value: string) => {
-    if (selectedRange && onBulkCellChange) {
-      onBulkCellChange(selectedRange.cells, value);
     }
   };
 
