@@ -51,6 +51,7 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
   onItemUpdate,
 }) => {
   const dispatch = useAppDispatch();
+  const { selectedCells, setSelectedCells } = useContext(SelectionContext);
   const selectedCategory = useAppSelector(state => 
     state.costTypes.item?.programs
       .flatMap(program => program.projects)
@@ -60,9 +61,6 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
   const [editingName, setEditingName] = useState<{ [key: number]: string }>({});
   const [cloningItems, setCloningItems] = useState<{ [key: number]: boolean }>({});
   const [cloneItemSuccess, setCloneItemSuccess] = useState<{ [key: number]: boolean }>({});
-  const [editingValues, setEditingValues] = useState<{ [key: string]: string }>({});
-  const [loadingItems, setLoadingItems] = useState<{ [key: string]: boolean }>({});
-  const [selectedCells, setSelectedCells] = useState<CellPosition[]>([]);
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionStart, setSelectionStart] = useState<CellPosition | null>(null);
   const [selectedRange, setSelectedRange] = useState<CellRange | null>(null);
@@ -120,92 +118,6 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
       } catch (error) {
         console.error('Failed to update item name:', error);
       }
-    }
-  };
-
-  const handleInputBlur = async (itemId: number, costId: number, value: string) => {
-    const numericValue = parseFloat(value.replace(/\$/g, '')) || 0;
-    const loadingKey = `${itemId}-${costId}`;
-
-    try {
-      setLoadingItems(prev => ({ ...prev, [loadingKey]: true }));
-
-      if (selectedCells.some(cell => cell.itemId === itemId && cell.costId === costId)) {
-        const updatedItems = new Map<number, Item>();
-        
-        selectedCells.forEach(cell => {
-          const itemToUpdate = items.find(item => item.id === cell.itemId);
-          if (!itemToUpdate || !itemToUpdate.id) return;
-
-          if (!updatedItems.has(cell.itemId)) {
-            updatedItems.set(cell.itemId, {
-              ...itemToUpdate,
-              costs: [...itemToUpdate.costs]
-            });
-          }
-
-          const item = updatedItems.get(cell.itemId)!;
-          const costIndex = item.costs.findIndex(cost => cost.id === cell.costId);
-          if (costIndex !== -1) {
-            item.costs[costIndex] = {
-              ...item.costs[costIndex],
-              value: numericValue
-            };
-          }
-        });
-
-        const itemsToUpdate = Array.from(updatedItems.values()).map(item => ({
-          id: item.id!,
-          costs: item.costs.map(cost => ({
-            id: cost.id!,
-            value: Number(cost.value)
-          }))
-        }));
-
-        await bulkUpdateItems(itemsToUpdate);
-        
-        if (selectedCategory) {
-          dispatch(updateCategoryInStore({
-            programId: selectedProgramId!,
-            projectId: selectedProjectId!,
-            category: {
-              ...selectedCategory,
-              items: itemsToDisplay.map(item => 
-                updatedItems.has(item.id!) ? updatedItems.get(item.id!)! : item
-              )
-            }
-          }));
-        }
-      } else {
-        const item = itemsToDisplay.find(i => i.id === itemId);
-        if (item) {
-          const updatedItem = {
-            ...item,
-            costs: item.costs.map(cost => 
-              cost.id === costId ? { ...cost, value: numericValue } : cost
-            )
-          };
-
-          await dispatch(updateItemCostsAsync({
-            itemId,
-            updatedItem: { costs: updatedItem.costs },
-            programId: selectedProgramId!,
-            projectId: selectedProjectId!,
-            categoryId: selectedCategoryId!
-          })).unwrap();
-
-          onItemUpdate(updatedItem);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to update costs:', error);
-    } finally {
-      setLoadingItems(prev => ({ ...prev, [loadingKey]: false }));
-      setEditingValues(prev => {
-        const newValues = { ...prev };
-        delete newValues[loadingKey];
-        return newValues;
-      });
     }
   };
 
@@ -276,13 +188,13 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
     });
 
     const allSelected = columnCells.every(cell => 
-      selectedCells.some(selected => 
+      selectedCells.some((selected: CellPosition) => 
         selected.itemId === cell.itemId && selected.costId === cell.costId
       )
     );
 
     if (allSelected) {
-      setSelectedCells(selectedCells.filter(selected => 
+      setSelectedCells(selectedCells.filter((selected: CellPosition) => 
         !columnCells.some(cell => 
           cell.itemId === selected.itemId && cell.costId === selected.costId
         )
@@ -294,42 +206,39 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
 
   const TableContent: React.FC = () => {
     const { selectedCells } = useContext(SelectionContext);
-    
+    const [editingValues, setEditingValues] = useState<{ [key: string]: string }>({});
+    const [loadingItems, setLoadingItems] = useState<{ [key: string]: boolean }>({});
+
     useEffect(() => {
-      console.log('Selected cells updated:', selectedCells);
-    }, [selectedCells]);
+      console.log('editingValues updated:', editingValues);
+    }, [editingValues]);
 
     const handleInputChange = (itemId: number, costId: number, value: string) => {
-      console.log('handleInputChange called:', { itemId, costId, value });
+      console.log('handleInputChange:', { itemId, costId, value });
+      console.log('Current selectedCells:', selectedCells);
+      
       const sanitizedValue = value.replace(/[^0-9.$]/g, '');
       const numericValue = parseFloat(sanitizedValue.replace(/\$/g, ''));
       
       if (numericValue < 0) return;
 
-      const isPartOfSelection = selectedCells.some(cell => 
+      const isPartOfSelection = selectedCells?.some((cell: CellPosition) => 
         cell.itemId === itemId && cell.costId === costId
-      );
+      ) || false;
 
       console.log('Is part of selection:', isPartOfSelection);
-      console.log('Current selectedCells:', selectedCells);
 
-      if (isPartOfSelection) {
-        console.log('Updating all selected cells');
-        selectedCells.forEach(cell => {
+      if (isPartOfSelection && selectedCells) {
+        console.log('Updating multiple cells with value:', sanitizedValue);
+        selectedCells.forEach((cell: CellPosition) => {
           const key = `${cell.itemId}-${cell.costId}`;
-          console.log('Updating cell:', key, 'with value:', sanitizedValue);
-          setEditingValues(prev => {
-            const newValues = {
-              ...prev,
-              [key]: sanitizedValue
-            };
-            console.log('New editing values:', newValues);
-            return newValues;
-          });
+          setEditingValues(prev => ({
+            ...prev,
+            [key]: sanitizedValue
+          }));
         });
       } else {
         const key = `${itemId}-${costId}`;
-        console.log('Updating single cell:', key);
         setEditingValues(prev => ({
           ...prev,
           [key]: sanitizedValue
@@ -337,9 +246,89 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
       }
     };
 
-    useEffect(() => {
-      console.log('Editing values updated:', editingValues);
-    }, [editingValues]);
+    const handleInputBlur = async (itemId: number, costId: number, value: string) => {
+      console.log('handleInputBlur:', { itemId, costId, value });
+      console.log('Current selectedCells:', selectedCells);
+      
+      const numericValue = parseFloat(value.replace(/\$/g, '')) || 0;
+      const loadingKey = `${itemId}-${costId}`;
+
+      try {
+        setLoadingItems(prev => ({ ...prev, [loadingKey]: true }));
+
+        if (selectedCells?.some(cell => cell.itemId === itemId && cell.costId === costId)) {
+          const itemsToUpdate = selectedCells.reduce((acc, cell) => {
+            const item = itemsToDisplay.find(i => i.id === cell.itemId);
+            if (!item) return acc;
+
+            const existingItem = acc.find(i => i.id === cell.itemId);
+            if (existingItem) {
+              existingItem.costs.push({ id: cell.costId, value: numericValue });
+            } else {
+              acc.push({
+                id: cell.itemId,
+                costs: [{ id: cell.costId, value: numericValue }]
+              });
+            }
+            return acc;
+          }, [] as Array<{ id: number; costs: Array<{ id: number; value: number }> }>);
+
+          console.log('Sending bulk update:', itemsToUpdate);
+          const updatedItems = await bulkUpdateItems(itemsToUpdate);
+          console.log('Received updated items:', updatedItems);
+
+          if (selectedCategory) {
+            const updatedCategoryItems = itemsToDisplay.map(item => {
+              const updatedItem = updatedItems.find(ui => ui.id === item.id);
+              if (updatedItem) {
+                return {
+                  ...item,
+                  costs: item.costs.map(cost => {
+                    const updatedCost = updatedItem.costs.find(uc => uc.id === cost.id);
+                    return updatedCost ? { ...cost, value: updatedCost.value } : cost;
+                  })
+                };
+              }
+              return item;
+            });
+
+            dispatch(updateCategoryInStore({
+              programId: selectedProgramId!,
+              projectId: selectedProjectId!,
+              category: {
+                ...selectedCategory,
+                items: updatedCategoryItems
+              }
+            }));
+          }
+        } else {
+          const item = itemsToDisplay.find(i => i.id === itemId);
+          if (item) {
+            const updatedItem = {
+              ...item,
+              costs: item.costs.map(cost => 
+                cost.id === costId ? { ...cost, value: numericValue } : cost
+              )
+            };
+
+            await dispatch(updateItemCostsAsync({
+              itemId,
+              updatedItem: { costs: updatedItem.costs },
+              programId: selectedProgramId!,
+              projectId: selectedProjectId!,
+              categoryId: selectedCategoryId!
+            })).unwrap();
+
+            onItemUpdate(updatedItem);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to update costs:', error);
+      } finally {
+        setLoadingItems(prev => ({ ...prev, [loadingKey]: false }));
+        setEditingValues({});
+      }
+    };
 
     return (
       <table className="items-table">
@@ -397,10 +386,10 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
                 <tr>
                   {sortedCosts.map((cost, index) => {
                     const loadingKey = `${item.id!}-${cost.id}`;
-                    const isSelected = selectedCells.some(cell => 
+                    const isSelected = selectedCells?.some((cell: CellPosition) => 
                       cell.itemId === item.id! && 
                       cell.costId === cost.id!
-                    );
+                    ) || false;
                     const isFrozen = isCellFrozen(index);
                     
                     return (
