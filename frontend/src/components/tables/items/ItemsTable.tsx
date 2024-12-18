@@ -16,7 +16,6 @@ import { bulkUpdateItems } from '../../../services/itemService';
 import CurrencyInput from '../../common/CurrencyInput';
 import { SelectionProvider, SelectionContext } from './SelectionContext';
 import CellSelection from './CellSelection';
-import TestSelectionTable from './TestSelectionTable';
 
 interface CellRange {
   cells: Array<{
@@ -437,7 +436,6 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
       <SelectionProvider items={itemsToDisplay} frozenPeriods={frozenPeriods}>
         <TableContent />
       </SelectionProvider>
-      {/* <TestSelectionTable /> */}
     </>
   );
 };
