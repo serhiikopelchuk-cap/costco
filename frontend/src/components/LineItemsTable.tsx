@@ -163,10 +163,6 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
     }
 
     try {
-      // Store current selections and category
-      const currentSelectedItems = [...selectedLineItems];
-      const currentCategoryId = selectedCategoryId;  // Store current category ID
-
       // Create new item
       const newItem: Partial<Item> = {
         name: 'New Line Item',
@@ -175,7 +171,7 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
 
       // Add to backend
       const response = await dispatch(createLineItemAsync({
-        categoryId: currentCategoryId,  // Use stored category ID
+        categoryId: selectedCategoryId,
         item: newItem,
         programId: selectedProgramId,
         projectId: selectedProjectId
@@ -183,16 +179,19 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
 
       // Fetch updated category data
       await dispatch(fetchCategoryAsync({
-        categoryId: currentCategoryId,  // Use stored category ID
+        categoryId: selectedCategoryId,
         programId: selectedProgramId,
         projectId: selectedProjectId
       })).unwrap();
 
-      // Ensure category stays selected
-      dispatch(setCategoryId(currentCategoryId));
+      // If there are selected items, add the new item to the selection
+      // If no items are selected, the new item will appear with all items automatically
+      if (selectedLineItems.length > 0) {
+        dispatch(setLineItemsAction([...selectedLineItems, response.item]));
+      }
 
-      // Restore previous selections AND add the new item to selection
-      dispatch(setLineItemsAction([...currentSelectedItems, response.item]));
+      // Ensure category stays selected
+      dispatch(setCategoryId(selectedCategoryId));
 
     } catch (error) {
       console.error('Failed to create line item:', error);
@@ -355,6 +354,40 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
     }
   };
 
+
+  const handleRemoveLastLineItem = async () => {
+    if (lineItems.length === 0 || !selectedProgramId || !selectedProjectId || !selectedCategoryId) return;
+
+    const lastItem = lineItems[lineItems.length - 1];
+    try {
+      // Check if this is the last selected item
+      const isLastSelectedItem = selectedLineItems.length === 1 && selectedLineItems[0].id === lastItem.id;
+
+      // Delete from backend
+      await dispatch(deleteLineItemAsync({
+        itemId: lastItem.id!,
+        programId: selectedProgramId,
+        projectId: selectedProjectId,
+        categoryId: selectedCategoryId
+      })).unwrap();
+
+      // Fetch updated category data to ensure local state is in sync
+      await dispatch(fetchCategoryAsync({
+        categoryId: selectedCategoryId,
+        programId: selectedProgramId,
+        projectId: selectedProjectId
+      })).unwrap();
+
+      // If this was the last selected item, clear the selection to show all items
+      if (isLastSelectedItem) {
+        dispatch(setLineItemsAction([]));
+      }
+
+    } catch (error) {
+      console.error('Failed to delete line item:', error);
+    }
+  };
+
   return (
     <div className="line-items-table">
       <div className="table-header">
@@ -391,6 +424,7 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
           <ActionButtons
             handleDeselectAll={handleDeselectAll}
             handleAddLineItem={handleAddLineItem}
+            handleRemoveLastLineItem={handleRemoveLastLineItem}
             selectedLineItemsCount={selectedLineItems.length}
             cloudProviders={cloudProviders}
             selectedProvider={selectedProvider}

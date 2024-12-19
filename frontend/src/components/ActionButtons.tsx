@@ -1,6 +1,4 @@
 import React from 'react';
-import { useAppDispatch } from '../hooks/reduxHooks';
-import { deleteLineItemAsync } from '../store/slices/costTypesSlice';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faFilter } from '@fortawesome/free-solid-svg-icons';
 import './ActionButtons.css';
@@ -10,6 +8,7 @@ import ProviderFilter from './common/ProviderFilter';
 interface ActionButtonsProps {
   handleDeselectAll: () => void;
   handleAddLineItem: () => void;
+  handleRemoveLastLineItem: () => void;
   selectedLineItemsCount: number;
   cloudProviders: string[];
   selectedProvider: string;
@@ -23,6 +22,7 @@ interface ActionButtonsProps {
 const ActionButtons: React.FC<ActionButtonsProps> = ({
   handleDeselectAll,
   handleAddLineItem,
+  handleRemoveLastLineItem,
   selectedLineItemsCount,
   cloudProviders,
   selectedProvider,
@@ -32,31 +32,8 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
   selectedCategoryId,
   lineItems
 }) => {
-  const dispatch = useAppDispatch();
-
-  const handleRemoveLastLineItem = async () => {
-    if (lineItems.length === 0 || !selectedProgramId || !selectedProjectId || !selectedCategoryId) return;
-
-    const lastItem = lineItems[lineItems.length - 1];
-    try {
-      await dispatch(deleteLineItemAsync({
-        itemId: lastItem.id!,
-        programId: selectedProgramId,
-        projectId: selectedProjectId,
-        categoryId: selectedCategoryId
-      })).unwrap();
-    } catch (error) {
-      console.error('Failed to delete line item:', error);
-    }
-  };
-
   return (
     <div className="action-buttons-container">
-      {/* <ProviderFilter
-        selectedProvider={selectedProvider}
-        onProviderChange={onProviderChange}
-        cloudProviders={cloudProviders}
-      /> */}
       <button 
         className="remove-item-button"
         onClick={handleRemoveLastLineItem}
