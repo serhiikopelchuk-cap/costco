@@ -60,10 +60,6 @@ const uiSlice = createSlice({
       state.addInputVisibility[action.payload.type] = action.payload.value;
     },
     setDetails: (state, action: PayloadAction<DetailsState | null>) => {
-      console.log('Setting details:', {
-        current: state.details,
-        new: action.payload
-      });
       if (state.details?.isPinned && action.payload === null) {
         return;
       }

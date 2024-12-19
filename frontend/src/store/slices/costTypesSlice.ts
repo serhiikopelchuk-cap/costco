@@ -700,11 +700,6 @@ const costTypesSlice = createSlice({
         }
       })
       .addCase(fetchCostTypeByAliasAsync.fulfilled, (state, action) => {
-        console.log('fetchCostTypeByAliasAsync.fulfilled:', {
-          payload: action.payload,
-          currentState: state
-        });
-        
         if (action.meta.arg === 'direct_costs') {
           state.directCosts = action.payload;
           state.item = action.payload;

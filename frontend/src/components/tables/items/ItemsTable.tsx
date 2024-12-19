@@ -63,6 +63,7 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionStart, setSelectionStart] = useState<CellPosition | null>(null);
   const [selectedRange, setSelectedRange] = useState<CellRange | null>(null);
+  const [editingItemId, setEditingItemId] = useState<number | null>(null);
 
   const columns = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9', 'P10', 'P11', 'P12', 'P13', 'Total', 'Average'];
   const numberOfCosts = 13;
@@ -87,7 +88,11 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
   const averageOfAverages = itemsToDisplay.length > 0 ? totalOfTotals / (itemsToDisplay.length * numberOfCosts) : 0;
 
   const handleNameChange = (itemId: number, value: string) => {
-    setEditingName(prev => ({ ...prev, [itemId]: value }));
+    setEditingName(prev => ({
+      ...prev,
+      [itemId]: value
+    }));
+    setEditingItemId(itemId);
   };
 
   const handleNameBlur = async (itemId: number) => {
@@ -114,6 +119,7 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
           delete newState[itemId];
           return newState;
         });
+        setEditingItemId(null);
       } catch (error) {
         console.error('Failed to update item name:', error);
       }
@@ -176,12 +182,9 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
     const [loadingItems, setLoadingItems] = useState<{ [key: string]: boolean }>({});
 
     useEffect(() => {
-      console.log('editingValues updated:', editingValues);
     }, [editingValues]);
 
     const handleInputChange = (itemId: number, costId: number, value: string) => {
-      console.log('handleInputChange:', { itemId, costId, value });
-      console.log('Current selectedCells:', selectedCells);
       
       const sanitizedValue = value.replace(/[^0-9.$]/g, '');
       const numericValue = parseFloat(sanitizedValue.replace(/\$/g, ''));
@@ -192,10 +195,8 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
         cell.itemId === itemId && cell.costId === costId
       ) || false;
 
-      console.log('Is part of selection:', isPartOfSelection);
 
       if (isPartOfSelection && selectedCells) {
-        console.log('Updating multiple cells with value:', sanitizedValue);
         selectedCells.forEach((cell: CellPosition) => {
           const key = `${cell.itemId}-${cell.costId}`;
           setEditingValues(prev => ({
@@ -213,8 +214,6 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
     };
 
     const handleInputBlur = async (itemId: number, costId: number, value: string) => {
-      console.log('handleInputBlur:', { itemId, costId, value });
-      console.log('Current selectedCells:', selectedCells);
       
       const numericValue = parseFloat(value.replace(/\$/g, '')) || 0;
       const loadingKey = `${itemId}-${costId}`;
@@ -239,9 +238,7 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
             return acc;
           }, [] as Array<{ id: number; costs: Array<{ id: number; value: number }> }>);
 
-          console.log('Sending bulk update:', itemsToUpdate);
           const updatedItems = await bulkUpdateItems(itemsToUpdate);
-          console.log('Received updated items:', updatedItems);
 
           if (selectedCategory) {
             const updatedCategoryItems = itemsToDisplay.map(item => {
@@ -364,10 +361,12 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
                   <td className="line-item-label" colSpan={columns.length}>
                     <input
                       type="text"
-                      value={editingName[item.id!] !== undefined ? editingName[item.id!] : item.name}
+                      value={editingName[item.id!] || item.name}
                       onChange={(e) => handleNameChange(item.id!, e.target.value)}
                       onBlur={() => handleNameBlur(item.id!)}
+                      onFocus={() => setEditingItemId(item.id!)}
                       className="line-item-input"
+                      autoFocus={editingItemId === item.id}
                     />
                     <CloneButton
                       isCloning={cloningItems[item.id!]}

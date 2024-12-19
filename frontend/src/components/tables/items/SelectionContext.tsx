@@ -23,9 +23,7 @@ export const SelectionProvider: React.FC<{
 
   useEffect(() => {
     const updateSelectedCells = () => {
-      console.log('Selection Manager updating cells');
       const newSelectedCells = rangeSelector.getSelectedCells();
-      console.log('New selected cells:', newSelectedCells);
       setSelectedCells(newSelectedCells);
     };
 
@@ -42,7 +40,6 @@ export const SelectionProvider: React.FC<{
   }), [rangeSelector, isSelecting, selectedCells]);
 
   useEffect(() => {
-    console.log('Context value updated:', contextValue);
   }, [contextValue]);
 
   return (
