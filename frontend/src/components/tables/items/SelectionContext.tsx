@@ -17,7 +17,7 @@ export const SelectionProvider: React.FC<{
   frozenPeriods: { [key: number]: boolean };
   children: React.ReactNode;
 }> = ({ items, frozenPeriods, children }) => {
-  const [rangeSelector] = useState(() => new SelectionManager(items, frozenPeriods));
+  const rangeSelector = useMemo(() => new SelectionManager(items, frozenPeriods), [items, frozenPeriods]);
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectedCells, setSelectedCells] = useState<CellPosition[]>([]);
 
@@ -38,9 +38,6 @@ export const SelectionProvider: React.FC<{
     selectedCells,
     setSelectedCells
   }), [rangeSelector, isSelecting, selectedCells]);
-
-  useEffect(() => {
-  }, [contextValue]);
 
   return (
     <SelectionContext.Provider value={contextValue}>

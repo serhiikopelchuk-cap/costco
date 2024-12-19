@@ -293,12 +293,6 @@ const LineItemsTable: React.FC<LineItemsTableProps> = ({
     handleLineItemUpdate(updatedItem);
   };
 
-  // Define available providers with IDs
-  const availableProviders = [
-    { id: 1, name: 'Azure' },
-    { id: 2, name: 'GCP' }
-  ];
-
   const handleProviderAdd = async (provider: CloudProvider) => {
     if (!selectedCategory || !selectedProgramId || !selectedProjectId) return;
 

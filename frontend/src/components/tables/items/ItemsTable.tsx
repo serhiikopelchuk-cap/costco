@@ -64,6 +64,7 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
   const [selectionStart, setSelectionStart] = useState<CellPosition | null>(null);
   const [selectedRange, setSelectedRange] = useState<CellRange | null>(null);
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
+  const [shouldFocus, setShouldFocus] = useState<boolean>(false);
 
   const columns = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9', 'P10', 'P11', 'P12', 'P13', 'Total', 'Average'];
   const numberOfCosts = 13;
@@ -93,6 +94,7 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
       [itemId]: value
     }));
     setEditingItemId(itemId);
+    setShouldFocus(true);
   };
 
   const handleNameBlur = async (itemId: number) => {
@@ -120,6 +122,7 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
           return newState;
         });
         setEditingItemId(null);
+        setShouldFocus(false);
       } catch (error) {
         console.error('Failed to update item name:', error);
       }
@@ -364,9 +367,9 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
                       value={editingName[item.id!] || item.name}
                       onChange={(e) => handleNameChange(item.id!, e.target.value)}
                       onBlur={() => handleNameBlur(item.id!)}
-                      onFocus={() => setEditingItemId(item.id!)}
+                      onFocus={() => setShouldFocus(true)}
                       className="line-item-input"
-                      autoFocus={editingItemId === item.id}
+                      autoFocus={shouldFocus && editingItemId === item.id}
                     />
                     <CloneButton
                       isCloning={cloningItems[item.id!]}

@@ -15,11 +15,24 @@ export class SelectionManager {
   private subscribers: (() => void)[] = [];
   
   constructor(
-    private readonly items: Item[],
-    private readonly frozenPeriods: { [key: number]: boolean }
+    private items: Item[],
+    private frozenPeriods: { [key: number]: boolean }
   ) {}
 
+  public updateItems(newItems: Item[]): void {
+    this.items = newItems;
+    this.ranges = [];
+    this.notifySubscribers();
+  }
+
+  public updateFrozenPeriods(newFrozenPeriods: { [key: number]: boolean }): void {
+    this.frozenPeriods = newFrozenPeriods;
+    this.notifySubscribers();
+  }
+
   public startNewRange(cell: CellPosition): void {
+    if (!this.isValidCell(cell)) return;
+    
     console.log('Starting new range:', cell);
     this.ranges = [{
       startCell: cell,
@@ -29,7 +42,7 @@ export class SelectionManager {
   }
 
   public updateLastRange(cell: CellPosition): void {
-    if (this.ranges.length === 0) return;
+    if (this.ranges.length === 0 || !this.isValidCell(cell)) return;
 
     console.log('Updating range:', {
       start: this.ranges[0].startCell,
@@ -39,6 +52,16 @@ export class SelectionManager {
     const lastRange = this.ranges[0];
     lastRange.endCell = cell;
     this.notifySubscribers();
+  }
+
+  private isValidCell(cell: CellPosition): boolean {
+    const item = this.items.find(i => i.id === cell.itemId);
+    if (!item) return false;
+
+    const sortedCosts = [...item.costs].sort((a, b) => (a.id || 0) - (b.id || 0));
+    const costIndex = sortedCosts.findIndex(c => c.id === cell.costId);
+    
+    return costIndex !== -1 && !this.frozenPeriods[costIndex + 1];
   }
 
   public getSelectedCells(): CellPosition[] {
