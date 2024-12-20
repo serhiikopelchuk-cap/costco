@@ -3,7 +3,8 @@ import { useDispatch } from 'react-redux';
 import MiniGenericList from '../common/MiniGenericList';
 import { Project } from '../../types/program';
 import { updateSelections } from '../../store/slices/selectionSlice';
-import { setDetails } from '../../store/slices/uiSlice';
+import { setDetails, unpinDetails } from '../../store/slices/uiSlice';
+import { useAppSelector } from '../../hooks/reduxHooks';
 
 interface MiniProjectListProps {
   projects: Project[];
@@ -15,21 +16,30 @@ const MiniProjectList: React.FC<MiniProjectListProps> = ({
   selectedProjectId,
 }) => {
   const dispatch = useDispatch();
+  const selectedProgramId = useAppSelector(state => state.selection.selectedProgramId);
 
   const handleExpand = () => {
     dispatch(updateSelections({ selectedCategoryId: null }));
   };
 
   const handleDetailsClick = (project: Project) => {
-    console.log('MiniProjectList - handleDetailsClick:', project);
-    dispatch(updateSelections({ selectedCategoryId: null }));
+    if (!selectedProgramId) return;
+
+    // Unpin any existing details first
+    dispatch(unpinDetails());
+
+    // Set new details with parent program ID
     dispatch(setDetails({
       type: 'project',
       id: project.id,
       name: project.name,
       isPinned: true,
-      activeTab: 'summary'
+      activeTab: 'summary',
+      parentProgramId: selectedProgramId
     }));
+
+    // Clear category selection
+    dispatch(updateSelections({ selectedCategoryId: null }));
   };
 
   return (
