@@ -1,13 +1,20 @@
 import { FRONTEND_URL, BACKEND_URL } from './constants';
-import { DEV_CERTIFICATES } from '../certs/dev.certificates';
+
+// Try to import development certificates, but don't fail if they don't exist
+let DEV_CERTIFICATES = { cert: '', privateKey: '' };
+try {
+  DEV_CERTIFICATES = require('../certs/dev.certificates').DEV_CERTIFICATES;
+} catch (error) {
+  console.log('Development certificates not found. SAML authentication will be disabled in development mode.');
+}
 
 export const devSamlConfig = {
   entryPoint: process.env.SAML_ENTRY_POINT || 'https://loginnp.costco.com/idp/SSO.saml2',
   issuer: BACKEND_URL,
-  cert: DEV_CERTIFICATES.cert,
-  privateKey: DEV_CERTIFICATES.privateKey,
+  cert: process.env.DEV_SAML_CERTIFICATE || DEV_CERTIFICATES.cert || '',
+  privateKey: process.env.DEV_SAML_PRIVATE_KEY || DEV_CERTIFICATES.privateKey || '',
   callbackUrl: `${BACKEND_URL}/auth/callback`,
-  decryptionPvk: DEV_CERTIFICATES.privateKey,
+  decryptionPvk: process.env.DEV_SAML_PRIVATE_KEY || DEV_CERTIFICATES.privateKey || '',
   acceptedClockSkewMs: -1,
   identifierFormat: process.env.SAML_IDENTIFIER_FORMAT || 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified',
   validateInResponseTo: true,
@@ -24,10 +31,10 @@ export const devSamlConfig = {
 export const prodSamlConfig = {
   entryPoint: process.env.SAML_ENTRY_POINT || 'https://loginnp.costco.com/idp/SSO.saml2',
   issuer: BACKEND_URL,
-  cert: process.env.SAML_CERTIFICATE,
-  privateKey: process.env.SAML_PRIVATE_KEY,
+  cert: process.env.SAML_CERTIFICATE || '',
+  privateKey: process.env.SAML_PRIVATE_KEY || '',
   callbackUrl: `${BACKEND_URL}/auth/callback`,
-  decryptionPvk: process.env.SAML_PRIVATE_KEY,
+  decryptionPvk: process.env.SAML_PRIVATE_KEY || '',
   acceptedClockSkewMs: -1,
   identifierFormat: process.env.SAML_IDENTIFIER_FORMAT || 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified',
   validateInResponseTo: true,

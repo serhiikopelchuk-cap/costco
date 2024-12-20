@@ -3,12 +3,15 @@ import { join } from 'path';
 import { FRONTEND_URL, BACKEND_URL } from './constants';
 import { devSamlConfig, prodSamlConfig } from './saml.dev.config';
 
-// const certsPath = join(process.cwd(), 'src/certs');
-
 const getCertificates = () => {
   if (process.env.NODE_ENV === 'production') {
     if (!process.env.SAML_CERTIFICATE || !process.env.SAML_PRIVATE_KEY) {
-      throw new Error('SAML certificates not provided in environment variables for production');
+      console.warn('SAML certificates not provided in environment variables for production. SAML authentication will be disabled.');
+      return {
+        cert: '',
+        privateKey: '',
+        decryptionPvk: '',
+      };
     }
     return {
       cert: process.env.SAML_CERTIFICATE,
@@ -19,9 +22,9 @@ const getCertificates = () => {
 
   // For development, use the devSamlConfig
   return {
-    cert: devSamlConfig.cert,
-    privateKey: devSamlConfig.privateKey,
-    decryptionPvk: devSamlConfig.decryptionPvk,
+    cert: devSamlConfig.cert || '',
+    privateKey: devSamlConfig.privateKey || '',
+    decryptionPvk: devSamlConfig.decryptionPvk || '',
   };
 };
 
@@ -35,6 +38,11 @@ const getEnvironmentConfig = () => {
 export const samlConfig = {
   ...getCertificates(),
   ...getEnvironmentConfig(),
+};
+
+// Add a helper to check if SAML is configured
+export const isSamlConfigured = () => {
+  return Boolean(samlConfig.cert && samlConfig.privateKey);
 };
 
 console.log("NODE_ENV:", process.env.NODE_ENV);
