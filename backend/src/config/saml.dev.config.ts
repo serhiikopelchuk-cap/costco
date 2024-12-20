@@ -1,18 +1,15 @@
-import { readFileSync } from 'fs';
-import { join } from 'path';
 import { FRONTEND_URL, BACKEND_URL } from './constants';
-
-const certsPath = join(process.cwd(), 'src/certs');
+import { DEV_CERTIFICATES } from '../certs/dev.certificates';
 
 export const devSamlConfig = {
-  entryPoint: 'https://loginnp.costco.com/idp/SSO.saml2',
+  entryPoint: process.env.SAML_ENTRY_POINT || 'https://loginnp.costco.com/idp/SSO.saml2',
   issuer: BACKEND_URL,
-  cert: readFileSync(join(certsPath, 'idp-certificate.crt'), 'utf-8'),
-  privateKey: readFileSync(join(certsPath, 'private.key'), 'utf-8'),
+  cert: DEV_CERTIFICATES.cert,
+  privateKey: DEV_CERTIFICATES.privateKey,
   callbackUrl: `${BACKEND_URL}/auth/callback`,
-  decryptionPvk: readFileSync(join(certsPath, 'private.key'), 'utf-8'),
+  decryptionPvk: DEV_CERTIFICATES.privateKey,
   acceptedClockSkewMs: -1,
-  identifierFormat: 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified',
+  identifierFormat: process.env.SAML_IDENTIFIER_FORMAT || 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified',
   validateInResponseTo: true,
   disableRequestedAuthnContext: true,
   wantAuthnRequestsSigned: false,
@@ -25,14 +22,14 @@ export const devSamlConfig = {
 };
 
 export const prodSamlConfig = {
-  entryPoint: 'https://loginnp.costco.com/idp/SSO.saml2',
+  entryPoint: process.env.SAML_ENTRY_POINT || 'https://loginnp.costco.com/idp/SSO.saml2',
   issuer: BACKEND_URL,
-  cert: readFileSync(join(certsPath, 'idp-certificate.crt'), 'utf-8'),
-  privateKey: readFileSync(join(certsPath, 'private.key'), 'utf-8'),
+  cert: process.env.SAML_CERTIFICATE,
+  privateKey: process.env.SAML_PRIVATE_KEY,
   callbackUrl: `${BACKEND_URL}/auth/callback`,
-  decryptionPvk: readFileSync(join(certsPath, 'private.key'), 'utf-8'),
+  decryptionPvk: process.env.SAML_PRIVATE_KEY,
   acceptedClockSkewMs: -1,
-  identifierFormat: 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified',
+  identifierFormat: process.env.SAML_IDENTIFIER_FORMAT || 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified',
   validateInResponseTo: true,
   disableRequestedAuthnContext: true,
   wantAuthnRequestsSigned: false,
