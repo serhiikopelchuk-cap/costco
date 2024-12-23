@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppConfigService } from './config.service';
+import { SamlMetadataService } from './saml-metadata.service';
 
 @Module({
   imports: [
@@ -9,7 +10,7 @@ import { AppConfigService } from './config.service';
       envFilePath: ['.env.local', '.env'],
     }),
   ],
-  providers: [AppConfigService],
-  exports: [AppConfigService],
+  providers: [AppConfigService, SamlMetadataService],
+  exports: [AppConfigService, SamlMetadataService],
 })
 export class AppConfigModule {} 

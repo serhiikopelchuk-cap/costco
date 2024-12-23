@@ -58,3 +58,6 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 # Certificates and keys
 src/certs/*.key
 src/certs/*.crt
+
+# SAML metadata
+src/config/*.xml

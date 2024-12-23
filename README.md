@@ -41,37 +41,9 @@ Follow these steps to get the project up and running:
      - Password: `postgres`
      - Database: `mydatabase`
 
-## Stopping the Containers
+## SAML Authentication
 
-To stop the running containers, use:
-
-This command will stop and remove the containers, but the data in the PostgreSQL database will be preserved in the `postgres_data` volume.
-
-## Additional Information
-
-- **Environment Variables**: You can modify the environment variables in the `docker-compose.yml` file to suit your needs.
-- **Volumes**: The PostgreSQL data is stored in a Docker volume named `postgres_data` to ensure data persistence across container restarts.
-
-## Troubleshooting
-
-- If you encounter any issues, ensure that no other services are running on the ports `80`, `3000`, or `5432`.
-- Check the logs for any errors by running:
-
-  ```bash
-  docker-compose logs
-  ```
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Contact
-
-For any questions or issues, please contact [your-email@example.com](mailto:your-email@example.com).
-
-## SAML Authentication Flow
-
-The application uses SAML 2.0 for authentication with Costco's Identity Provider (IdP).
+The application uses SAML 2.0 for authentication with Costco's Identity Provider (IdP). The SAML configuration is flexible and supports multiple ways of providing certificates and metadata.
 
 ### Authentication Flow
 1. User clicks "Login with SSO" on frontend
@@ -91,6 +63,34 @@ The application uses SAML 2.0 for authentication with Costco's Identity Provider
    - Stores token
    - Redirects to dashboard
 
+### SAML Configuration Options
+
+The application supports multiple ways to configure SAML, in order of priority:
+
+1. **Metadata File**
+   ```env
+   SAML_METADATA_FILE=path/to/costco_nonprod_meta.xml
+   ```
+   - Contains IdP endpoints and certificates
+   - Automatically configures entryPoint and cert
+   - Can be overridden by environment variables
+
+2. **Environment Variables**
+   ```env
+   SAML_ENTRY_POINT=https://loginnp.costco.com/idp/SSO.saml2
+   SAML_ISSUER=your-app-issuer
+   SAML_CERTIFICATE=-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----
+   SAML_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----
+   ```
+
+3. **Auto-generated Certificates**
+   - If no certificates are provided, the application will:
+     - Generate self-signed certificates
+     - Store them in `src/certs` directory
+     - Use them for SAML signing/encryption
+   - Generated certificates persist across restarts
+   - Not recommended for production use
+
 ### Environment Setup
 
 #### Development Environment
@@ -101,16 +101,13 @@ FRONTEND_URL=http://localhost:80
 BACKEND_URL=http://localhost:3000
 JWT_SECRET=your-secret-key-here
 
-# SAML Settings
-SAML_ENTRY_POINT=https://loginnp.costco.com/idp/SSO.saml2
-SAML_ISSUER=your-app-issuer
+# SAML Settings (using metadata file)
+SAML_METADATA_FILE=costco_nonprod_meta.xml
 
-# Certificates (development uses local files in src/certs/)
-# src/certs/idp-certificate.crt
-# src/certs/private.key
+# Certificates are auto-generated if not provided
 ```
 
-#### Production/Staging Environment
+#### Production Environment
 ```env
 # Backend (.env)
 NODE_ENV=production
@@ -119,24 +116,79 @@ BACKEND_URL=https://your-backend-domain
 JWT_SECRET=your-secure-secret
 
 # SAML Settings
-SAML_ENTRY_POINT=https://loginnp.costco.com/idp/SSO.saml2
-SAML_ISSUER=your-app-issuer
-
-# SAML Certificates (stored as environment variables)
+SAML_METADATA_FILE=/path/to/metadata.xml
+# Or use environment variables:
 SAML_CERTIFICATE=-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----
 SAML_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----
 ```
 
 ### Certificate Management
-- **Development**: Certificates are stored in `backend/src/certs/`
-- **Production**: Certificates should be provided through environment variables or secrets management service
-- **Staging**: Similar to production, but with staging-specific certificates
+
+The application handles certificates in the following order:
+
+1. **Production**
+   - Use environment variables for certificates
+   - Or use metadata file with separate private key
+   - Never use auto-generated certificates
+
+2. **Development**
+   - Can use metadata file for IdP certificate
+   - Auto-generates SP certificates if needed
+   - Certificates stored in `src/certs` directory
+
+3. **Auto-generation**
+   - Creates RSA 4096-bit key pair
+   - Generates self-signed certificate
+   - Stores in accessible directory
+   - Handles Docker volume permissions
 
 ### Security Considerations
-1. Never commit real certificates to repository
-2. Use secure secret management in production
-3. Different certificates for different environments
-4. Proper CORS configuration
-5. Secure JWT secret management
+
+1. **Certificate Handling**
+   - Never commit real certificates to repository
+   - Use secure secrets management in production
+   - Different certificates for different environments
+   - Auto-generated certificates only for development
+
+2. **Configuration Security**
+   - Protect metadata files
+   - Secure environment variables
+   - Use proper file permissions
+   - Regular certificate rotation
+
+3. **Development vs Production**
+   - Auto-generation only in development
+   - Strict certificate requirements in production
+   - Proper error handling and logging
+   - Environment-specific configurations
+
+## Stopping the Containers
+
+To stop the running containers, use:
+```bash
+docker-compose down
+```
+
+This command will stop and remove the containers, but the data in the PostgreSQL database will be preserved in the `postgres_data` volume.
+
+## Troubleshooting
+
+- If you encounter any issues, ensure that no other services are running on the ports `80`, `3000`, or `5432`.
+- Check the logs for any errors:
+  ```bash
+  docker-compose logs
+  ```
+- For SAML-specific issues, check the backend logs:
+  ```bash
+  docker-compose logs backend
+  ```
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Contact
+
+For any questions or issues, please contact [your-email@example.com](mailto:your-email@example.com).
 
 

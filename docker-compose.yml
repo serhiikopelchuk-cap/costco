@@ -38,15 +38,17 @@ services:
       - JWT_SECRET=your-secret-key-here
       
       # SAML Settings
-      - SAML_ENTRY_POINT=https://loginnp.costco.com/idp/SSO.saml2
-      - SAML_ISSUER=costco-crm-app  # Should match what's registered with Costco IdP
-      - SAML_IDENTIFIER_FORMAT=urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified
+      - SAML_METADATA_FILE=costco_nonprod_meta.xml  # Just the filename, will be resolved relative to mounted config directory
+      # - SAML_ENTRY_POINT=https://loginnp.costco.com/idp/SSO.saml2  # Optional: override metadata
+      # - SAML_ISSUER=costco-crm-app  # Optional: override metadata
+      # - SAML_IDENTIFIER_FORMAT=urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified  # Optional: override metadata
       
       # SAML Certificates (for production)
-      - SAML_CERTIFICATE=${SAML_CERTIFICATE}
-      - SAML_PRIVATE_KEY=${SAML_PRIVATE_KEY}
+      # - SAML_CERTIFICATE=${SAML_CERTIFICATE}  # Optional: override metadata
+      # - SAML_PRIVATE_KEY=${SAML_PRIVATE_KEY}
     volumes:
-      - ./backend/src/certs:/app/src/certs:ro  # Mount certificates for development
+      - ./backend/src/certs:/app/src/certs  # Remove :ro to make it writable
+      - ./backend/src/config:/app/src/config:ro  # Mount config directory for metadata file
     depends_on:
       - postgres
     healthcheck:
