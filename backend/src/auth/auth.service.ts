@@ -8,9 +8,15 @@ export class AuthService {
   constructor(private jwtService: JwtService) {}
 
   async validateSamlUser(profile: any): Promise<SamlUser> {
+    // Generate a unique ID if none provided
+    const userId = profile.nameID || `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Use a default email if none provided
+    const userEmail = profile.email || `${userId}@placeholder.com`;
+
     return {
-      id: profile.nameID,
-      email: profile.email,
+      id: userId,
+      email: userEmail,
       accessGranted: profile.accessGranted === 'true',
     };
   }
