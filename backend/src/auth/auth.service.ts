@@ -1,11 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { Strategy, SamlConfig } from 'passport-saml';
 import { SamlUser } from './types/auth.types';
 import { samlConfig } from '../config/saml.config';
 
 @Injectable()
 export class AuthService {
-  constructor(private jwtService: JwtService) {}
+  private samlStrategy: Strategy;
+
+  constructor(private jwtService: JwtService) {
+    // Initialize SAML strategy for metadata generation
+    const strategyConfig: SamlConfig = {
+      ...samlConfig,
+      passReqToCallback: true,
+      signatureAlgorithm: samlConfig.signatureAlgorithm as 'sha256' | 'sha512',
+      cert: samlConfig.cert || '',
+      entryPoint: samlConfig.entryPoint || ''
+    };
+
+    this.samlStrategy = new Strategy(
+      strategyConfig,
+      () => {} // Dummy callback, not used for metadata generation
+    );
+  }
 
   async validateSamlUser(profile: any): Promise<SamlUser> {
     // Generate a unique ID if none provided
@@ -36,17 +53,10 @@ export class AuthService {
   }
 
   getMetadata(): string {
-    // Generate SAML metadata for Service Provider
-    return `<?xml version="1.0"?>
-    <md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata"
-                        entityID="${samlConfig.issuer}">
-      <md:SPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
-        <md:AssertionConsumerService
-          Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
-          Location="${samlConfig.callbackUrl}"
-          index="1"/>
-      </md:SPSSODescriptor>
-    </md:EntityDescriptor>`;
+    return this.samlStrategy.generateServiceProviderMetadata(
+      samlConfig.cert,
+      samlConfig.cert
+    );
   }
 
   async generateDevToken(user: SamlUser): Promise<string> {

@@ -24,8 +24,8 @@ services:
       - NODE_ENV=development
       
       # URLs
-      - FRONTEND_URL=http://localhost:80
-      - BACKEND_URL=http://localhost:3000
+      - FRONTEND_URL=https://frontend.totalcost.ecp-aks.adt-gen.c2.westus2.np.ct-costco.internal
+      - BACKEND_URL=https://backend.totalcost.ecp-aks.adt-gen.c2.westus2.np.ct-costco.internal
       
       # Database
       - DATABASE_HOST=postgres
