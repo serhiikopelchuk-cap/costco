@@ -28,16 +28,34 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async callback(@Req() req, @Res() res: Response) {
     try {
-      // 1. Get SAML response from Costco
-      const samlUser = await this.authService.validateSamlUser(req.user);
-      
-      // 2. Create JWT token for our app
-      const token = await this.authService.generateToken(samlUser);
-      
-      // 3. Redirect back to frontend with token
-      res.redirect(`${FRONTEND_URL}/auth-success?token=${token}`);
+      console.log('=== Processing SAML callback ===');
+      console.log('Request user:', req.user);
+      console.log('Request body:', req.body);
+
+      // Create JWT token
+      const token = await this.authService.generateToken(req.user);
+      console.log('Generated token length:', token.length);
+
+      // In development, always use the environment URL
+      const redirectUrl = process.env.NODE_ENV === 'development' 
+        ? (process.env.FRONTEND_URL || 'http://localhost:3001')
+        : (req.body?.RelayState || process.env.FRONTEND_URL);
+
+      console.log('Environment:', process.env.NODE_ENV);
+      console.log('Redirect base URL:', redirectUrl);
+
+      const finalRedirectUrl = `${redirectUrl}/auth-success?token=${token}`;
+      console.log('Final redirect URL:', finalRedirectUrl);
+
+      // Redirect to frontend
+      console.log('=== Redirecting to frontend ===');
+      res.redirect(finalRedirectUrl);
     } catch (error) {
-      res.redirect(`${FRONTEND_URL}/login?error=authentication_failed`);
+      console.error('=== Error in SAML callback ===');
+      console.error('Error details:', error);
+      console.error('Error stack:', error.stack);
+      const redirectUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+      res.redirect(`${redirectUrl}/login?error=authentication_failed`);
     }
   }
 

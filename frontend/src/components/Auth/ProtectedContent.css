@@ -1,0 +1,90 @@
+.user-info-page {
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.user-info-page h2 {
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+.user-info {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.info-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.info-item label {
+  font-weight: 600;
+  color: #666;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-item span {
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.info-item.groups ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.info-item.groups li {
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  border: 1px solid #e9ecef;
+}
+
+.granted {
+  color: #2ecc71;
+  font-weight: 600;
+}
+
+.denied {
+  color: #e74c3c;
+  font-weight: 600;
+}
+
+.token-info {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #eee;
+}
+
+.token-info h3 {
+  color: #666;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.status-text {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  color: #666;
+}
+
+.status-text.active {
+  color: #2ecc71;
+} 

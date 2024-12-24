@@ -1,48 +1,33 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { Strategy } from 'passport-saml';
-import { samlConfig, isSamlConfigured } from '../config/saml.config';
-
-const DEV_USER = {
-  id: 'dev-user',
-  email: 'dev@example.com',
-  name: 'Development User'
-};
+import { Strategy, Profile } from 'passport-saml';
+import { AuthService } from './auth.service';
+import { samlConfig } from '../config/saml.config';
 
 @Injectable()
-export class SamlStrategy extends PassportStrategy(Strategy) {
-  constructor() {
-    // Create a dummy config for passport-saml when SAML is not configured
-    const dummyConfig = {
-      entryPoint: 'http://localhost',
-      issuer: 'dummy',
-      cert: 'dummy',
-      privateKey: 'dummy',
-      // Add required callback to handle the response
+export class SamlStrategy extends PassportStrategy(Strategy, 'saml') {
+  constructor(private authService: AuthService) {
+    super({
+      ...samlConfig,
       passReqToCallback: true
-    };
-
-    super(isSamlConfigured() ? samlConfig : dummyConfig);
-
-    if (!isSamlConfigured()) {
-      console.warn('SAML is not configured. Using development authentication.');
-    }
+    });
   }
 
-  async validate(request: any, profile: any, done: Function) {
-    if (!isSamlConfigured()) {
-      return done(null, DEV_USER);
-    }
+  async validate(
+    request: any,
+    profile: any
+  ): Promise<any> {
+    console.log('SAML Profile:', JSON.stringify(profile, null, 2));
+    console.log('accessGranted value:', profile.accessGranted, typeof profile.accessGranted);
+    
+    // Extract user information from SAML response
+    const user = await this.authService.validateSamlUser({
+      nameID: profile.nameID,
+      email: profile.Email || profile['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'],
+      accessGranted: profile.accessGranted === 'True' || profile.accessGranted === true,
+      userId: profile.userID || profile.nameID
+    });
 
-    try {
-      const user = {
-        id: profile.nameID,
-        email: profile.email,
-        name: profile.displayName,
-      };
-      done(null, user);
-    } catch (err) {
-      done(err, null);
-    }
+    return user;
   }
 } 

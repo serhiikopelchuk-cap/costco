@@ -13,10 +13,8 @@ import EnterTeamSpend from './pages/EnterTeamSpend';
 import IndirectCost from './pages/IndirectCost';
 import DirectCosts from './pages/DirectCosts';
 import { AuthProvider } from './context/AuthContext';
-import SamlLogin from './components/Auth/SamlLogin';
-import ProtectedRoute from './components/Auth/ProtectedRoute';
 import AuthCallback from './components/Auth/AuthCallback';
-import ProtectedContent from './components/Auth/ProtectedContent';
+import { ProtectedContent } from './components/Auth/ProtectedContent';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -43,14 +41,8 @@ function App() {
                 <Route path="/defaultlogin" element={<Login />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/auth-success" element={<AuthCallback />} />
-                <Route
-                  path="/protected"
-                  element={
-                    <ProtectedRoute>
-                      <ProtectedContent />
-                    </ProtectedRoute>
-                  }
-                />
+                <Route path="/protected" element={<ProtectedContent />} />
+                <Route path="/user" element={<ProtectedContent />} />
               </Routes>
             </main>
             <Footer />

@@ -102,6 +102,9 @@ interface SamlConfigOptions {
   additionalParams?: {
     RelayState: string;
   };
+  audience?: string;
+  wantAssertionsSigned?: boolean;
+  digestAlgorithm?: string;
 }
 
 // Cache for loaded configuration
@@ -195,12 +198,20 @@ const createSamlConfig = () => {
     
     // Add base configuration for missing fields
     issuer: config.issuer || baseConfig.issuer,
-    acceptedClockSkewMs: baseConfig.acceptedClockSkewMs,
-    validateInResponseTo: baseConfig.validateInResponseTo,
-    disableRequestedAuthnContext: baseConfig.disableRequestedAuthnContext,
+    acceptedClockSkewMs: baseConfig.acceptedClockSkewMs || 300000, // 5 minutes clock skew
+    disableRequestedAuthnContext: true,
     forceAuthn: baseConfig.forceAuthn,
     passive: baseConfig.passive,
-    signatureAlgorithm: baseConfig.signatureAlgorithm,
+    
+    // SAML signature settings
+    signatureAlgorithm: 'sha256',
+    digestAlgorithm: 'sha256',
+    wantAssertionsSigned: true,
+    wantAuthnRequestsSigned: false,
+    authnRequestsSigned: false,
+    validateInResponseTo: false,
+    allowCreate: true,
+    skipRequestCompression: true,
     
     // Additional configuration
     callbackUrl: `${BACKEND_URL}/auth/callback`,
@@ -209,35 +220,27 @@ const createSamlConfig = () => {
     }
   };
 
-  console.log('[DEBUG] Config after merge:', {
-    ...finalConfig,
-    cert: finalConfig.cert ? 'CERT_EXISTS' : 'NO_CERT',
-    privateKey: finalConfig.privateKey ? 'KEY_EXISTS' : 'NO_KEY'
-  });
-
   // Handle certificates
-  if (!finalConfig.privateKey || !finalConfig.cert) {
-    console.log('Missing certificates, attempting to generate...');
-    const generatedCerts = generateCertificates();
-    if (generatedCerts) {
-      finalConfig.cert = finalConfig.cert || generatedCerts.cert;
-      finalConfig.privateKey = finalConfig.privateKey || generatedCerts.privateKey;
-      finalConfig.decryptionPvk = finalConfig.privateKey;
-      console.log('Successfully generated and applied certificates');
+  if (!finalConfig.cert) {
+    console.warn('[WARN] No certificate found in metadata or environment variables');
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[INFO] Generating self-signed certificates for development');
+      const generatedCerts = generateCertificates();
+      if (generatedCerts) {
+        finalConfig.cert = generatedCerts.cert;
+        finalConfig.privateKey = generatedCerts.privateKey;
+        finalConfig.decryptionPvk = generatedCerts.privateKey;
+      }
+    } else {
+      console.error('[ERROR] No certificate available in production environment');
     }
   }
 
   console.log('[DEBUG] Final certificates:', {
     cert: finalConfig.cert ? 'CERT_EXISTS' : 'NO_CERT',
-    privateKey: finalConfig.privateKey ? 'KEY_EXISTS' : 'NO_KEY'
+    privateKey: finalConfig.privateKey ? 'KEY_EXISTS' : 'NO_KEY',
+    certFormat: finalConfig.cert?.includes('-----BEGIN CERTIFICATE-----') ? 'PEM' : 'RAW'
   });
-
-  if (!finalConfig.cert || !finalConfig.privateKey) {
-    console.warn('SAML certificates not complete:', {
-      cert: finalConfig.cert ? 'PROVIDED' : 'NOT_PROVIDED',
-      privateKey: finalConfig.privateKey ? 'PROVIDED' : 'NOT_PROVIDED'
-    });
-  }
 
   return finalConfig;
 };
@@ -263,4 +266,4 @@ console.log("SAML Config (without sensitive data):", {
   cert: samlConfig.cert ? '***' : 'NOT_PROVIDED',
   privateKey: samlConfig.privateKey ? '***' : 'NOT_PROVIDED',
   decryptionPvk: samlConfig.decryptionPvk ? '***' : 'NOT_PROVIDED'
-});
+}); 
