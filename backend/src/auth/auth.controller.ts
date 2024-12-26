@@ -2,7 +2,7 @@ import { Controller, Post, Get, UseGuards, Req, Res, HttpStatus } from '@nestjs/
 import { AuthGuard } from '@nestjs/passport';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
-import { ApiTags, ApiOperation, ApiResponse, ApiExcludeEndpoint } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiExcludeEndpoint, ApiBody } from '@nestjs/swagger';
 import { FRONTEND_URL } from 'src/config/constants';
 
 @ApiTags('Authentication')
@@ -26,6 +26,31 @@ export class AuthController {
   @ApiOperation({ summary: 'SAML callback endpoint' })
   @ApiResponse({ status: 302, description: 'Redirects to frontend with JWT token' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        RelayState: {
+          type: 'string',
+          example: 'RelayState=https://frontend.totalcost.ecp-aks.adt-gen.c2.westus2.np.ct-costco.internal'
+        },
+        SAMLResponse: {
+          type: 'string',
+          example: 'PHNhbWxwOlJlc3BvbnNlIFZlcnNpb249IjIuMCI....[truncated]'
+        }
+      },
+      required: ['RelayState', 'SAMLResponse']
+    },
+    description: 'SAML Response data from Identity Provider',
+    examples: {
+      'SAML Callback Example': {
+        value: {
+          RelayState: 'RelayState=https://frontend.totalcost.ecp-aks.adt-gen.c2.westus2.np.ct-costco.internal',
+          SAMLResponse: 'PHNhbWxwOlJlc3BvbnNlIFZlcnNpb249IjIuMCI...[truncated for brevity]'
+        }
+      }
+    }
+  })
   async callback(@Req() req, @Res() res: Response) {
     try {
       console.log('=== Processing SAML callback ===');
@@ -47,15 +72,36 @@ export class AuthController {
       const finalRedirectUrl = `${redirectUrl}/auth-success?token=${token}`;
       console.log('Final redirect URL:', finalRedirectUrl);
 
-      // Redirect to frontend
-      console.log('=== Redirecting to frontend ===');
-      res.redirect(finalRedirectUrl);
+      // Check if the request is from a browser (accepts HTML)
+      const acceptHeader = req.get('Accept') || '';
+      if (acceptHeader.includes('text/html')) {
+        // Browser request - send redirect
+        return res.status(302).header('Location', finalRedirectUrl).send();
+      } else {
+        // API request (e.g., Postman) - send JSON response
+        return res.status(200).json({
+          success: true,
+          redirectUrl: finalRedirectUrl,
+          token
+        });
+      }
     } catch (error) {
       console.error('=== Error in SAML callback ===');
       console.error('Error details:', error);
       console.error('Error stack:', error.stack);
-      const redirectUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
-      res.redirect(`${redirectUrl}/login?error=authentication_failed`);
+      
+      // Check if the request is from a browser
+      const acceptHeader = req.get('Accept') || '';
+      if (acceptHeader.includes('text/html')) {
+        const redirectUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+        return res.status(302).header('Location', `${redirectUrl}/login?error=authentication_failed`).send();
+      } else {
+        return res.status(500).json({
+          success: false,
+          error: 'Authentication failed',
+          details: error.message
+        });
+      }
     }
   }
 
