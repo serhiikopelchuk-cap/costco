@@ -61,13 +61,12 @@ export class AuthController {
       const token = await this.authService.generateToken(req.user);
       console.log('Generated token length:', token.length);
 
-      // In development, always use the environment URL
-      const redirectUrl = process.env.NODE_ENV === 'development' 
-        ? (process.env.FRONTEND_URL || 'http://localhost:3001')
-        : (req.body?.RelayState || process.env.FRONTEND_URL);
+      // Get the redirect URL from RelayState or environment variable
+      const redirectUrl = req.body?.RelayState?.replace('RelayState=', '') || process.env.FRONTEND_URL || 'http://localhost:3001';
 
       console.log('Environment:', process.env.NODE_ENV);
       console.log('Redirect base URL:', redirectUrl);
+      console.log('RelayState:', req.body?.RelayState);
 
       const finalRedirectUrl = `${redirectUrl}/auth-success?token=${token}`;
       console.log('Final redirect URL:', finalRedirectUrl);

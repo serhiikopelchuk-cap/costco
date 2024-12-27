@@ -193,53 +193,38 @@ const createSamlConfig = () => {
   });
 
   // Create final config starting with metadata/env configuration
-  const finalConfig = {
-    ...config,
-    
-    // Add base configuration for missing fields
-    issuer: config.issuer || baseConfig.issuer,
-    acceptedClockSkewMs: baseConfig.acceptedClockSkewMs || 300000, // 5 minutes clock skew
+  const finalConfig: SamlConfigOptions = {
+    entryPoint: config.entryPoint || 'https://loginnp.costco.com/idp/SSO.saml2',
+    cert: config.cert,
+    identifierFormat: 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified',
+    wantAuthnRequestsSigned: false,
+    issuer: FRONTEND_URL,
+    acceptedClockSkewMs: -1,
+    validateInResponseTo: false,
     disableRequestedAuthnContext: true,
-    forceAuthn: baseConfig.forceAuthn,
-    passive: baseConfig.passive,
-    
-    // SAML signature settings
+    forceAuthn: false,
+    passive: false,
     signatureAlgorithm: 'sha256',
     digestAlgorithm: 'sha256',
-    wantAssertionsSigned: true,
-    wantAuthnRequestsSigned: false,
-    authnRequestsSigned: false,
-    validateInResponseTo: false,
-    allowCreate: true,
-    skipRequestCompression: true,
-    
-    // Additional configuration
+    wantAssertionsSigned: false,
     callbackUrl: `${BACKEND_URL}/auth/callback`,
     additionalParams: {
       RelayState: FRONTEND_URL
     }
   };
 
-  // Handle certificates
-  if (!finalConfig.cert) {
-    console.warn('[WARN] No certificate found in metadata or environment variables');
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('[INFO] Generating self-signed certificates for development');
-      const generatedCerts = generateCertificates();
-      if (generatedCerts) {
-        finalConfig.cert = generatedCerts.cert;
-        finalConfig.privateKey = generatedCerts.privateKey;
-        finalConfig.decryptionPvk = generatedCerts.privateKey;
-      }
-    } else {
-      console.error('[ERROR] No certificate available in production environment');
-    }
+  // Use certificate from metadata if available
+  if (config.cert) {
+    console.log('[INFO] Using certificate from metadata');
+    finalConfig.cert = config.cert;
+  } else {
+    console.warn('[WARN] No certificate found in metadata');
   }
 
   console.log('[DEBUG] Final certificates:', {
     cert: finalConfig.cert ? 'CERT_EXISTS' : 'NO_CERT',
-    privateKey: finalConfig.privateKey ? 'KEY_EXISTS' : 'NO_KEY',
-    certFormat: finalConfig.cert?.includes('-----BEGIN CERTIFICATE-----') ? 'PEM' : 'RAW'
+    certFormat: finalConfig.cert?.includes('-----BEGIN CERTIFICATE-----') ? 'PEM' : 'RAW',
+    certLength: finalConfig.cert?.length
   });
 
   return finalConfig;

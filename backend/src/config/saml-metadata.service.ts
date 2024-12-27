@@ -12,14 +12,15 @@ export class SamlMetadataService {
     try {
       console.log('[DEBUG] Starting certificate formatting');
       console.log('[DEBUG] Raw certificate length:', rawCert.length);
-      console.log('[DEBUG] Raw certificate first 100 chars:', rawCert.substring(0, 100));
-      console.log('[DEBUG] Raw certificate contains line breaks:', rawCert.includes('\n'));
-      console.log('[DEBUG] Raw certificate contains carriage returns:', rawCert.includes('\r'));
 
       // Remove all whitespace and line breaks
       const cleanCert = rawCert.replace(/[\r\n\s]/g, '');
       console.log('[DEBUG] Cleaned certificate length:', cleanCert.length);
-      console.log('[DEBUG] Clean certificate first 100 chars:', cleanCert.substring(0, 100));
+      
+      // Return the raw certificate if it's already in PEM format
+      if (cleanCert.includes('-----BEGIN CERTIFICATE-----')) {
+        return cleanCert;
+      }
       
       // Split into lines of exactly 64 characters
       const lines: string[] = [];
@@ -30,8 +31,7 @@ export class SamlMetadataService {
       console.log('[DEBUG] Certificate lines:', {
         totalLines: lines.length,
         firstLineLength: lines[0]?.length,
-        lastLineLength: lines[lines.length - 1]?.length,
-        sampleLine: lines[0]
+        lastLineLength: lines[lines.length - 1]?.length
       });
       
       // Format as PEM certificate
@@ -45,9 +45,7 @@ export class SamlMetadataService {
         totalLength: formattedCert.length,
         lineCount: lines.length + 2,
         containsHeader: formattedCert.includes('-----BEGIN CERTIFICATE-----'),
-        containsFooter: formattedCert.includes('-----END CERTIFICATE-----'),
-        firstLine: formattedCert.split('\n')[0],
-        lastLine: formattedCert.split('\n').slice(-1)[0]
+        containsFooter: formattedCert.includes('-----END CERTIFICATE-----')
       });
       
       return formattedCert;
