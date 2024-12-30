@@ -15,7 +15,9 @@ const DirectCostsTable: React.FC<DirectCostsTableProps> = ({ directCostsData }) 
   const calculateCategoryCosts = (category: any) => {
     const totalCosts = Array(periodsCount).fill(0);
     category.items.forEach((item: any) => {
-      item.costs.forEach((cost: any, index: number) => {
+      // Sort costs by ID before calculations
+      const sortedCosts = item.costs.slice().sort((a: any, b: any) => (a.id || 0) - (b.id || 0));
+      sortedCosts.forEach((cost: any, index: number) => {
         if (index < periodsCount) {
           const value = typeof cost.value === 'string' ? parseFloat(cost.value) : cost.value;
           if (!isNaN(value)) {
@@ -35,7 +37,19 @@ const DirectCostsTable: React.FC<DirectCostsTableProps> = ({ directCostsData }) 
     setVisibleCategories((prev) => prev + initialVisibleCategories);
   };
 
-  const directTotal = allCategories.flatMap(category => calculateCategoryCosts(category));
+  // Calculate total costs for all categories
+  const calculateTotalCosts = () => {
+    const totalCosts = Array(periodsCount).fill(0);
+    allCategories.forEach(category => {
+      const categoryCosts = calculateCategoryCosts(category);
+      categoryCosts.forEach((cost, index) => {
+        totalCosts[index] += cost;
+      });
+    });
+    return totalCosts;
+  };
+
+  const directTotal = calculateTotalCosts();
 
   const barData = {
     labels: Array.from({ length: periodsCount }, (_, i) => `P${i + 1}`),

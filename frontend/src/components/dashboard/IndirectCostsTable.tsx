@@ -46,7 +46,9 @@ const IndirectCostsTable: React.FC<IndirectCostsTableProps> = ({ indirectCostsDa
             const periods = Array(periodsCount).fill(0);
 
             category.items.forEach((item) => {
-              item.costs.forEach((cost, index) => {
+              // Sort costs by ID before calculations
+              const sortedCosts = item.costs.slice().sort((a, b) => (a.id || 0) - (b.id || 0));
+              sortedCosts.forEach((cost, index) => {
                 if (index < periodsCount) {
                   const value = typeof cost.value === 'string' ? parseFloat(cost.value) : cost.value;
                   if (!isNaN(value)) {

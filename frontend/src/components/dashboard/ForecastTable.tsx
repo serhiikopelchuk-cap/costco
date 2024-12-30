@@ -23,11 +23,13 @@ const ForecastTable: React.FC<ForecastTableProps> = ({ settings, directCostsData
       ? settings?.directGrowthRates || Array(periodsCount - 1).fill(0)
       : settings?.indirectGrowthRates || Array(periodsCount - 1).fill(0);
     
+    const sortedGrowthRates = growthRates.slice().sort((a, b) => a - b);
+    
     const costs = [investment];
     let currentValue = investment;
     
     for (let i = 0; i < periodsCount - 1; i++) {
-      const growthRate = (growthRates[i] || 0) / 100;
+      const growthRate = (sortedGrowthRates[i] || 0) / 100;
       currentValue = currentValue * (1 + growthRate);
       costs.push(currentValue);
     }
@@ -64,7 +66,8 @@ const ForecastTable: React.FC<ForecastTableProps> = ({ settings, directCostsData
       const rates = isDirectCost ? settings.directGrowthRates : settings.indirectGrowthRates;
       
       if (rates) {
-        rates.forEach((rate, index) => {
+        const sortedRates = rates.slice().sort((a, b) => a - b);
+        sortedRates.forEach((rate, index) => {
           growthRates[index] += rate; // rates are already in percentage
         });
         programCount++;
