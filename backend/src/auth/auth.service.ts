@@ -6,6 +6,8 @@ import { samlConfig } from '../config/saml.config';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 import { Profile, VerifiedCallback } from 'passport-saml';
+import { UserService } from '../user/user.service';
+import { User } from '../user/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -14,6 +16,7 @@ export class AuthService {
   constructor(
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
+    private readonly userService: UserService,
   ) {
     this.samlStrategy = new Strategy(
       {
@@ -32,26 +35,41 @@ export class AuthService {
     try {
       console.log('=== Starting SAML validation ===');
       console.log('SAML Profile:', JSON.stringify(profile, null, 2));
-      console.log('Raw Request Body:', req.body);
       
+      const email = profile.Email || profile.email;
+      if (typeof email !== 'string') {
+        console.error('No valid email found in profile!');
+        done(new Error('No valid email found in SAML profile'));
+        return;
+      }
+
       // Extract user info from SAML profile
       const userInfo = {
-        id: profile.nameID,
-        email: profile.Email || profile.email, // Note: case sensitivity matters
+        ssoId: profile.nameID as string,
+        email,
         accessGranted: profile.accessGranted === 'True' || profile.accessGranted === true,
-        groups: profile.userGroup || [],
+        groups: (profile.userGroup || []) as string[],
       };
       
       console.log('Extracted user info:', JSON.stringify(userInfo, null, 2));
 
-      if (!userInfo.email) {
-        console.error('No email found in profile!');
-        console.log('Available profile keys:', Object.keys(profile));
-      }
+      // Create or update user in database
+      const user = await this.userService.createOrUpdateFromSso(userInfo);
+      console.log('User created/updated:', user);
 
-      console.log('=== Completing SAML validation ===');
-      done(null, userInfo);
-      console.log('=== Done callback executed ===');
+      // Convert User instance to plain object
+      const userPlain = {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        ssoId: user.ssoId,
+        accessGranted: user.accessGranted,
+        groups: user.groups,
+        isActive: user.isActive,
+        lastLoginAt: user.lastLoginAt
+      };
+
+      done(null, userPlain);
     } catch (error) {
       console.error('=== Error in SAML validation ===');
       console.error('Error details:', error);
@@ -60,16 +78,16 @@ export class AuthService {
     }
   }
 
-  async createToken(user: any): Promise<string> {
+  async createToken(user: User): Promise<string> {
     try {
       console.log('=== Creating token ===');
-      console.log('User data for token:', JSON.stringify(user, null, 2));
       
       const payload = {
         sub: user.id,
         email: user.email,
         accessGranted: user.accessGranted,
         groups: user.groups,
+        ssoId: user.ssoId
       };
       
       console.log('Token payload:', JSON.stringify(payload, null, 2));
@@ -85,24 +103,33 @@ export class AuthService {
   }
 
   async validateSamlUser(profile: any): Promise<SamlUser> {
-    // Generate a unique ID if none provided
-    const userId = profile.nameID || `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    // Use a default email if none provided
-    const userEmail = profile.email || `${userId}@placeholder.com`;
-
-    return {
-      id: userId,
-      email: userEmail,
+    const userInfo = {
+      ssoId: profile.nameID || profile.userId,
+      email: profile.email as string,
       accessGranted: profile.accessGranted === 'true',
+      groups: (profile.userGroup || []) as string[],
+    };
+
+    const user = await this.userService.createOrUpdateFromSso(userInfo);
+    return {
+      id: user.ssoId,
+      email: user.email,
+      accessGranted: user.accessGranted,
     };
   }
 
   async generateToken(user: SamlUser): Promise<string> {
+    const dbUser = await this.userService.findBySsoId(user.id);
+    if (!dbUser) {
+      throw new Error('User not found in database');
+    }
+
     const payload = {
-      sub: user.id,
-      email: user.email,
-      accessGranted: user.accessGranted,
+      sub: dbUser.id,
+      email: dbUser.email,
+      accessGranted: dbUser.accessGranted,
+      groups: dbUser.groups,
+      ssoId: dbUser.ssoId
     };
 
     return this.jwtService.sign(payload);
@@ -120,11 +147,22 @@ export class AuthService {
   }
 
   async generateDevToken(user: SamlUser): Promise<string> {
-    const payload = {
-      sub: user.id,
+    const userInfo = {
+      ssoId: user.id,
       email: user.email,
       accessGranted: user.accessGranted,
-      isDev: true // Mark as development token
+      groups: [] as string[],
+    };
+
+    const dbUser = await this.userService.createOrUpdateFromSso(userInfo);
+
+    const payload = {
+      sub: dbUser.id,
+      email: dbUser.email,
+      accessGranted: dbUser.accessGranted,
+      groups: dbUser.groups,
+      ssoId: dbUser.ssoId,
+      isDev: true
     };
 
     return this.jwtService.sign(payload);

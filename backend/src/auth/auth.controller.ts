@@ -62,7 +62,12 @@ export class AuthController {
       console.log('Generated token length:', token.length);
 
       // Get the redirect URL from RelayState or environment variable
-      const redirectUrl = req.body?.RelayState?.replace('RelayState=', '') || process.env.FRONTEND_URL || 'http://localhost:3001';
+      const redirectUrl = 
+      // req.body?.RelayState?.replace('RelayState=', '') 
+      // || process.env.FRONTEND_URL || 
+      'http://localhost:3001'
+      
+      ;
 
       console.log('Environment:', process.env.NODE_ENV);
       console.log('Redirect base URL:', redirectUrl);
