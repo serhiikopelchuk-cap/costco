@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { User } from '../../types/program';
 import { userService } from '../../services/userService';
+import ChipSelector from '../common/ChipSelector';
+import './SecurityTab.css';
 
 interface SecurityTabProps {
   programId: number;
@@ -32,24 +34,24 @@ export const SecurityTab: React.FC<SecurityTabProps> = ({ programId }) => {
     loadUsers();
   }, [programId]);
 
-  const handleAddUser = async (email: string) => {
-    const user = users.find(u => u.email === email);
-    if (user && !selectedUsers.some(u => u.id === user.id)) {
+  const handleAddUser = async (user: { id: number; label: string; value: string }) => {
+    const selectedUser = users.find(u => u.id === user.id);
+    if (selectedUser && !selectedUsers.some(u => u.id === selectedUser.id)) {
       try {
-        await userService.addProgramToUser(user.id, programId);
-        setSelectedUsers([...selectedUsers, user]);
+        await userService.addProgramToUser(selectedUser.id, programId);
+        setSelectedUsers([...selectedUsers, selectedUser]);
       } catch (error) {
         console.error('Error adding user to program:', error);
       }
     }
   };
 
-  const handleRemoveUser = async (email: string) => {
-    const user = selectedUsers.find(u => u.email === email);
-    if (user) {
+  const handleRemoveUser = async (user: { id: number; label: string; value: string }) => {
+    const selectedUser = selectedUsers.find(u => u.id === user.id);
+    if (selectedUser) {
       try {
-        await userService.removeProgramFromUser(user.id, programId);
-        setSelectedUsers(selectedUsers.filter(u => u.id !== user.id));
+        await userService.removeProgramFromUser(selectedUser.id, programId);
+        setSelectedUsers(selectedUsers.filter(u => u.id !== selectedUser.id));
       } catch (error) {
         console.error('Error removing user from program:', error);
       }
@@ -60,18 +62,30 @@ export const SecurityTab: React.FC<SecurityTabProps> = ({ programId }) => {
     return <div>Loading...</div>;
   }
 
+  const userItems = users.map(user => ({
+    id: user.id,
+    label: user.name,
+    value: user.email
+  }));
+
+  const selectedUserItems = selectedUsers.map(user => ({
+    id: user.id,
+    label: user.name,
+    value: user.email
+  }));
+
   return (
     <div className="security-tab">
       <div className="section">
         <h3>Program Access</h3>
         <p>Select users who should have access to this program:</p>
-        {/* <CloudProviderChips
-          selectedProviders={selectedUsers.map(user => user.email)}
-          availableProviders={users.map(user => user.email)}
+        <ChipSelector
+          selectedItems={selectedUserItems}
+          availableItems={userItems}
           onAdd={handleAddUser}
           onRemove={handleRemoveUser}
           placeholder="Add user"
-        /> */}
+        />
       </div>
     </div>
   );

@@ -1,0 +1,140 @@
+.chip-selector-container {
+  position: relative;
+  width: 100%;
+}
+
+.chip-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 36px;
+  align-items: center;
+  padding: 4px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background: white;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background-color: #f0f0f0;
+  border-radius: 16px;
+  font-size: 14px;
+  color: #333;
+}
+
+.chip.disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.chip-label {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.remove-item {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.remove-item:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+.add-item-button {
+  background-color: transparent;
+  border: 1px dashed #ccc;
+  border-radius: 16px;
+  padding: 4px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.add-item-button:hover {
+  background-color: #f5f5f5;
+  border-color: #999;
+  color: #333;
+}
+
+.dropdown-container {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 4px;
+  z-index: 1000;
+}
+
+.search-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+  outline: none;
+}
+
+.search-input:focus {
+  border-color: #ddd;
+}
+
+.item-dropdown {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.item-option {
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s;
+}
+
+.item-option:hover {
+  background-color: #f5f5f5;
+}
+
+.item-label {
+  font-weight: 500;
+}
+
+.item-value {
+  color: #666;
+  font-size: 0.9em;
+}
+
+.no-results {
+  padding: 12px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+}
+
+.placeholder-text {
+  color: #999;
+  font-size: 14px;
+} 
