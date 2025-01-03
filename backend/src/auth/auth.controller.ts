@@ -1,4 +1,4 @@
-import { Controller, Post, Get, UseGuards, Req, Res, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, UseGuards, Req, Res, HttpStatus, Body, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
@@ -73,12 +73,12 @@ export class AuthController {
 
       // Get the redirect URL
       let redirectUrl = req.body?.RelayState?.replace('RelayState=', '');
-      // if (!redirectUrl) {
-      //   redirectUrl = process.env.FRONTEND_URL;
-      // }
-      // if (!redirectUrl) {
+      if (!redirectUrl) {
+        redirectUrl = process.env.FRONTEND_URL;
+      }
+      if (!redirectUrl) {
         redirectUrl = 'http://localhost:3001';
-      // }
+      }
 
       console.log('Environment:', process.env.NODE_ENV);
       console.log('Redirect URL:', redirectUrl);
@@ -113,13 +113,13 @@ export class AuthController {
       console.error('Error stack:', error.stack);
       
       // Use the same redirect URL logic for errors
-      // let redirectUrl = req.body?.RelayState?.replace('RelayState=', '');
-      // if (!redirectUrl) {
-      //   redirectUrl = process.env.FRONTEND_URL;
-      // }
-      // if (!redirectUrl) {
+      let redirectUrl = req.body?.RelayState?.replace('RelayState=', '');
+      if (!redirectUrl) {
+        redirectUrl = process.env.FRONTEND_URL;
+      }
+      if (!redirectUrl) {
         let redirectUrl = 'http://localhost:3001';
-      // }
+      }
       
       const errorUrl = `${redirectUrl}/login?error=${encodeURIComponent(error.message || 'authentication_failed')}`;
       
@@ -229,6 +229,58 @@ export class AuthController {
     } catch (error) {
       console.error('Token verification error:', error);
       return { valid: false };
+    }
+  }
+
+  @Post('login/password')
+  @ApiOperation({ summary: 'Login with email and password' })
+  @ApiResponse({ status: 200, description: 'Successfully logged in' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'user@example.com' },
+        password: { type: 'string', example: 'password123' }
+      },
+      required: ['email', 'password']
+    }
+  })
+  async loginWithPassword(@Body() credentials: { email: string; password: string }) {
+    try {
+      return await this.authService.loginWithCredentials(
+        credentials.email,
+        credentials.password
+      );
+    } catch (error) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+  }
+
+  @Post('register')
+  @ApiOperation({ summary: 'Register new user' })
+  @ApiResponse({ status: 201, description: 'User successfully registered' })
+  @ApiResponse({ status: 400, description: 'Bad request - validation error' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'user@example.com' },
+        password: { type: 'string', example: 'password123' },
+        name: { type: 'string', example: 'John Doe' }
+      },
+      required: ['email', 'password', 'name']
+    }
+  })
+  async register(@Body() userData: { email: string; password: string; name: string }) {
+    try {
+      await this.userService.createWithPassword(userData);
+      return { message: 'User registered successfully' };
+    } catch (error) {
+      if (error.message === 'User with this email already exists') {
+        throw new BadRequestException(error.message);
+      }
+      throw error;
     }
   }
 } 

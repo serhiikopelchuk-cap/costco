@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable, BeforeInsert, BeforeUpdate } from 'typeorm';
 import { Program } from '../program/program.entity';
+import * as bcrypt from 'bcrypt';
 
 @Entity()
 export class User {
@@ -11,6 +12,9 @@ export class User {
 
   @Column()
   name: string;
+
+  @Column({ nullable: true, select: false })
+  password: string;
 
   @Column({ default: true })
   isActive: boolean;
@@ -33,4 +37,18 @@ export class User {
   @ManyToMany(() => Program)
   @JoinTable()
   programs: Program[];
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  async hashPassword() {
+    if (this.password) {
+      const salt = await bcrypt.genSalt();
+      this.password = await bcrypt.hash(this.password, salt);
+    }
+  }
+
+  async validatePassword(password: string): Promise<boolean> {
+    if (!this.password) return false;
+    return bcrypt.compare(password, this.password);
+  }
 } 

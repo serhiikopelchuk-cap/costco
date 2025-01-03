@@ -12,9 +12,14 @@ interface ForecastTableProps {
   indirectCostsData: CostType;
 }
 
-const ForecastTable: React.FC<ForecastTableProps> = ({ settings, directCostsData, indirectCostsData }) => {
+const ForecastTable: React.FC<ForecastTableProps> = ({ settings = {
+  directInvestment: 0,
+  indirectInvestment: 0,
+  directGrowthRates: [],
+  indirectGrowthRates: []
+}, directCostsData, indirectCostsData }) => {
   const periodsCount = 6;
-  console.log("settings", settings, "directCostsData", directCostsData, "indirectCostsData", indirectCostsData);
+
   const calculateCosts = (isDirectCost: boolean) => {
     const investment = isDirectCost 
       ? settings?.directInvestment || 0 
@@ -47,8 +52,7 @@ const ForecastTable: React.FC<ForecastTableProps> = ({ settings, directCostsData
   }, [] as number[]);
 
   const calculateAverageGrowthRates = (costsData: CostType, isDirectCost: boolean) => {
-    if (!costsData || !costsData.programs) {
-      console.warn('Cost data is missing for growth rates:', costsData);
+    if (!costsData?.programs?.length) {
       return Array(periodsCount - 1).fill(0);
     }
 
@@ -56,19 +60,21 @@ const ForecastTable: React.FC<ForecastTableProps> = ({ settings, directCostsData
     let programCount = 0;
 
     costsData.programs.forEach(program => {
-      if (!program.settings) return;
+      if (!program?.settings) return;
 
       const settings = program.settings as {
-        directGrowthRates: number[];
-        indirectGrowthRates: number[];
+        directGrowthRates?: number[];
+        indirectGrowthRates?: number[];
       };
 
-      const rates = isDirectCost ? settings.directGrowthRates : settings.indirectGrowthRates;
+      const rates = isDirectCost ? settings?.directGrowthRates : settings?.indirectGrowthRates;
       
-      if (rates) {
+      if (rates?.length) {
         const sortedRates = rates.slice().sort((a, b) => a - b);
         sortedRates.forEach((rate, index) => {
-          growthRates[index] += rate; // rates are already in percentage
+          if (index < growthRates.length) {
+            growthRates[index] += rate;
+          }
         });
         programCount++;
       }
@@ -79,6 +85,10 @@ const ForecastTable: React.FC<ForecastTableProps> = ({ settings, directCostsData
 
   const directGrowthRates = calculateAverageGrowthRates(directCostsData, true);
   const indirectGrowthRates = calculateAverageGrowthRates(indirectCostsData, false);
+
+  // Ensure we have arrays of correct length for growth rates
+  const safeDirectGrowthRates = settings?.directGrowthRates || Array(periodsCount - 1).fill(0);
+  const safeIndirectGrowthRates = settings?.indirectGrowthRates || Array(periodsCount - 1).fill(0);
 
   return (
     <div className="forecast-table">
@@ -130,7 +140,7 @@ const ForecastTable: React.FC<ForecastTableProps> = ({ settings, directCostsData
           <tr>
             <td>Direct Growth Rate</td>
             <td>base year</td>
-            {settings.directGrowthRates.map((rate, index) => (
+            {safeDirectGrowthRates.map((rate, index) => (
               <td key={index}>+{rate.toFixed(1)}%</td>
             ))}
             <td colSpan={2}></td>
@@ -138,7 +148,7 @@ const ForecastTable: React.FC<ForecastTableProps> = ({ settings, directCostsData
           <tr>
             <td>Indirect Growth Rate</td>
             <td>base year</td>
-            {settings.indirectGrowthRates.map((rate, index) => (
+            {safeIndirectGrowthRates.map((rate, index) => (
               <td key={index}>+{rate.toFixed(1)}%</td>
             ))}
             <td colSpan={2}></td>

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Strategy, SamlConfig } from 'passport-saml';
 import { SamlUser } from './types/auth.types';
@@ -25,6 +25,30 @@ export class AuthService {
       } as SamlConfig,
       this.validate.bind(this),
     );
+  }
+
+  async validateCredentials(email: string, password: string): Promise<User> {
+    const user = await this.userService.findByEmailWithPassword(email);
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const isPasswordValid = await user.validatePassword(password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    return user;
+  }
+
+  async loginWithCredentials(email: string, password: string): Promise<{ token: string; user: User }> {
+    const user = await this.validateCredentials(email, password);
+    const token = await this.createToken(user);
+
+    // Update last login
+    await this.userService.update(user.id, { lastLoginAt: new Date() });
+
+    return { token, user };
   }
 
   async validate(

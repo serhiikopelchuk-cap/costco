@@ -9,6 +9,31 @@ const setupAxiosInterceptors = (token: string) => {
 };
 
 export const authService = {
+  // Generic email/password login
+  loginWithCredentials: async (email: string, password: string): Promise<{ token: string; user: User }> => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/auth/login/password`, { email, password });
+      const { token, user } = response.data;
+      if (token) {
+        authService.setToken(token);
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Login failed:', error);
+      throw error;
+    }
+  },
+
+  // Register new user
+  register: async (userData: { email: string; password: string; name: string }): Promise<void> => {
+    try {
+      await axios.post(`${API_BASE_URL}/auth/register`, userData);
+    } catch (error) {
+      console.error('Registration failed:', error);
+      throw error;
+    }
+  },
+
   // Initiate SSO login
   login: () => {
     window.location.href = SSO_LOGIN_URL;

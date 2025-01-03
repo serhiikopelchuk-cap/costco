@@ -43,6 +43,14 @@ export class UserService {
     });
   }
 
+  async findByEmailWithPassword(email: string): Promise<User | null> {
+    return this.userRepository.findOne({
+      where: { email },
+      select: ['id', 'email', 'password', 'name', 'isActive', 'accessGranted', 'groups', 'ssoId', 'lastLoginAt'],
+      relations: ['programs']
+    });
+  }
+
   async findBySsoId(ssoId: string): Promise<User | null> {
     return this.userRepository.findOne({
       where: { ssoId },
@@ -112,5 +120,25 @@ export class UserService {
       groups: ssoData.groups,
       lastLoginAt: new Date(),
     });
+  }
+
+  async createWithPassword(userData: {
+    email: string;
+    password: string;
+    name: string;
+  }): Promise<User> {
+    const existingUser = await this.findByEmail(userData.email);
+    if (existingUser) {
+      throw new Error('User with this email already exists');
+    }
+
+    const user = this.userRepository.create({
+      ...userData,
+      accessGranted: true,
+      isActive: true,
+      lastLoginAt: new Date(),
+    });
+
+    return this.userRepository.save(user);
   }
 } 
