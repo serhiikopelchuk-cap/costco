@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './DetailsComponent.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClone, faSpinner, faCheck, faTable, faCog, faMoneyBillTrendUp } from '@fortawesome/free-solid-svg-icons';
+import { faClone, faSpinner, faCheck, faTable, faCog, faMoneyBillTrendUp, faUserShield } from '@fortawesome/free-solid-svg-icons';
 import { cloneProgram, deleteProgram } from '../services/programService';
 import { cloneProject, deleteProject } from '../services/projectService';
 import { Category, Project } from '../types/program';
@@ -19,7 +19,7 @@ import {
   fetchProjectAsync
 } from '../store/slices/costTypesSlice';
 import { setProgramId, setProjectId, updateSelections } from '../store/slices/selectionSlice';
-import { SummaryTab, SettingsTab } from './details-component';
+import { SummaryTab, SettingsTab, SecurityTab } from './details-component';
 import { setDetails } from '../store/slices/uiSlice';
 
 
@@ -49,7 +49,7 @@ const DetailsComponent: React.FC = () => {
   const [overallAverageSum, setOverallAverageSum] = useState<number>(0);
   const [isCloning, setIsCloning] = useState(false);
   const [cloneSuccess, setCloneSuccess] = useState(false);
-  const [activeTab, setActiveTab] = useState<'summary' | 'settings'>('summary');
+  const [activeTab, setActiveTab] = useState<'summary' | 'settings' | 'security'>('summary');
   const [editingName, setEditingName] = useState('');
 
   useEffect(() => {
@@ -220,12 +220,20 @@ const DetailsComponent: React.FC = () => {
           <FontAwesomeIcon icon={faTable} /> Summary
         </button>
         {type === 'program' && (
-          <button
-            className={`tab-button ${activeTab === 'settings' ? 'active' : ''}`}
-            onClick={() => setActiveTab('settings')}
-          >
-            <FontAwesomeIcon icon={faMoneyBillTrendUp} /> Investment
-          </button>
+          <>
+            <button
+              className={`tab-button ${activeTab === 'settings' ? 'active' : ''}`}
+              onClick={() => setActiveTab('settings')}
+            >
+              <FontAwesomeIcon icon={faMoneyBillTrendUp} /> Investment
+            </button>
+            <button
+              className={`tab-button ${activeTab === 'security' ? 'active' : ''}`}
+              onClick={() => setActiveTab('security')}
+            >
+              <FontAwesomeIcon icon={faUserShield} /> Security
+            </button>
+          </>
         )}
       </div>
       <div className="header-with-clone">
@@ -270,6 +278,9 @@ const DetailsComponent: React.FC = () => {
       )}
       {activeTab === 'settings' && type === 'program' && (
         <SettingsTab type={type} />
+      )}
+      {activeTab === 'security' && type === 'program' && (
+        <SecurityTab programId={id} />
       )}
     </div>
   );

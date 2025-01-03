@@ -43,14 +43,21 @@ const CloudProviderChips: React.FC<CloudProviderChipsProps> = ({
             )}
           </span>
         ))}
-        {!disabled && unselectedProviders.length > 0 && (
-          <button
-            className="add-provider-button"
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            aria-label="Add cloud provider"
-          >
-            <FontAwesomeIcon icon={faPlus} />
-          </button>
+        {!disabled && (
+          <>
+            {selectedProviders.length === 0 && (
+              <span className="placeholder-text">Assign cloud provider</span>
+            )}
+            {unselectedProviders.length > 0 && (
+              <button
+                className="add-provider-button"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                aria-label="Add cloud provider"
+              >
+                <FontAwesomeIcon icon={faPlus} />
+              </button>
+            )}
+          </>
         )}
       </div>
 

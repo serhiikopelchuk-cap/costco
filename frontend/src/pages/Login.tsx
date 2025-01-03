@@ -1,9 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
 import './Login.css';
 import DevLogin from '../components/Auth/DevLogin';
 import SamlLogin from '../components/Auth/SamlLogin';
+import { useAuth } from '../context/AuthContext';
 
 function Login() {
     const navigate = useNavigate();

@@ -34,23 +34,44 @@ const initialState: CostTypesState = {
 
 export const fetchProgramsAsync = createAsyncThunk(
   'costTypes/fetchPrograms',
-  async () => {
-    const response = await fetchPrograms();
-    return response;
+  async (_, { getState }) => {
+    console.log('Starting fetchProgramsAsync');
+    const state = getState() as RootState;
+    const currentUser = state.user.currentUser;
+    console.log('Current user in fetchProgramsAsync:', currentUser);
+    
+    if (!currentUser) {
+      console.log('No current user found, returning empty array');
+      return [];
+    }
+    
+    const programs = currentUser.programs || [];
+    console.log('Returning programs:', programs);
+    return programs;
   }
 );
 
 // Helper function to convert programs to CostType structure
 const programsToCostType = (programs: Program[], costTypeId: number, alias: string): CostType => {
+  if (!Array.isArray(programs)) {
+    console.log('Programs is not an array, returning empty CostType');
+    return {
+      id: costTypeId,
+      name: alias,
+      alias: alias,
+      programs: []
+    };
+  }
+
   return {
     id: costTypeId,
     name: alias,
     alias: alias,
     programs: programs.map(program => ({
       ...program,
-      projects: program.projects.map(project => ({
+      projects: (program.projects || []).map(project => ({
         ...project,
-        categories: project.categories.filter(category => 
+        categories: (project.categories || []).filter(category => 
           !category.costType || category.costType?.id === costTypeId
         )
       }))
@@ -230,8 +251,21 @@ export const fetchCategoryAsync = createAsyncThunk(
 
 export const createProgramAsync = createAsyncThunk(
   'costTypes/createProgram',
-  async ({ program }: { program: Partial<Program> }) => {
+  async ({ program }: { program: Partial<Program> }, { getState }) => {
+    const state = getState() as RootState;
+    const currentUser = state.user.currentUser;
+    
+    if (!currentUser) {
+      throw new Error('No authenticated user found');
+    }
+
+    // Create the program
     const response = await createProgram(program);
+
+    // Assign program to the current user
+    const { userService } = await import('../../services/userService');
+    await userService.addProgramToUser(currentUser.id, response.id);
+
     return response;
   }
 );
@@ -299,20 +333,36 @@ export const selectProjectById = (state: RootState, projectId: number) => {
 
 export const fetchCostTypeByAliasAsync = createAsyncThunk(
   'costTypes/fetchCostTypeByAlias',
-  async (alias: string, { dispatch }) => {
-    // First fetch all programs
-    const response = await fetchPrograms();
+  async (alias: string, { dispatch, getState }) => {
+    console.log('Starting fetchCostTypeByAliasAsync');
+    const state = getState() as RootState;
+    let currentUser = state.user.currentUser;
+    console.log('Initial currentUser:', currentUser);
     
-    // Then update programs in state
-    await dispatch(fetchProgramsAsync());
-    
-    // Return all programs without filtering
-    return {
+    // If no user data, fetch it first
+    if (!currentUser) {
+      console.log('No user found in state, fetching from auth service...');
+      const { authService } = await import('../../services/authService');
+      currentUser = await authService.getCurrentUser();
+      console.log('Fetched user from auth service:', currentUser);
+      
+      if (currentUser) {
+        console.log('Dispatching setCurrentUser action');
+        dispatch({ type: 'user/setCurrentUser', payload: currentUser });
+      } else {
+        console.log('No user returned from auth service');
+      }
+    }
+
+    const result = {
       id: alias === 'direct_costs' ? 1 : 2,
       name: alias,
       alias: alias,
-      programs: response
+      programs: currentUser?.programs || []
     };
+    
+    console.log('Returning cost type with programs:', result);
+    return result;
   }
 );
 

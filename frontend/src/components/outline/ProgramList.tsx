@@ -10,10 +10,8 @@ import { DetailsState } from '../../store/slices/uiSlice';
 const ProgramList: React.FC = () => {
   const dispatch = useAppDispatch();
   const programs = useAppSelector(state => {
-    // console.log('ProgramList selector:', state.costTypes.item?.programs);
     return state.costTypes.item?.programs || [];
   });
-  // console.log('programs:', programs);
   // Selection state from Redux
   const selectedProgramId = useAppSelector(state => state.selection.selectedProgramId);
 
@@ -88,6 +86,12 @@ const ProgramList: React.FC = () => {
       }));
     } catch (error) {
       console.error('Failed to create program:', error);
+      // We might want to add a notification system to show this error to the user (aka toast)
+      if (error instanceof Error) {
+        alert(`Failed to create program: ${error.message}`);
+      } else {
+        alert('Failed to create program. Please try again.');
+      }
     }
   };
 

@@ -14,17 +14,20 @@ import ProviderFilter from '../components/common/ProviderFilter';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { AppDispatch } from '../store';
+import { useAuth } from '../context/AuthContext';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement);
 
 function Dashboard() {
   const dispatch = useDispatch<AppDispatch>();
-  const programs = useSelector((state: RootState) => state.costTypes.allPrograms);
+  const { user } = useAuth();
   const [selectedProvider, setSelectedProvider] = useState('');
   const [selectedProgramId, setSelectedProgramId] = useState<number | ''>('');
 
+  // Use programs directly from user object
+  const programs = user?.programs || [];
+
   useEffect(() => {
-    dispatch(fetchProgramsAsync());
     dispatch(fetchCloudProvidersAsync());
   }, [dispatch]);
 
@@ -39,9 +42,9 @@ function Dashboard() {
           directGrowthRates: Array(5).fill(0),
           indirectGrowthRates: Array(5).fill(0)
         },
-        projects: program.projects.map(project => ({
+        projects: (program.projects || []).map(project => ({
           ...project,
-          categories: project.categories.filter(category => 
+          categories: (project.categories || []).filter(category => 
             category.costType?.id === costTypeId &&
             (!selectedProvider || category.cloudProviders?.some(cp => 
               cp.name.toLowerCase() === selectedProvider.toLowerCase()
@@ -63,7 +66,7 @@ function Dashboard() {
 
   const getProgramSettings = (programId: number | '') => {
     if (!programId) {
-      // If no program selected, combine all programs' settings
+      // If no program selected, combine all user's programs' settings
       return programs.reduce((acc, program) => ({
         directInvestment: (acc.directInvestment || 0) + (program.settings?.directInvestment || 0),
         indirectInvestment: (acc.indirectInvestment || 0) + (program.settings?.indirectInvestment || 0),

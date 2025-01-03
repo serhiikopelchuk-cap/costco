@@ -1,4 +1,16 @@
 // Base types
+export interface User {
+  id: number;
+  email: string;
+  name: string;
+  ssoId: string;
+  accessGranted: boolean;
+  groups: string[];
+  isActive: boolean;
+  lastLoginAt: Date;
+  programs: Program[];
+}
+
 export interface CostType {
   id: number;
   name: string;

@@ -1,25 +1,26 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { authService } from '../../services/authService';
 
 const AuthCallback: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    // 1. Get token from URL params
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get('token');
-    
+    const token = searchParams.get('token');
     if (token) {
-      // 2. Store token in auth context/localStorage
-      login(token);
-      // 3. Redirect to app dashboard
+      // Store the token
+      authService.setToken(token);
+      // Redirect to dashboard
       navigate('/dashboard');
+    } else {
+      // If no token, redirect to login
+      navigate('/login');
     }
-  }, []);
+  }, [navigate, searchParams]);
 
-  return <div>Processing authentication...</div>;
+  return null;
 };
 
 export default AuthCallback; 

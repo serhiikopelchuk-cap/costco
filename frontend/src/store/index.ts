@@ -4,7 +4,7 @@ import selectionReducer from './slices/selectionSlice';
 import uiReducer from './slices/uiSlice';
 import costTypesReducer from './slices/costTypesSlice';
 import cloudProvidersReducer from './slices/cloudProvidersSlice';
-// import itemsReducer from './slices/itemsSlice';
+import userReducer from './slices/userSlice';
 
 export const store = configureStore({
   reducer: {
@@ -13,7 +13,7 @@ export const store = configureStore({
     ui: uiReducer,
     costTypes: costTypesReducer,
     cloudProviders: cloudProvidersReducer,
-    // items: itemsReducer,
+    user: userReducer,
   },
   devTools: process.env.NODE_ENV !== 'production',
 });

@@ -25,8 +25,8 @@ function App() {
 
   return (
     <Provider store={store}>
-      <AuthProvider>
-        <Router>
+      <Router>
+        <AuthProvider>
           <div className="App">
             <Header toggleSidebar={toggleSidebar} />
             <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
@@ -47,8 +47,8 @@ function App() {
             </main>
             <Footer />
           </div>
-        </Router>
-      </AuthProvider>
+        </AuthProvider>
+      </Router>
     </Provider>
   );
 }

@@ -1,0 +1,23 @@
+.security-tab {
+  padding: 20px;
+}
+
+.security-tab .section {
+  margin-bottom: 24px;
+}
+
+.security-tab h3 {
+  font-size: 1.1em;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.security-tab p {
+  color: #666;
+  margin-bottom: 16px;
+  font-size: 0.9em;
+}
+
+.security-tab .cloud-provider-chips-container {
+  max-width: 600px;
+} 

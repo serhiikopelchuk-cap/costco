@@ -1,71 +1,119 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { authService } from '../services/authService';
 import { jwtDecode } from "jwt-decode";
-
-interface User {
-  id: string;
-  email: string;
-  accessGranted: boolean;
-  groups?: string[];
-}
+import { User } from '../types/program';
 
 interface AuthContextType {
   isAuthenticated: boolean;
+  loading: boolean;
   user: User | null;
-  login: (token: string) => void;
+  login: () => void;
   logout: () => void;
 }
 
-// Export the context so it can be imported by useAuth hook
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType>({
+  isAuthenticated: false,
+  loading: true,
+  user: null,
+  login: () => {},
+  logout: () => {},
+});
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Check for existing token on mount
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      login(token);
-    }
-  }, []);
+    const initAuth = async () => {
+      try {
+        // Check for token in URL if we're on the auth-success page
+        if (location.pathname === '/auth-success') {
+          const params = new URLSearchParams(location.search);
+          const token = params.get('token');
+          if (token) {
+            console.log('Received token on auth-success page');
+            authService.setToken(token);
+            const currentUser = await authService.getCurrentUser();
+            if (currentUser) {
+              console.log('Successfully fetched user after SSO:', currentUser);
+              setUser(currentUser);
+              setIsAuthenticated(true);
+              navigate('/dashboard');
+              return;
+            }
+          }
+          // If we're on auth-success but don't have a valid token/user, redirect to login
+          console.log('No valid token/user on auth-success, redirecting to login');
+          navigate('/login');
+          return;
+        }
 
-  const login = (token: string) => {
-    try {
-      // Decode the JWT token
-      const decoded = jwtDecode(token) as any;
-      console.log('Decoded token:', decoded);
+        // Check if user is already authenticated
+        const token = localStorage.getItem('token');
+        if (token) {
+          console.log('Found existing token, verifying...');
+          const isAuth = await authService.isAuthenticated();
+          if (isAuth) {
+            console.log('Token is valid, fetching user...');
+            const currentUser = await authService.getCurrentUser();
+            if (currentUser) {
+              console.log('Successfully fetched existing user:', currentUser);
+              setUser(currentUser);
+              setIsAuthenticated(true);
+              if (location.pathname === '/login' || location.pathname === '/') {
+                navigate('/dashboard');
+              }
+            }
+          } else {
+            console.log('Token is invalid, clearing auth state');
+            localStorage.removeItem('token');
+            setIsAuthenticated(false);
+            setUser(null);
+            if (location.pathname !== '/login') {
+              navigate('/login');
+            }
+          }
+        } else if (location.pathname !== '/login' && location.pathname !== '/') {
+          console.log('No token found, redirecting to login');
+          navigate('/login');
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        setIsAuthenticated(false);
+        setUser(null);
+        if (location.pathname !== '/login') {
+          navigate('/login');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      // Store token
-      localStorage.setItem('auth_token', token);
+    initAuth();
+  }, [location.pathname, navigate]);
 
-      // Set user info from token
-      setUser({
-        id: decoded.sub,
-        email: decoded.email,
-        accessGranted: decoded.accessGranted,
-        groups: decoded.groups
-      });
-
-      // Set authenticated state
-      setIsAuthenticated(true);
-
-      console.log('Authentication successful');
-    } catch (error) {
-      console.error('Failed to process token:', error);
-      logout();
-    }
+  const login = () => {
+    console.log('Initiating login...');
+    authService.login();
   };
 
-  const logout = () => {
-    localStorage.removeItem('auth_token');
+  const logout = async () => {
+    console.log('Logging out...');
+    await authService.logout();
     setIsAuthenticated(false);
     setUser(null);
+    navigate('/login');
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, loading, user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
-}; 
+};
+
+export const useAuth = () => useContext(AuthContext); 

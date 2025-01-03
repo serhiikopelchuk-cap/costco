@@ -8,9 +8,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  /* margin-bottom: 8px; */
-  
-  justify-content: end;
+  justify-content: flex-end;
   min-height: 32px;
   align-items: center;
 }
@@ -98,4 +96,12 @@
 
 .provider-option:hover {
   background-color: #f5f5f5;
+}
+
+.placeholder-text {
+  color: rgba(102, 102, 102, 0.6);
+  /* font-style: italic; */
+  font-size: 0.7em;
+  position: absolute;
+  left: -50px;
 } 

@@ -4,11 +4,16 @@ import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiExcludeEndpoint, ApiBody } from '@nestjs/swagger';
 import { FRONTEND_URL } from 'src/config/constants';
+import { JwtAuthGuard } from './jwt-auth.guard';
+import { UserService } from '../user/user.service';
 
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly userService: UserService,
+  ) {}
 
   @Get('login')
   @UseGuards(AuthGuard('saml'))
@@ -57,21 +62,34 @@ export class AuthController {
       console.log('Request user:', req.user);
       console.log('Request body:', req.body);
 
+      if (!req.user) {
+        console.error('No user data in request');
+        throw new Error('Authentication failed - no user data');
+      }
+
       // Create JWT token
       const token = await this.authService.generateToken(req.user);
       console.log('Generated token length:', token.length);
 
-      // Get the redirect URL from RelayState or environment variable
-      const redirectUrl = 
-      // req.body?.RelayState?.replace('RelayState=', '') 
-      // || process.env.FRONTEND_URL || 
-      'http://localhost:3001'
-      
-      ;
+      // Get the redirect URL
+      let redirectUrl = req.body?.RelayState?.replace('RelayState=', '');
+      // if (!redirectUrl) {
+      //   redirectUrl = process.env.FRONTEND_URL;
+      // }
+      // if (!redirectUrl) {
+        redirectUrl = 'http://localhost:3001';
+      // }
 
       console.log('Environment:', process.env.NODE_ENV);
-      console.log('Redirect base URL:', redirectUrl);
+      console.log('Redirect URL:', redirectUrl);
       console.log('RelayState:', req.body?.RelayState);
+
+      // Get user from database to ensure it exists
+      const user = await this.userService.findBySsoId(req.user.id);
+      if (!user) {
+        console.error('User not found in database after SSO');
+        throw new Error('User not found after authentication');
+      }
 
       const finalRedirectUrl = `${redirectUrl}/auth-success?token=${token}`;
       console.log('Final redirect URL:', finalRedirectUrl);
@@ -82,7 +100,7 @@ export class AuthController {
         // Browser request - send redirect
         return res.status(302).header('Location', finalRedirectUrl).send();
       } else {
-        // API request (e.g., Postman) - send JSON response
+        // API request - send JSON response
         return res.status(200).json({
           success: true,
           redirectUrl: finalRedirectUrl,
@@ -94,13 +112,22 @@ export class AuthController {
       console.error('Error details:', error);
       console.error('Error stack:', error.stack);
       
-      // Check if the request is from a browser
+      // Use the same redirect URL logic for errors
+      // let redirectUrl = req.body?.RelayState?.replace('RelayState=', '');
+      // if (!redirectUrl) {
+      //   redirectUrl = process.env.FRONTEND_URL;
+      // }
+      // if (!redirectUrl) {
+        let redirectUrl = 'http://localhost:3001';
+      // }
+      
+      const errorUrl = `${redirectUrl}/login?error=${encodeURIComponent(error.message || 'authentication_failed')}`;
+      
       const acceptHeader = req.get('Accept') || '';
       if (acceptHeader.includes('text/html')) {
-        const redirectUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
-        return res.status(302).header('Location', `${redirectUrl}/login?error=authentication_failed`).send();
+        return res.status(302).header('Location', errorUrl).send();
       } else {
-        return res.status(500).json({
+        return res.status(401).json({
           success: false,
           error: 'Authentication failed',
           details: error.message
@@ -155,5 +182,53 @@ export class AuthController {
     return res.status(HttpStatus.NOT_FOUND).json({
       message: 'Endpoint not available in production'
     });
+  }
+
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get current user profile' })
+  @ApiResponse({ status: 200, description: 'Return current user profile.' })
+  async getProfile(@Req() req: any) {
+    console.log('Getting profile for user:', req.user);
+    
+    if (!req.user?.sub) {
+      console.error('No user ID in request');
+      return null;
+    }
+
+    try {
+      const user = await this.userService.findOne(req.user.sub);
+      if (!user) {
+        console.error('User not found:', req.user.sub);
+        return null;
+      }
+
+      console.log('Returning user profile:', user);
+      return user;
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      return null;
+    }
+  }
+
+  @Get('verify')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Verify JWT token' })
+  @ApiResponse({ status: 200, description: 'Token is valid' })
+  async verifyToken(@Req() req: any) {
+    try {
+      const user = await this.userService.findOne(req.user.sub);
+      return { 
+        valid: true,
+        user: {
+          id: user.id,
+          email: user.email,
+          accessGranted: user.accessGranted
+        }
+      };
+    } catch (error) {
+      console.error('Token verification error:', error);
+      return { valid: false };
+    }
   }
 } 

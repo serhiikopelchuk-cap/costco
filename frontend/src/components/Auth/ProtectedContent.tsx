@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../context/AuthContext';
 import './ProtectedContent.css';
 
 export const ProtectedContent: React.FC = () => {
@@ -38,7 +38,7 @@ export const ProtectedContent: React.FC = () => {
             <div className="info-item groups">
               <label>Groups</label>
               <ul>
-                {user.groups.map((group, index) => (
+                {user.groups.map((group: string, index: number) => (
                   <li key={index}>{group}</li>
                 ))}
               </ul>

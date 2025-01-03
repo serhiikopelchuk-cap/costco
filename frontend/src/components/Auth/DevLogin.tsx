@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../context/AuthContext';
+import { authService } from '../../services/authService';
 import { API_BASE_URL } from '../../config';
 
 const DevLogin: React.FC = () => {
@@ -18,7 +19,8 @@ const DevLogin: React.FC = () => {
 
       const { token } = await response.json();
       if (token) {
-        login(token);
+        authService.setToken(token);
+        login();
         navigate('/dashboard');
       }
     } catch (error) {
